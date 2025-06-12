@@ -280,6 +280,21 @@
             });
         }
 
+        function formatPhoneNumber(phoneNumber) {
+            // Remove any non-digits
+            const digits = phoneNumber.replace(/\D/g, '');
+            
+            // Format as "+1 414 277 4839"
+            if (digits.length === 11 && digits.startsWith('1')) {
+                return `+1 ${digits.slice(1, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
+            } else if (digits.length === 10) {
+                return `+1 ${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
+            }
+            
+            // Fallback if format doesn't match expected
+            return `+1 ${phoneNumber}`;
+        }
+
         function validateUsername() {
             const isValid = username && username.endsWith('@msoe.edu');
             
@@ -372,7 +387,7 @@
                 const successHTML = `
                     <div class="username">${username}</div>
                     <div class="phone-number">${formattedPhone}</div>
-                    <div class="status">provisioning complete</div>
+                    <div class="status">***provisioning complete***</div>
                 `;
                 successMessage.innerHTML = successHTML;
                 successMessage.style.display = 'block';
