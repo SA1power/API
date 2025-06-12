@@ -189,6 +189,15 @@
                 <select id="phoneDropdown" class="dropdown">
                     <option value="">Loading phone numbers...</option>
                 </select>
+            </div>
+
+            <div class="form-group">
+                <label for="usernameInput">Username:</label>
+                <input type="text" id="usernameInput" class="dropdown" placeholder="Enter your MSOE email (e.g., user@msoe.edu)" />
+                <div id="usernameError" class="error" style="display: none; margin-top: 5px; padding: 5px;">Username must end with @msoe.edu</div>
+            </div>
+
+            <div class="form-group">
                 <button id="selectButton" class="select-button" disabled>Submit</button>
                 <button id="selectAnotherButton" class="select-again-button" style="display: none;">Select Another Number</button>
             </div>
@@ -207,9 +216,12 @@
         // Global variables
         let availableNumbers = [];
         let selectedNumber = null;
+        let username = null;
 
         // DOM elements
         const phoneDropdown = document.getElementById('phoneDropdown');
+        const usernameInput = document.getElementById('usernameInput');
+        const usernameError = document.getElementById('usernameError');
         const selectButton = document.getElementById('selectButton');
         const selectAnotherButton = document.getElementById('selectAnotherButton');
         const errorMessage = document.getElementById('errorMessage');
@@ -224,14 +236,19 @@
 
         function setupEventListeners() {
             phoneDropdown.addEventListener('change', function() {
-                const selected = this.value;
-                selectButton.disabled = !selected;
-                selectedNumber = selected;
+                selectedNumber = this.value;
+                validateForm();
+            });
+
+            usernameInput.addEventListener('input', function() {
+                username = this.value;
+                validateUsername();
+                validateForm();
             });
 
             selectButton.addEventListener('click', function() {
-                if (selectedNumber) {
-                    selectPhoneNumber(selectedNumber);
+                if (selectedNumber && username) {
+                    selectPhoneNumber(selectedNumber, username);
                 }
             });
 
@@ -239,6 +256,25 @@
                 resetForm();
                 loadPhoneNumbers();
             });
+        }
+
+        function validateUsername() {
+            const isValid = username && username.endsWith('@msoe.edu');
+            
+            if (username && !isValid) {
+                usernameError.style.display = 'block';
+            } else {
+                usernameError.style.display = 'none';
+            }
+            
+            return isValid;
+        }
+
+        function validateForm() {
+            const phoneSelected = selectedNumber && selectedNumber !== '';
+            const usernameValid = validateUsername();
+            
+            selectButton.disabled = !(phoneSelected && usernameValid);
         }
 
         async function loadPhoneNumbers() {
@@ -282,21 +318,22 @@
             });
         }
 
-        async function selectPhoneNumber(phoneNumber) {
+        async function selectPhoneNumber(phoneNumber, username) {
             try {
                 // Disable button during submission
                 selectButton.disabled = true;
                 selectButton.textContent = 'Submitting...';
                 hideMessages();
                 
-                // Make API call to submit the number
+                // Make API call to submit the number and username
                 const response = await fetch(`${API_CONFIG.functionUrl}?code=${API_CONFIG.functionKey}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        phoneNumber: phoneNumber
+                        phoneNumber: phoneNumber,
+                        username: username
                     })
                 });
 
@@ -316,6 +353,8 @@
                 
                 // Hide the form elements and show select another button
                 phoneDropdown.style.display = 'none';
+                usernameInput.style.display = 'none';
+                usernameError.style.display = 'none';
                 selectButton.style.display = 'none';
                 selectAnotherButton.style.display = 'inline-block';
                 
@@ -330,17 +369,21 @@
         function resetForm() {
             // Reset form elements
             phoneDropdown.style.display = 'block';
+            usernameInput.style.display = 'block';
             selectButton.style.display = 'inline-block';
             selectButton.disabled = true;
             selectButton.textContent = 'Submit';
             selectAnotherButton.style.display = 'none';
             
-            // Clear selection
+            // Clear selection and input
             phoneDropdown.value = '';
+            usernameInput.value = '';
             selectedNumber = null;
+            username = null;
             
-            // Hide messages
+            // Hide messages and errors
             hideMessages();
+            usernameError.style.display = 'none';
         }
 
         function showLoading(show) {
