@@ -117,13 +117,31 @@
 
         .success {
             color: #006600;
-            padding: 15px;
+            padding: 20px;
             background-color: #e6ffe6;
             border: 1px solid #006600;
             border-radius: 4px;
             margin-bottom: 20px;
-            font-size: 16px;
+            font-size: 18px;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .success .username {
             font-weight: bold;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .success .phone-number {
+            font-weight: bold;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .success .status {
+            font-size: 16px;
+            color: #004400;
         }
 
         .select-button {
@@ -184,15 +202,15 @@
             <div id="errorMessage" class="error" style="display: none;"></div>
             <div id="successMessage" class="success" style="display: none;"></div>
             
-            <div class="form-group">
-                <label for="phoneDropdown">Available Phone Numbers:</label>
+            <div class="form-group" id="phoneGroup">
+                <label for="phoneDropdown" id="phoneLabel">Available Phone Numbers:</label>
                 <select id="phoneDropdown" class="dropdown">
                     <option value="">Loading phone numbers...</option>
                 </select>
             </div>
 
-            <div class="form-group">
-                <label for="usernameInput">Username:</label>
+            <div class="form-group" id="usernameGroup">
+                <label for="usernameInput" id="usernameLabel">Username:</label>
                 <input type="text" id="usernameInput" class="dropdown" placeholder="Enter your MSOE email (e.g., user@msoe.edu)" />
                 <div id="usernameError" class="error" style="display: none; margin-top: 5px; padding: 5px;">Username must end with @msoe.edu</div>
             </div>
@@ -220,7 +238,11 @@
 
         // DOM elements
         const phoneDropdown = document.getElementById('phoneDropdown');
+        const phoneGroup = document.getElementById('phoneGroup');
+        const phoneLabel = document.getElementById('phoneLabel');
         const usernameInput = document.getElementById('usernameInput');
+        const usernameGroup = document.getElementById('usernameGroup');
+        const usernameLabel = document.getElementById('usernameLabel');
         const usernameError = document.getElementById('usernameError');
         const selectButton = document.getElementById('selectButton');
         const selectAnotherButton = document.getElementById('selectAnotherButton');
@@ -343,20 +365,29 @@
 
                 const result = await response.json();
                 
-                // Show success message with the actual phone number
-                showSuccess(`${phoneNumber} Successfully Committed`);
+                // Format the phone number
+                const formattedPhone = formatPhoneNumber(phoneNumber);
+                
+                // Show success message with username, formatted phone number, and status
+                const successHTML = `
+                    <div class="username">${username}</div>
+                    <div class="phone-number">${formattedPhone}</div>
+                    <div class="status">provisioning complete</div>
+                `;
+                successMessage.innerHTML = successHTML;
+                successMessage.style.display = 'block';
                 
                 // Remove the selected number from the available list
                 availableNumbers = availableNumbers.filter(item => 
                     item.AvailablePhoneNumber !== phoneNumber
                 );
                 
-                // Hide the form elements and show select another button
-                phoneDropdown.style.display = 'none';
-                usernameInput.style.display = 'none';
-                usernameError.style.display = 'none';
+                // Hide the form elements and labels, show select another button
+                phoneGroup.style.display = 'none';
+                usernameGroup.style.display = 'none';
                 selectButton.style.display = 'none';
                 selectAnotherButton.style.display = 'inline-block';
+                
                 
             } catch (error) {
                 console.error('Error submitting phone number:', error);
@@ -368,8 +399,8 @@
 
         function resetForm() {
             // Reset form elements
-            phoneDropdown.style.display = 'block';
-            usernameInput.style.display = 'block';
+            phoneGroup.style.display = 'block';
+            usernameGroup.style.display = 'block';
             selectButton.style.display = 'inline-block';
             selectButton.disabled = true;
             selectButton.textContent = 'Submit';
