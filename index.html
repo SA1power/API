@@ -306,8 +306,8 @@
 
                 const result = await response.json();
                 
-                // Show success message
-                showSuccess(`Phone Number Successfully Committed`);
+                // Show success message with the actual phone number
+                showSuccess(`${phoneNumber} Successfully Committed`);
                 
                 // Remove the selected number from the available list
                 availableNumbers = availableNumbers.filter(item => 
