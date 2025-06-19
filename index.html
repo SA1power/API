@@ -298,11 +298,8 @@
                     <label>Teams Call Queue Group Membership(s):</label>
                     <div id="addCallQueueGroups" class="dynamic-section">
                         <div class="dynamic-item">
-                            <select class="form-control" style="width: 80%;">
-                                <option value="">Select Call Queue Group...</option>
-                                <option value="support">Support Queue</option>
-                                <option value="sales">Sales Queue</option>
-                                <option value="technical">Technical Queue</option>
+                            <select class="form-control cq-group-select" style="width: 80%;">
+                                <option value="">Loading Call Queue Groups...</option>
                             </select>
                             <button type="button" class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
                         </div>
@@ -314,11 +311,8 @@
                     <label>Teams Auto Attendant Authorized User (Manager):</label>
                     <div id="addAutoAttendants" class="dynamic-section">
                         <div class="dynamic-item">
-                            <select class="form-control" style="width: 80%;">
-                                <option value="">Select Auto Attendant...</option>
-                                <option value="main">Main Auto Attendant</option>
-                                <option value="support">Support Auto Attendant</option>
-                                <option value="directory">Directory Auto Attendant</option>
+                            <select class="form-control aa-select" style="width: 80%;">
+                                <option value="">Loading Auto Attendants...</option>
                             </select>
                             <button type="button" class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
                         </div>
@@ -330,11 +324,8 @@
                     <label>Teams Call Queue Authorized User (Manager):</label>
                     <div id="addCallQueueManagers" class="dynamic-section">
                         <div class="dynamic-item">
-                            <select class="form-control" style="width: 80%;">
-                                <option value="">Select Call Queue...</option>
-                                <option value="helpdesk">Help Desk Queue</option>
-                                <option value="admissions">Admissions Queue</option>
-                                <option value="finance">Finance Queue</option>
+                            <select class="form-control cq-select" style="width: 80%;">
+                                <option value="">Loading Call Queues...</option>
                             </select>
                             <button type="button" class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
                         </div>
@@ -402,11 +393,8 @@
                     </div>
                     <div class="dynamic-section">
                         <div class="dynamic-item">
-                            <select class="form-control" style="width: 70%;">
+                            <select class="form-control aa-select" style="width: 70%;">
                                 <option value="">Select Auto Attendant to Add...</option>
-                                <option value="main">Main Auto Attendant</option>
-                                <option value="support">Support Auto Attendant</option>
-                                <option value="directory">Directory Auto Attendant</option>
                             </select>
                             <button type="button" class="btn btn-secondary btn-small">Add</button>
                         </div>
@@ -422,11 +410,8 @@
                     </div>
                     <div class="dynamic-section">
                         <div class="dynamic-item">
-                            <select class="form-control" style="width: 70%;">
+                            <select class="form-control cq-select" style="width: 70%;">
                                 <option value="">Select Call Queue to Add...</option>
-                                <option value="helpdesk">Help Desk Queue</option>
-                                <option value="admissions">Admissions Queue</option>
-                                <option value="finance">Finance Queue</option>
                             </select>
                             <button type="button" class="btn btn-secondary btn-small">Add</button>
                         </div>
@@ -469,6 +454,7 @@
         // Global variables
         let availableNumbers = [];
         let currentUser = null;
+        let dropdownData = null;
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
@@ -550,61 +536,63 @@
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
 
-                const dropdownData = await response.json();
-                populateDropdowns(dropdownData);
+                dropdownData = await response.json();
+                populateDropdowns();
+                
+                console.log('Loaded dropdown data:', dropdownData);
                 
             } catch (error) {
                 console.error('Error loading dropdown data:', error);
+                showMessage('addUserMessages', `Failed to load dropdown options: ${error.message}`, 'error');
             }
         }
 
-        function populateDropdowns(data) {
-            // Populate all Call Queue Group dropdowns
-            const callQueueSelects = document.querySelectorAll('select[class*="form-control"]');
-            callQueueSelects.forEach(select => {
-                const options = select.querySelectorAll('option');
-                const firstOption = options[0];
+        function populateDropdowns() {
+            if (!dropdownData) return;
+
+            // Populate Call Queue Group dropdowns
+            const cqGroupSelects = document.querySelectorAll('.cq-group-select');
+            cqGroupSelects.forEach(select => {
+                // Clear existing options except first
+                select.innerHTML = '<option value="">Select Call Queue Group...</option>';
                 
-                if (firstOption && firstOption.textContent.includes('Call Queue Group')) {
-                    // Clear existing options except first
-                    while (select.children.length > 1) {
-                        select.removeChild(select.lastChild);
-                    }
-                    
-                    // Add call queue groups
-                    data.callQueueGroups.forEach(group => {
-                        const option = document.createElement('option');
-                        option.value = group;
-                        option.textContent = group;
-                        select.appendChild(option);
-                    });
-                } else if (firstOption && firstOption.textContent.includes('Auto Attendant')) {
-                    // Clear existing options except first
-                    while (select.children.length > 1) {
-                        select.removeChild(select.lastChild);
-                    }
-                    
-                    // Add auto attendants
-                    data.autoAttendants.forEach(attendant => {
-                        const option = document.createElement('option');
-                        option.value = attendant;
-                        option.textContent = attendant;
-                        select.appendChild(option);
-                    });
-                } else if (firstOption && firstOption.textContent.includes('Call Queue') && !firstOption.textContent.includes('Group')) {
-                    // Clear existing options except first
-                    while (select.children.length > 1) {
-                        select.removeChild(select.lastChild);
-                    }
-                    
-                    // Add call queues
-                    data.callQueues.forEach(queue => {
-                        const option = document.createElement('option');
-                        option.value = queue;
-                        option.textContent = queue;
-                        select.appendChild(option);
-                    });
-                }
+                // Add call queue groups from database
+                dropdownData.callQueueGroups.forEach(group => {
+                    const option = document.createElement('option');
+                    option.value = group;
+                    option.textContent = group;
+                    select.appendChild(option);
+                });
+            });
+
+            // Populate Auto Attendant dropdowns
+            const aaSelects = document.querySelectorAll('.aa-select');
+            aaSelects.forEach(select => {
+                // Clear existing options except first
+                select.innerHTML = '<option value="">Select Auto Attendant...</option>';
+                
+                // Add auto attendants from database
+                dropdownData.autoAttendants.forEach(attendant => {
+                    const option = document.createElement('option');
+                    option.value = attendant;
+                    option.textContent = attendant;
+                    select.appendChild(option);
+                });
+            });
+
+            // Populate Call Queue dropdowns
+            const cqSelects = document.querySelectorAll('.cq-select');
+            cqSelects.forEach(select => {
+                // Clear existing options except first
+                select.innerHTML = '<option value="">Select Call Queue...</option>';
+                
+                // Add call queues from database
+                dropdownData.callQueues.forEach(queue => {
+                    const option = document.createElement('option');
+                    option.value = queue;
+                    option.textContent = queue;
+                    select.appendChild(option);
+                });
             });
         }
 
@@ -704,19 +692,19 @@
                 
                 // Collect Call Queue Groups
                 const callQueueGroups = [];
-                document.querySelectorAll('#addCallQueueGroups select').forEach(select => {
+                document.querySelectorAll('#addCallQueueGroups .cq-group-select').forEach(select => {
                     if (select.value) callQueueGroups.push(select.value);
                 });
                 
                 // Collect Auto Attendants
                 const autoAttendants = [];
-                document.querySelectorAll('#addAutoAttendants select').forEach(select => {
+                document.querySelectorAll('#addAutoAttendants .aa-select').forEach(select => {
                     if (select.value) autoAttendants.push(select.value);
                 });
                 
                 // Collect Call Queue Managers
                 const callQueueManagers = [];
-                document.querySelectorAll('#addCallQueueManagers select').forEach(select => {
+                document.querySelectorAll('#addCallQueueManagers .cq-select').forEach(select => {
                     if (select.value) callQueueManagers.push(select.value);
                 });
                 
@@ -794,201 +782,4 @@
                 // Reset form
                 document.getElementById('deprovisionUsername').value = '';
                 document.getElementById('deprovisionUserInfo').style.display = 'none';
-                document.getElementById('deprovisionUserSubmit').style.display = 'none';
-                
-            } catch (error) {
-                console.error('Error deprovisioning user:', error);
-                showMessage('deprovisionUserMessages', `Failed to deprovision user: ${error.message}`, 'error');
-            }
-        }
-
-        function lookupUser() {
-            const username = document.getElementById('modifyUsername').value;
-            
-            if (!username || !username.endsWith('@msoe.edu')) {
-                showMessage('modifyUserMessages', 'Please enter a valid MSOE email address', 'error');
-                return;
-            }
-            
-            // Mock user data - in real implementation, this would call an API
-            currentUser = {
-                username: username,
-                phoneNumber: '14142772203',
-                internationalCalling: true,
-                callQueueGroups: ['Support Queue', 'Technical Queue'],
-                autoAttendants: ['Main Auto Attendant'],
-                callQueueManagers: ['Help Desk Queue']
-            };
-            
-            displayCurrentUserSettings();
-            showModifyFields();
-        }
-
-        function displayCurrentUserSettings() {
-            const settingsDiv = document.getElementById('currentSettings');
-            const formattedPhone = formatPhoneNumber(currentUser.phoneNumber);
-            
-            settingsDiv.innerHTML = `
-                <div class="current-setting"><strong>Phone Number:</strong> ${formattedPhone}</div>
-                <div class="current-setting"><strong>International Calling:</strong> ${currentUser.internationalCalling ? 'Yes' : 'No'}</div>
-                <div class="current-setting"><strong>Call Queue Groups:</strong> ${currentUser.callQueueGroups.join(', ')}</div>
-                <div class="current-setting"><strong>Auto Attendants Manager:</strong> ${currentUser.autoAttendants.join(', ')}</div>
-                <div class="current-setting"><strong>Call Queue Manager:</strong> ${currentUser.callQueueManagers.join(', ')}</div>
-            `;
-            
-            // Display current memberships with remove buttons
-            displayCurrentMemberships();
-            
-            document.getElementById('currentUserInfo').style.display = 'block';
-        }
-
-        function displayCurrentMemberships() {
-            // Display current call queue groups
-            const callQueueGroupsList = document.getElementById('currentCallQueueGroupsList');
-            callQueueGroupsList.innerHTML = '';
-            currentUser.callQueueGroups.forEach(group => {
-                const item = document.createElement('div');
-                item.className = 'current-setting';
-                item.innerHTML = `
-                    <span>${group}</span>
-                    <button type="button" class="btn btn-danger btn-small" onclick="removeCurrentMembership('callQueueGroups', '${group}')">Remove</button>
-                `;
-                callQueueGroupsList.appendChild(item);
-            });
-
-            // Display current auto attendants
-            const autoAttendantsList = document.getElementById('currentAutoAttendantsList');
-            autoAttendantsList.innerHTML = '';
-            currentUser.autoAttendants.forEach(attendant => {
-                const item = document.createElement('div');
-                item.className = 'current-setting';
-                item.innerHTML = `
-                    <span>${attendant}</span>
-                    <button type="button" class="btn btn-danger btn-small" onclick="removeCurrentMembership('autoAttendants', '${attendant}')">Remove</button>
-                `;
-                autoAttendantsList.appendChild(item);
-            });
-
-            // Display current call queue managers
-            const callQueueManagersList = document.getElementById('currentCallQueueManagersList');
-            callQueueManagersList.innerHTML = '';
-            currentUser.callQueueManagers.forEach(queue => {
-                const item = document.createElement('div');
-                item.className = 'current-setting';
-                item.innerHTML = `
-                    <span>${queue}</span>
-                    <button type="button" class="btn btn-danger btn-small" onclick="removeCurrentMembership('callQueueManagers', '${queue}')">Remove</button>
-                `;
-                callQueueManagersList.appendChild(item);
-            });
-        }
-
-        function showModifyFields() {
-            const fieldsToShow = ['modifyPhoneGroup', 'modifyIntlGroup', 'modifyCallQueueGroupsGroup', 'modifyAutoAttendantsGroup', 'modifyCallQueueManagersGroup'];
-            fieldsToShow.forEach(id => {
-                document.getElementById(id).style.display = 'block';
-            });
-            document.getElementById('modifyUserSubmit').style.display = 'block';
-            
-            // Set current values
-            document.getElementById('modifyIntlYes').checked = currentUser.internationalCalling;
-            document.getElementById('modifyIntlNo').checked = !currentUser.internationalCalling;
-        }
-
-        function resetAddForm() {
-            document.getElementById('addPhoneNumber').value = '';
-            document.getElementById('addUsername').value = '';
-            document.getElementById('addIntlNo').checked = true;
-            document.getElementById('a5LicenseConfirm').checked = false;
-            
-            // Reset the fields container to disabled state
-            const fieldsContainer = document.getElementById('addUserFields');
-            fieldsContainer.style.opacity = '0.5';
-            fieldsContainer.style.pointerEvents = 'none';
-            
-            validateAddForm();
-        }
-
-        function formatPhoneNumber(phoneNumber) {
-            const digits = phoneNumber.replace(/\D/g, '');
-            
-            if (digits.length === 11 && digits.startsWith('1')) {
-                return `+1 ${digits.slice(1, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
-            } else if (digits.length === 10) {
-                return `+1 ${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
-            }
-            
-            return `+1 ${phoneNumber}`;
-        }
-
-        function showMessage(containerId, message, type) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = `<div class="${type}">${message}</div>`;
-        }
-
-        // Dynamic content management functions
-        function addCallQueueGroup(column) {
-            const container = document.getElementById(`${column}CallQueueGroups`);
-            const newItem = document.createElement('div');
-            newItem.className = 'dynamic-item';
-            newItem.innerHTML = `
-                <select class="form-control" style="width: 80%;">
-                    <option value="">Select Call Queue Group...</option>
-                    <option value="support">Support Queue</option>
-                    <option value="sales">Sales Queue</option>
-                    <option value="technical">Technical Queue</option>
-                </select>
-                <button type="button" class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
-            `;
-            container.appendChild(newItem);
-        }
-
-        function addAutoAttendant(column) {
-            const container = document.getElementById(`${column}AutoAttendants`);
-            const newItem = document.createElement('div');
-            newItem.className = 'dynamic-item';
-            newItem.innerHTML = `
-                <select class="form-control" style="width: 80%;">
-                    <option value="">Select Auto Attendant...</option>
-                    <option value="main">Main Auto Attendant</option>
-                    <option value="support">Support Auto Attendant</option>
-                    <option value="directory">Directory Auto Attendant</option>
-                </select>
-                <button type="button" class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
-            `;
-            container.appendChild(newItem);
-        }
-
-        function addCallQueueManager(column) {
-            const container = document.getElementById(`${column}CallQueueManagers`);
-            const newItem = document.createElement('div');
-            newItem.className = 'dynamic-item';
-            newItem.innerHTML = `
-                <select class="form-control" style="width: 80%;">
-                    <option value="">Select Call Queue...</option>
-                    <option value="helpdesk">Help Desk Queue</option>
-                    <option value="admissions">Admissions Queue</option>
-                    <option value="finance">Finance Queue</option>
-                </select>
-                <button type="button" class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
-            `;
-            container.appendChild(newItem);
-        }
-
-        function removeItem(button) {
-            button.parentElement.remove();
-        }
-
-        function removeCurrentMembership(type, item) {
-            // Remove from current user data
-            const index = currentUser[type].indexOf(item);
-            if (index > -1) {
-                currentUser[type].splice(index, 1);
-            }
-            
-            // Refresh the display
-            displayCurrentMemberships();
-        }
-    </script>
-</body>
-</html>
+                document.getElementById('deprovisionUserSubm
