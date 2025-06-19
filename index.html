@@ -523,15 +523,7 @@
 
         async function loadDropdownData() {
             try {
-                const response = await fetch(`${API_CONFIG.functionUrl}?code=${API_CONFIG.functionKey}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'getdropdowndata'
-                    })
-                });
+                const response = await fetch(`${API_CONFIG.functionUrl}?code=${API_CONFIG.functionKey}&data=dropdowns`);
 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
