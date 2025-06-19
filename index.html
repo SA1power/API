@@ -487,7 +487,8 @@
             });
             document.getElementById('addUserSubmit').addEventListener('click', submitAddUser);
 
-            // Modify User Column - removed the radio button listeners since we show dropdown directly
+            // Modify User Column
+            document.getElementById('modifyUserSubmit').addEventListener('click', submitModifyUser);
 
             // Deprovision User Column
             document.getElementById('deprovisionUserSubmit').addEventListener('click', submitDeprovisionUser);
@@ -646,18 +647,46 @@
                 return;
             }
             
-            // Mock user data for deprovision - in real implementation, this would call an API
-            const deprovisionUser = {
-                username: username,
-                phoneNumber: '14142772203',
-                internationalCalling: true,
-                callQueueGroups: ['Support Queue', 'Technical Queue'],
-                autoAttendants: ['Main Auto Attendant'],
-                callQueueManagers: ['Help Desk Queue']
-            };
+            // Clear any previous messages
+            showMessage('deprovisionUserMessages', '', '');
             
-            displayDeprovisionUserSettings(deprovisionUser);
-            showDeprovisionButton();
+            // Call API to lookup user
+            lookupUserData(username, 'deprovision');
+        }
+
+        async function lookupUserData(username, context) {
+            try {
+                const response = await fetch(`${API_CONFIG.functionUrl}?code=${API_CONFIG.functionKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'lookup',
+                        username: username
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const userData = await response.json();
+                
+                if (context === 'deprovision') {
+                    displayDeprovisionUserSettings(userData);
+                    showDeprovisionButton();
+                } else if (context === 'modify') {
+                    currentUser = userData;
+                    displayCurrentUserSettings();
+                    showModifyFields();
+                }
+                
+            } catch (error) {
+                console.error('Error looking up user:', error);
+                const messageContainer = context === 'deprovision' ? 'deprovisionUserMessages' : 'modifyUserMessages';
+                showMessage(messageContainer, `Failed to lookup user: ${error.message}`, 'error');
+            }
         }
 
         function displayDeprovisionUserSettings(user) {
@@ -772,6 +801,29 @@
             try {
                 const username = document.getElementById('deprovisionUsername').value;
                 
+                // Disable button during submission
+                const submitBtn = document.getElementById('deprovisionUserSubmit');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Processing...';
+                
+                // Make API call to deprovision the user
+                const response = await fetch(`${API_CONFIG.functionUrl}?code=${API_CONFIG.functionKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'deprovision',
+                        username: username
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                
                 // Show confirmation message
                 const confirmHTML = `
                     <div style="font-weight: bold; font-size: 18px; margin-bottom: 10px;">${username}</div>
@@ -782,4 +834,301 @@
                 // Reset form
                 document.getElementById('deprovisionUsername').value = '';
                 document.getElementById('deprovisionUserInfo').style.display = 'none';
-                document.getElementById('deprovisionUserSubm
+                document.getElementById('deprovisionUserSubmit').style.display = 'none';
+                
+            } catch (error) {
+                console.error('Error deprovisioning user:', error);
+                showMessage('deprovisionUserMessages', `Failed to deprovision user: ${error.message}`, 'error');
+                
+                // Re-enable button
+                const submitBtn = document.getElementById('deprovisionUserSubmit');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Deprovision User';
+            }
+        }
+
+        function lookupUser() {
+            const username = document.getElementById('modifyUsername').value;
+            
+            if (!username || !username.endsWith('@msoe.edu')) {
+                showMessage('modifyUserMessages', 'Please enter a valid MSOE email address', 'error');
+                return;
+            }
+            
+            // Clear any previous messages
+            showMessage('modifyUserMessages', '', '');
+            
+            // Call API to lookup user
+            lookupUserData(username, 'modify');
+        }
+
+        function displayCurrentUserSettings() {
+            const settingsDiv = document.getElementById('currentSettings');
+            const formattedPhone = formatPhoneNumber(currentUser.phoneNumber);
+            
+            settingsDiv.innerHTML = `
+                <div class="current-setting"><strong>Phone Number:</strong> ${formattedPhone}</div>
+                <div class="current-setting"><strong>International Calling:</strong> ${currentUser.internationalCalling ? 'Yes' : 'No'}</div>
+                <div class="current-setting"><strong>Call Queue Groups:</strong> ${currentUser.callQueueGroups.join(', ')}</div>
+                <div class="current-setting"><strong>Auto Attendants Manager:</strong> ${currentUser.autoAttendants.join(', ')}</div>
+                <div class="current-setting"><strong>Call Queue Manager:</strong> ${currentUser.callQueueManagers.join(', ')}</div>
+            `;
+            
+            // Display current memberships with remove buttons
+            displayCurrentMemberships();
+            
+            document.getElementById('currentUserInfo').style.display = 'block';
+        }
+
+        function displayCurrentMemberships() {
+            // Display current call queue groups
+            const callQueueGroupsList = document.getElementById('currentCallQueueGroupsList');
+            callQueueGroupsList.innerHTML = '';
+            currentUser.callQueueGroups.forEach(group => {
+                const item = document.createElement('div');
+                item.className = 'current-setting';
+                item.innerHTML = `
+                    <span>${group}</span>
+                    <button type="button" class="btn btn-danger btn-small" onclick="removeCurrentMembership('callQueueGroups', '${group}')">Remove</button>
+                `;
+                callQueueGroupsList.appendChild(item);
+            });
+
+            // Display current auto attendants
+            const autoAttendantsList = document.getElementById('currentAutoAttendantsList');
+            autoAttendantsList.innerHTML = '';
+            currentUser.autoAttendants.forEach(attendant => {
+                const item = document.createElement('div');
+                item.className = 'current-setting';
+                item.innerHTML = `
+                    <span>${attendant}</span>
+                    <button type="button" class="btn btn-danger btn-small" onclick="removeCurrentMembership('autoAttendants', '${attendant}')">Remove</button>
+                `;
+                autoAttendantsList.appendChild(item);
+            });
+
+            // Display current call queue managers
+            const callQueueManagersList = document.getElementById('currentCallQueueManagersList');
+            callQueueManagersList.innerHTML = '';
+            currentUser.callQueueManagers.forEach(queue => {
+                const item = document.createElement('div');
+                item.className = 'current-setting';
+                item.innerHTML = `
+                    <span>${queue}</span>
+                    <button type="button" class="btn btn-danger btn-small" onclick="removeCurrentMembership('callQueueManagers', '${queue}')">Remove</button>
+                `;
+                callQueueManagersList.appendChild(item);
+            });
+        }
+
+        function showModifyFields() {
+            const fieldsToShow = ['modifyPhoneGroup', 'modifyIntlGroup', 'modifyCallQueueGroupsGroup', 'modifyAutoAttendantsGroup', 'modifyCallQueueManagersGroup'];
+            fieldsToShow.forEach(id => {
+                document.getElementById(id).style.display = 'block';
+            });
+            document.getElementById('modifyUserSubmit').style.display = 'block';
+            
+            // Set current values
+            document.getElementById('modifyIntlYes').checked = currentUser.internationalCalling;
+            document.getElementById('modifyIntlNo').checked = !currentUser.internationalCalling;
+        }
+
+        function resetAddForm() {
+            document.getElementById('addPhoneNumber').value = '';
+            document.getElementById('addUsername').value = '';
+            document.getElementById('addIntlNo').checked = true;
+            document.getElementById('a5LicenseConfirm').checked = false;
+            
+            // Reset the fields container to disabled state
+            const fieldsContainer = document.getElementById('addUserFields');
+            fieldsContainer.style.opacity = '0.5';
+            fieldsContainer.style.pointerEvents = 'none';
+            
+            validateAddForm();
+        }
+
+        function formatPhoneNumber(phoneNumber) {
+            const digits = phoneNumber.replace(/\D/g, '');
+            
+            if (digits.length === 11 && digits.startsWith('1')) {
+                return `+1 ${digits.slice(1, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
+            } else if (digits.length === 10) {
+                return `+1 ${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
+            }
+            
+            return `+1 ${phoneNumber}`;
+        }
+
+        function showMessage(containerId, message, type) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+
+        // Dynamic content management functions
+        function addCallQueueGroup(column) {
+            const container = document.getElementById(`${column}CallQueueGroups`);
+            const newItem = document.createElement('div');
+            newItem.className = 'dynamic-item';
+            newItem.innerHTML = `
+                <select class="form-control cq-group-select" style="width: 80%;">
+                    <option value="">Select Call Queue Group...</option>
+                </select>
+                <button type="button" class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+            `;
+            container.appendChild(newItem);
+            
+            // Populate the new dropdown with current data
+            if (dropdownData && dropdownData.callQueueGroups) {
+                const select = newItem.querySelector('.cq-group-select');
+                dropdownData.callQueueGroups.forEach(group => {
+                    const option = document.createElement('option');
+                    option.value = group;
+                    option.textContent = group;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        function addAutoAttendant(column) {
+            const container = document.getElementById(`${column}AutoAttendants`);
+            const newItem = document.createElement('div');
+            newItem.className = 'dynamic-item';
+            newItem.innerHTML = `
+                <select class="form-control aa-select" style="width: 80%;">
+                    <option value="">Select Auto Attendant...</option>
+                </select>
+                <button type="button" class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+            `;
+            container.appendChild(newItem);
+            
+            // Populate the new dropdown with current data
+            if (dropdownData && dropdownData.autoAttendants) {
+                const select = newItem.querySelector('.aa-select');
+                dropdownData.autoAttendants.forEach(attendant => {
+                    const option = document.createElement('option');
+                    option.value = attendant;
+                    option.textContent = attendant;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        function addCallQueueManager(column) {
+            const container = document.getElementById(`${column}CallQueueManagers`);
+            const newItem = document.createElement('div');
+            newItem.className = 'dynamic-item';
+            newItem.innerHTML = `
+                <select class="form-control cq-select" style="width: 80%;">
+                    <option value="">Select Call Queue...</option>
+                </select>
+                <button type="button" class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+            `;
+            container.appendChild(newItem);
+            
+            // Populate the new dropdown with current data
+            if (dropdownData && dropdownData.callQueues) {
+                const select = newItem.querySelector('.cq-select');
+                dropdownData.callQueues.forEach(queue => {
+                    const option = document.createElement('option');
+                    option.value = queue;
+                    option.textContent = queue;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        function removeItem(button) {
+            button.parentElement.remove();
+        }
+
+        async function submitModifyUser() {
+            try {
+                const username = document.getElementById('modifyUsername').value;
+                const phoneNumber = document.getElementById('modifyPhoneNumber').value;
+                const internationalCalling = document.getElementById('modifyIntlYes').checked;
+                
+                // Collect new Call Queue Groups (from add sections, not current ones)
+                const callQueueGroups = [];
+                document.querySelectorAll('#modifyCallQueueGroupsGroup .cq-group-select').forEach(select => {
+                    if (select.value) callQueueGroups.push(select.value);
+                });
+                
+                // Collect new Auto Attendants (from add sections, not current ones)
+                const autoAttendants = [];
+                document.querySelectorAll('#modifyAutoAttendantsGroup .aa-select').forEach(select => {
+                    if (select.value) autoAttendants.push(select.value);
+                });
+                
+                // Collect new Call Queue Managers (from add sections, not current ones)
+                const callQueueManagers = [];
+                document.querySelectorAll('#modifyCallQueueManagersGroup .cq-select').forEach(select => {
+                    if (select.value) callQueueManagers.push(select.value);
+                });
+                
+                // Merge with existing data that hasn't been removed
+                const finalCallQueueGroups = [...currentUser.callQueueGroups, ...callQueueGroups];
+                const finalAutoAttendants = [...currentUser.autoAttendants, ...autoAttendants];
+                const finalCallQueueManagers = [...currentUser.callQueueManagers, ...callQueueManagers];
+                
+                // Disable button during submission
+                const submitBtn = document.getElementById('modifyUserSubmit');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Processing...';
+                
+                // Make API call to modify the user
+                const response = await fetch(`${API_CONFIG.functionUrl}?code=${API_CONFIG.functionKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'modify',
+                        username: username,
+                        phoneNumber: phoneNumber,
+                        internationalCalling: internationalCalling,
+                        callQueueGroups: finalCallQueueGroups,
+                        autoAttendants: finalAutoAttendants,
+                        callQueueManagers: finalCallQueueManagers
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                
+                // Show success message
+                const successHTML = `
+                    <div style="font-weight: bold; font-size: 18px; margin-bottom: 10px;">${username}</div>
+                    <div style="font-weight: bold;">***modification complete***</div>
+                `;
+                showMessage('modifyUserMessages', successHTML, 'success');
+                
+                // Refresh user data
+                lookupUserData(username, 'modify');
+                
+            } catch (error) {
+                console.error('Error modifying user:', error);
+                showMessage('modifyUserMessages', `Failed to modify user: ${error.message}`, 'error');
+                
+                // Re-enable button
+                const submitBtn = document.getElementById('modifyUserSubmit');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Modify Phone User';
+            }
+        }
+
+        function removeCurrentMembership(type, item) {
+            // Remove from current user data
+            const index = currentUser[type].indexOf(item);
+            if (index > -1) {
+                currentUser[type].splice(index, 1);
+            }
+            
+            // Refresh the display
+            displayCurrentMemberships();
+        }
+    </script>
+</body>
+</html>
