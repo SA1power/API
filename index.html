@@ -899,7 +899,7 @@
                     <div style="font-weight: bold; font-size: 18px; margin-bottom: 10px;">${username}</div>
                     <div style="font-weight: bold; font-size: 18px; margin-bottom: 10px;">${formattedPhone}</div>
                     <div style="font-weight: bold; margin-bottom: 15px;">***provisioning complete***</div>
-                    <button type="button" class="btn btn-secondary" onclick="startNewAdd()" style="margin-top: 10px;">Start New User</button>
+                    <button type="button" class="btn btn-secondary" onclick="startNewAdd()" style="margin-top: 10px;">Reset Form</button>
                 `;
                 showMessage('addUserMessages', successHTML, 'success');
                 
@@ -954,7 +954,7 @@
                 const successHTML = `
                     <div style="font-weight: bold; font-size: 18px; margin-bottom: 10px;">${username}</div>
                     <div style="font-weight: bold; margin-bottom: 15px;">***deprovisioning complete***</div>
-                    <button type="button" class="btn btn-secondary" onclick="startNewDeprovision()" style="margin-top: 10px;">Start New Deprovisioning</button>
+                    <button type="button" class="btn btn-secondary" onclick="startNewDeprovision()" style="margin-top: 10px;">Reset Form</button>
                 `;
                 showMessage('deprovisionUserMessages', successHTML, 'success');
                 
@@ -1228,7 +1228,7 @@
                 const successHTML = `
                     <div style="font-weight: bold; font-size: 18px; margin-bottom: 10px;">${username}</div>
                     <div style="font-weight: bold; margin-bottom: 15px;">***modification complete***</div>
-                    <button type="button" class="btn btn-secondary" onclick="startNewModify()" style="margin-top: 10px;">Start New Modification</button>
+                    <button type="button" class="btn btn-secondary" onclick="startNewModify()" style="margin-top: 10px;">Reset Form</button>
                 `;
                 showMessage('modifyUserMessages', successHTML, 'success');
                 
