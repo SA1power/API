@@ -523,48 +523,63 @@
 
         async function loadDropdownData() {
             try {
-                console.log('Loading dropdown data via POST method...');
+                console.log('Trying GET method with data=dropdowns parameter...');
                 
-                // Try different action name variations
-                const actionVariations = ['getdropdowndata', 'getDropdownData', 'GetDropdownData'];
+                // Try GET method first (this should work with the updated function)
+                const getResponse = await fetch(`${API_CONFIG.functionUrl}?code=${API_CONFIG.functionKey}&data=dropdowns`);
+                console.log('GET Response status:', getResponse.status);
                 
-                for (const actionName of actionVariations) {
-                    console.log(`Trying action: "${actionName}"`);
-                    
-                    const response = await fetch(`${API_CONFIG.functionUrl}?code=${API_CONFIG.functionKey}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            action: actionName
-                        })
-                    });
-                    
-                    console.log(`Response status for "${actionName}":`, response.status);
-                    
-                    const responseText = await response.text();
-                    console.log(`Raw response text for "${actionName}":`, responseText);
-                    
-                    if (response.ok && !responseText.includes('"error"')) {
-                        try {
-                            dropdownData = JSON.parse(responseText);
-                            console.log(`Success with action "${actionName}":`, dropdownData);
-                            
-                            if (dropdownData && typeof dropdownData === 'object' && !Array.isArray(dropdownData)) {
-                                populateDropdowns();
-                                return; // Exit successfully
-                            }
-                        } catch (parseError) {
-                            console.error(`Parse error for "${actionName}":`, parseError);
+                const getResponseText = await getResponse.text();
+                console.log('GET Raw response text:', getResponseText);
+                
+                if (getResponse.ok && !getResponseText.includes('"error"')) {
+                    try {
+                        dropdownData = JSON.parse(getResponseText);
+                        console.log('GET Success - parsed dropdown data:', dropdownData);
+                        
+                        if (dropdownData && typeof dropdownData === 'object' && !Array.isArray(dropdownData)) {
+                            populateDropdowns();
+                            return; // Success!
                         }
-                    } else {
-                        console.log(`Failed with action "${actionName}". Error response:`, responseText);
+                    } catch (parseError) {
+                        console.error('GET Parse error:', parseError);
                     }
                 }
                 
-                // If we get here, all actions failed
-                throw new Error('All action name variations failed');
+                console.log('GET method failed or returned wrong data, trying direct endpoint approach...');
+                
+                // If GET fails, try POST with exact action name from your function
+                console.log('Trying POST with exact switch case name...');
+                
+                const response = await fetch(`${API_CONFIG.functionUrl}?code=${API_CONFIG.functionKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'getdropdowndata'  // Exact match from switch statement
+                    })
+                });
+                
+                console.log('POST Response status:', response.status);
+                const responseText = await response.text();
+                console.log('POST Raw response text:', responseText);
+                
+                // For debugging - let's see what happens with an invalid action
+                console.log('Testing with invalid action to see default behavior...');
+                const testResponse = await fetch(`${API_CONFIG.functionUrl}?code=${API_CONFIG.functionKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'invalid_action_test'
+                    })
+                });
+                const testText = await testResponse.text();
+                console.log('Invalid action response:', testText);
+                
+                throw new Error('Unable to load dropdown data with any method');
                 
             } catch (error) {
                 console.error('Error loading dropdown data:', error);
