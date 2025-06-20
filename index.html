@@ -523,25 +523,80 @@
 
         async function loadDropdownData() {
             try {
+                console.log('Starting dropdown data load...');
+                console.log('API URL:', `${API_CONFIG.functionUrl}?code=${API_CONFIG.functionKey}&data=dropdowns`);
+                
                 const response = await fetch(`${API_CONFIG.functionUrl}?code=${API_CONFIG.functionKey}&data=dropdowns`);
+                
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
 
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    const errorText = await response.text();
+                    console.error('Response error text:', errorText);
+                    throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
                 }
 
-                dropdownData = await response.json();
-                populateDropdowns();
+                const responseText = await response.text();
+                console.log('Raw response text:', responseText);
                 
-                console.log('Loaded dropdown data:', dropdownData);
+                dropdownData = JSON.parse(responseText);
+                console.log('Parsed dropdown data:', dropdownData);
+                
+                populateDropdowns();
                 
             } catch (error) {
                 console.error('Error loading dropdown data:', error);
                 showMessage('addUserMessages', `Failed to load dropdown options: ${error.message}`, 'error');
+                
+                // Try fallback to POST method
+                console.log('Trying POST fallback method...');
+                try {
+                    const postResponse = await fetch(`${API_CONFIG.functionUrl}?code=${API_CONFIG.functionKey}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            action: 'getdropdowndata'
+                        })
+                    });
+                    
+                    console.log('POST Response status:', postResponse.status);
+                    
+                    if (postResponse.ok) {
+                        const postResponseText = await postResponse.text();
+                        console.log('POST Raw response text:', postResponseText);
+                        
+                        dropdownData = JSON.parse(postResponseText);
+                        console.log('POST Parsed dropdown data:', dropdownData);
+                        
+                        populateDropdowns();
+                        showMessage('addUserMessages', '', ''); // Clear error message
+                    } else {
+                        const postErrorText = await postResponse.text();
+                        console.error('POST Response error text:', postErrorText);
+                    }
+                } catch (postError) {
+                    console.error('POST fallback also failed:', postError);
+                }
             }
         }
 
         function populateDropdowns() {
-            if (!dropdownData) return;
+            if (!dropdownData) {
+                console.error('No dropdown data available');
+                return;
+            }
+
+            console.log('Dropdown data structure:', dropdownData);
+
+            // Check if the expected properties exist
+            if (!dropdownData.callQueueGroups || !Array.isArray(dropdownData.callQueueGroups)) {
+                console.error('callQueueGroups not found or not an array:', dropdownData.callQueueGroups);
+                showMessage('addUserMessages', 'Invalid dropdown data structure received', 'error');
+                return;
+            }
 
             // Populate Call Queue Group dropdowns
             const cqGroupSelects = document.querySelectorAll('.cq-group-select');
@@ -559,34 +614,42 @@
             });
 
             // Populate Auto Attendant dropdowns
-            const aaSelects = document.querySelectorAll('.aa-select');
-            aaSelects.forEach(select => {
-                // Clear existing options except first
-                select.innerHTML = '<option value="">Select Auto Attendant...</option>';
-                
-                // Add auto attendants from database
-                dropdownData.autoAttendants.forEach(attendant => {
-                    const option = document.createElement('option');
-                    option.value = attendant;
-                    option.textContent = attendant;
-                    select.appendChild(option);
+            if (dropdownData.autoAttendants && Array.isArray(dropdownData.autoAttendants)) {
+                const aaSelects = document.querySelectorAll('.aa-select');
+                aaSelects.forEach(select => {
+                    // Clear existing options except first
+                    select.innerHTML = '<option value="">Select Auto Attendant...</option>';
+                    
+                    // Add auto attendants from database
+                    dropdownData.autoAttendants.forEach(attendant => {
+                        const option = document.createElement('option');
+                        option.value = attendant;
+                        option.textContent = attendant;
+                        select.appendChild(option);
+                    });
                 });
-            });
+            } else {
+                console.error('autoAttendants not found or not an array:', dropdownData.autoAttendants);
+            }
 
             // Populate Call Queue dropdowns
-            const cqSelects = document.querySelectorAll('.cq-select');
-            cqSelects.forEach(select => {
-                // Clear existing options except first
-                select.innerHTML = '<option value="">Select Call Queue...</option>';
-                
-                // Add call queues from database
-                dropdownData.callQueues.forEach(queue => {
-                    const option = document.createElement('option');
-                    option.value = queue;
-                    option.textContent = queue;
-                    select.appendChild(option);
+            if (dropdownData.callQueues && Array.isArray(dropdownData.callQueues)) {
+                const cqSelects = document.querySelectorAll('.cq-select');
+                cqSelects.forEach(select => {
+                    // Clear existing options except first
+                    select.innerHTML = '<option value="">Select Call Queue...</option>';
+                    
+                    // Add call queues from database
+                    dropdownData.callQueues.forEach(queue => {
+                        const option = document.createElement('option');
+                        option.value = queue;
+                        option.textContent = queue;
+                        select.appendChild(option);
+                    });
                 });
-            });
+            } else {
+                console.error('callQueues not found or not an array:', dropdownData.callQueues);
+            }
         }
 
         function populatePhoneDropdowns() {
