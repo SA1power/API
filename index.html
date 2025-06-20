@@ -807,6 +807,16 @@
                     if (select.value) callQueueManagers.push(select.value);
                 });
                 
+                console.log('Form data being submitted:', {
+                    username,
+                    phoneNumber,
+                    a5Licensed,
+                    internationalCalling,
+                    callQueueGroups,
+                    autoAttendants,
+                    callQueueManagers
+                });
+                
                 // Disable button during submission
                 const submitBtn = document.getElementById('addUserSubmit');
                 submitBtn.disabled = true;
@@ -830,11 +840,27 @@
                     })
                 });
 
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+
+                const responseText = await response.text();
+                console.log('Raw response text:', responseText);
+
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                    try {
+                        const errorData = JSON.parse(responseText);
+                        if (errorData.error) {
+                            errorMessage += ` - ${errorData.error}`;
+                        }
+                    } catch (parseError) {
+                        errorMessage += ` - ${responseText}`;
+                    }
+                    throw new Error(errorMessage);
                 }
 
-                const result = await response.json();
+                const result = JSON.parse(responseText);
+                console.log('Parsed result:', result);
                 
                 // Format phone number for display
                 const formattedPhone = formatPhoneNumber(phoneNumber);
