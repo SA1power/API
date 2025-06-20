@@ -382,7 +382,14 @@
                         <h5 style="margin: 10px 0 5px 0; color: #1976d2;">Current Group Memberships:</h5>
                         <div id="currentCallQueueGroupsList"></div>
                     </div>
-                    <button type="button" class="btn btn-secondary btn-small" onclick="addCallQueueGroup('modify')">Add Group Membership</button>
+                    <div class="dynamic-section">
+                        <div class="dynamic-item">
+                            <select id="newCallQueueGroupSelect" class="form-control cq-group-select" style="width: 70%;">
+                                <option value="">Select Call Queue Group to Add...</option>
+                            </select>
+                            <button type="button" class="btn btn-secondary btn-small" onclick="addCallQueueGroupMembership()">Add</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group" style="display: none;" id="modifyAutoAttendantsGroup">
@@ -399,7 +406,6 @@
                             <button type="button" class="btn btn-secondary btn-small" onclick="addAutoAttendantRole()">Add</button>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-secondary btn-small" onclick="addAutoAttendant('modify')">Add Another Auto Attendant</button>
                 </div>
 
                 <div class="form-group" style="display: none;" id="modifyCallQueueManagersGroup">
@@ -416,7 +422,6 @@
                             <button type="button" class="btn btn-secondary btn-small" onclick="addCallQueueRole()">Add</button>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-secondary btn-small" onclick="addCallQueueManager('modify')">Add Another Call Queue</button>
                 </div>
 
                 <button id="modifyUserSubmit" class="btn btn-primary submit-button" style="display: none;">Modify Phone User</button>
@@ -1237,6 +1242,32 @@
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Modify Phone User';
             }
+        }
+
+        function addCallQueueGroupMembership() {
+            const select = document.getElementById('newCallQueueGroupSelect');
+            const selectedValue = select.value;
+            const selectedText = select.options[select.selectedIndex].text;
+            
+            if (!selectedValue) {
+                alert('Please select a Call Queue Group to add.');
+                return;
+            }
+            
+            // Check if already added
+            if (currentUser.callQueueGroups.includes(selectedValue)) {
+                alert('This Call Queue Group membership is already assigned to the user.');
+                return;
+            }
+            
+            // Add to current user data
+            currentUser.callQueueGroups.push(selectedValue);
+            
+            // Refresh the display
+            displayCurrentMemberships();
+            
+            // Reset the dropdown
+            select.value = '';
         }
 
         function addAutoAttendantRole() {
