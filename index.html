@@ -894,11 +894,12 @@
                 // Format phone number for display
                 const formattedPhone = formatPhoneNumber(phoneNumber);
                 
-                // Show success message
+                // Show success message with Start New button
                 const successHTML = `
                     <div style="font-weight: bold; font-size: 18px; margin-bottom: 10px;">${username}</div>
                     <div style="font-weight: bold; font-size: 18px; margin-bottom: 10px;">${formattedPhone}</div>
-                    <div style="font-weight: bold;">***provisioning complete***</div>
+                    <div style="font-weight: bold; margin-bottom: 15px;">***provisioning complete***</div>
+                    <button type="button" class="btn btn-secondary" onclick="startNewAdd()" style="margin-top: 10px;">Start New User</button>
                 `;
                 showMessage('addUserMessages', successHTML, 'success');
                 
@@ -908,8 +909,8 @@
                 );
                 populatePhoneDropdowns();
                 
-                // Reset form
-                resetAddForm();
+                // Hide the submit button
+                submitBtn.style.display = 'none';
                 
             } catch (error) {
                 console.error('Error submitting user:', error);
@@ -949,17 +950,17 @@
 
                 const result = await response.json();
                 
-                // Show confirmation message
-                const confirmHTML = `
+                // Show success message with Start New button
+                const successHTML = `
                     <div style="font-weight: bold; font-size: 18px; margin-bottom: 10px;">${username}</div>
-                    <div style="font-weight: bold;">***deprovisioning complete***</div>
+                    <div style="font-weight: bold; margin-bottom: 15px;">***deprovisioning complete***</div>
+                    <button type="button" class="btn btn-secondary" onclick="startNewDeprovision()" style="margin-top: 10px;">Start New Deprovisioning</button>
                 `;
-                showMessage('deprovisionUserMessages', confirmHTML, 'success');
+                showMessage('deprovisionUserMessages', successHTML, 'success');
                 
-                // Reset form
-                document.getElementById('deprovisionUsername').value = '';
+                // Hide user info and submit button
                 document.getElementById('deprovisionUserInfo').style.display = 'none';
-                document.getElementById('deprovisionUserSubmit').style.display = 'none';
+                submitBtn.style.display = 'none';
                 
             } catch (error) {
                 console.error('Error deprovisioning user:', error);
@@ -1223,15 +1224,21 @@
 
                 const result = await response.json();
                 
-                // Show success message
+                // Show success message with Start New button
                 const successHTML = `
                     <div style="font-weight: bold; font-size: 18px; margin-bottom: 10px;">${username}</div>
-                    <div style="font-weight: bold;">***modification complete***</div>
+                    <div style="font-weight: bold; margin-bottom: 15px;">***modification complete***</div>
+                    <button type="button" class="btn btn-secondary" onclick="startNewModify()" style="margin-top: 10px;">Start New Modification</button>
                 `;
                 showMessage('modifyUserMessages', successHTML, 'success');
                 
-                // Refresh user data
-                lookupUserData(username, 'modify');
+                // Hide modify sections and button
+                const fieldsToHide = ['modifyPhoneGroup', 'modifyIntlGroup', 'modifyCallQueueGroupsGroup', 'modifyAutoAttendantsGroup', 'modifyCallQueueManagersGroup'];
+                fieldsToHide.forEach(id => {
+                    document.getElementById(id).style.display = 'none';
+                });
+                document.getElementById('currentUserInfo').style.display = 'none';
+                submitBtn.style.display = 'none';
                 
             } catch (error) {
                 console.error('Error modifying user:', error);
@@ -1320,6 +1327,55 @@
             
             // Reset the dropdown
             select.value = '';
+        }
+
+        function startNewAdd() {
+            // Clear messages
+            showMessage('addUserMessages', '', '');
+            
+            // Reset form
+            resetAddForm();
+            
+            // Show submit button again
+            const submitBtn = document.getElementById('addUserSubmit');
+            submitBtn.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Activate Phone User';
+        }
+
+        function startNewModify() {
+            // Clear messages
+            showMessage('modifyUserMessages', '', '');
+            
+            // Reset form
+            document.getElementById('modifyUsername').value = '';
+            document.getElementById('modifyPhoneNumber').value = '';
+            document.getElementById('modifyIntlNo').checked = true;
+            
+            // Hide all modify sections
+            const fieldsToHide = ['modifyPhoneGroup', 'modifyIntlGroup', 'modifyCallQueueGroupsGroup', 'modifyAutoAttendantsGroup', 'modifyCallQueueManagersGroup'];
+            fieldsToHide.forEach(id => {
+                document.getElementById(id).style.display = 'none';
+            });
+            
+            // Hide user info and submit button
+            document.getElementById('currentUserInfo').style.display = 'none';
+            document.getElementById('modifyUserSubmit').style.display = 'none';
+            
+            // Reset current user
+            currentUser = null;
+        }
+
+        function startNewDeprovision() {
+            // Clear messages
+            showMessage('deprovisionUserMessages', '', '');
+            
+            // Reset form
+            document.getElementById('deprovisionUsername').value = '';
+            
+            // Hide user info and submit button
+            document.getElementById('deprovisionUserInfo').style.display = 'none';
+            document.getElementById('deprovisionUserSubmit').style.display = 'none';
         }
 
         function removeCurrentMembership(type, item) {
