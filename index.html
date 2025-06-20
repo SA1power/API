@@ -525,54 +525,46 @@
             try {
                 console.log('Loading dropdown data via POST method...');
                 
-                const response = await fetch(`${API_CONFIG.functionUrl}?code=${API_CONFIG.functionKey}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'getdropdowndata'
-                    })
-                });
+                // Try different action name variations
+                const actionVariations = ['getdropdowndata', 'getDropdownData', 'GetDropdownData'];
                 
-                console.log('Response status:', response.status);
-                console.log('Response ok:', response.ok);
-                console.log('Response headers:', response.headers);
-
-                const responseText = await response.text();
-                console.log('Raw response text:', responseText);
-                console.log('Response text length:', responseText.length);
-
-                if (!response.ok) {
-                    console.error('Response not OK. Status:', response.status);
-                    throw new Error(`HTTP ${response.status}: ${response.statusText} - ${responseText}`);
-                }
-
-                if (!responseText || responseText.trim() === '') {
-                    console.error('Empty response received');
-                    throw new Error('Empty response from server');
-                }
-
-                try {
-                    dropdownData = JSON.parse(responseText);
-                    console.log('Successfully parsed JSON');
-                    console.log('Parsed dropdown data:', dropdownData);
-                    console.log('Type of dropdownData:', typeof dropdownData);
-                    console.log('Is array:', Array.isArray(dropdownData));
+                for (const actionName of actionVariations) {
+                    console.log(`Trying action: "${actionName}"`);
                     
-                    if (dropdownData) {
-                        console.log('Object keys:', Object.keys(dropdownData));
-                        console.log('callQueueGroups property:', dropdownData.callQueueGroups);
-                        console.log('autoAttendants property:', dropdownData.autoAttendants);
-                        console.log('callQueues property:', dropdownData.callQueues);
+                    const response = await fetch(`${API_CONFIG.functionUrl}?code=${API_CONFIG.functionKey}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            action: actionName
+                        })
+                    });
+                    
+                    console.log(`Response status for "${actionName}":`, response.status);
+                    
+                    const responseText = await response.text();
+                    console.log(`Raw response text for "${actionName}":`, responseText);
+                    
+                    if (response.ok && !responseText.includes('"error"')) {
+                        try {
+                            dropdownData = JSON.parse(responseText);
+                            console.log(`Success with action "${actionName}":`, dropdownData);
+                            
+                            if (dropdownData && typeof dropdownData === 'object' && !Array.isArray(dropdownData)) {
+                                populateDropdowns();
+                                return; // Exit successfully
+                            }
+                        } catch (parseError) {
+                            console.error(`Parse error for "${actionName}":`, parseError);
+                        }
+                    } else {
+                        console.log(`Failed with action "${actionName}". Error response:`, responseText);
                     }
-                } catch (parseError) {
-                    console.error('JSON parse error:', parseError);
-                    console.error('Response was not valid JSON:', responseText);
-                    throw new Error(`Invalid JSON response: ${parseError.message}`);
                 }
                 
-                populateDropdowns();
+                // If we get here, all actions failed
+                throw new Error('All action name variations failed');
                 
             } catch (error) {
                 console.error('Error loading dropdown data:', error);
