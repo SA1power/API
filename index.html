@@ -393,10 +393,10 @@
                     </div>
                     <div class="dynamic-section">
                         <div class="dynamic-item">
-                            <select class="form-control aa-select" style="width: 70%;">
+                            <select id="newAutoAttendantSelect" class="form-control aa-select" style="width: 70%;">
                                 <option value="">Select Auto Attendant to Add...</option>
                             </select>
-                            <button type="button" class="btn btn-secondary btn-small">Add</button>
+                            <button type="button" class="btn btn-secondary btn-small" onclick="addAutoAttendantRole()">Add</button>
                         </div>
                     </div>
                     <button type="button" class="btn btn-secondary btn-small" onclick="addAutoAttendant('modify')">Add Another Auto Attendant</button>
@@ -410,10 +410,10 @@
                     </div>
                     <div class="dynamic-section">
                         <div class="dynamic-item">
-                            <select class="form-control cq-select" style="width: 70%;">
+                            <select id="newCallQueueSelect" class="form-control cq-select" style="width: 70%;">
                                 <option value="">Select Call Queue to Add...</option>
                             </select>
-                            <button type="button" class="btn btn-secondary btn-small">Add</button>
+                            <button type="button" class="btn btn-secondary btn-small" onclick="addCallQueueRole()">Add</button>
                         </div>
                     </div>
                     <button type="button" class="btn btn-secondary btn-small" onclick="addCallQueueManager('modify')">Add Another Call Queue</button>
@@ -726,6 +726,8 @@
 
         async function lookupUserData(username, context) {
             try {
+                console.log(`Looking up user: ${username} for context: ${context}`);
+                
                 const response = await fetch(`${API_CONFIG.functionUrl}?code=${API_CONFIG.functionKey}`, {
                     method: 'POST',
                     headers: {
@@ -737,11 +739,26 @@
                     })
                 });
 
+                console.log(`Lookup response status for ${username}:`, response.status);
+                
+                const responseText = await response.text();
+                console.log(`Lookup raw response for ${username}:`, responseText);
+
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                    try {
+                        const errorData = JSON.parse(responseText);
+                        if (errorData.error) {
+                            errorMessage = errorData.error;
+                        }
+                    } catch (parseError) {
+                        errorMessage = responseText;
+                    }
+                    throw new Error(errorMessage);
                 }
 
-                const userData = await response.json();
+                const userData = JSON.parse(responseText);
+                console.log(`Parsed user data for ${username}:`, userData);
                 
                 if (context === 'deprovision') {
                     displayDeprovisionUserSettings(userData);
@@ -753,9 +770,16 @@
                 }
                 
             } catch (error) {
-                console.error('Error looking up user:', error);
+                console.error(`Error looking up user ${username}:`, error);
                 const messageContainer = context === 'deprovision' ? 'deprovisionUserMessages' : 'modifyUserMessages';
-                showMessage(messageContainer, `Failed to lookup user: ${error.message}`, 'error');
+                
+                // Provide specific error messages
+                let userFriendlyMessage = `Failed to lookup user: ${error.message}`;
+                if (error.message.includes('User not found')) {
+                    userFriendlyMessage = `User ${username} has not been provisioned for Teams Phone yet. Please add them first using the "Add a Teams Phone User" section.`;
+                }
+                
+                showMessage(messageContainer, userFriendlyMessage, 'error');
             }
         }
 
@@ -1213,6 +1237,58 @@
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Modify Phone User';
             }
+        }
+
+        function addAutoAttendantRole() {
+            const select = document.getElementById('newAutoAttendantSelect');
+            const selectedValue = select.value;
+            const selectedText = select.options[select.selectedIndex].text;
+            
+            if (!selectedValue) {
+                alert('Please select an Auto Attendant to add.');
+                return;
+            }
+            
+            // Check if already added
+            if (currentUser.autoAttendants.includes(selectedValue)) {
+                alert('This Auto Attendant role is already assigned to the user.');
+                return;
+            }
+            
+            // Add to current user data
+            currentUser.autoAttendants.push(selectedValue);
+            
+            // Refresh the display
+            displayCurrentMemberships();
+            
+            // Reset the dropdown
+            select.value = '';
+        }
+
+        function addCallQueueRole() {
+            const select = document.getElementById('newCallQueueSelect');
+            const selectedValue = select.value;
+            const selectedText = select.options[select.selectedIndex].text;
+            
+            if (!selectedValue) {
+                alert('Please select a Call Queue to add.');
+                return;
+            }
+            
+            // Check if already added
+            if (currentUser.callQueueManagers.includes(selectedValue)) {
+                alert('This Call Queue role is already assigned to the user.');
+                return;
+            }
+            
+            // Add to current user data
+            currentUser.callQueueManagers.push(selectedValue);
+            
+            // Refresh the display
+            displayCurrentMemberships();
+            
+            // Reset the dropdown
+            select.value = '';
         }
 
         function removeCurrentMembership(type, item) {
