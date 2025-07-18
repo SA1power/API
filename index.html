@@ -303,7 +303,7 @@
               Clear All
             </button>
             <button id="resetPageBtn" class="btn btn-primary" style="width:100%; margin-top:10px; display:none">
-              Reset Page
+              🔄 Reset Page (No Confirmation)
             </button>
           </div>
 
@@ -560,18 +560,9 @@
     }
 
     function resetPage(){
-      console.log('Reset page function called');
-      // Show custom modal instead of confirm() popup
-      document.getElementById('resetModal').style.display = 'block';
-    }
-
-    function hideResetModal(){
-      document.getElementById('resetModal').style.display = 'none';
-    }
-
-    function confirmReset(){
-      console.log('User confirmed reset');
-      hideResetModal();
+      console.log('Reset page function called - executing immediately');
+      
+      // Execute reset immediately without confirmation (Teams iframe compatibility)
       
       // Clear all batch operations and results
       batchOperations = [];
@@ -631,7 +622,28 @@
         loadPhoneNumbers();
       }, 100);
       
-      console.log('Page reset completed');
+      console.log('Page reset completed successfully');
+      
+      // Show a brief visual feedback by temporarily changing button text
+      const btn = document.getElementById('resetPageBtn');
+      const originalText = btn.textContent;
+      btn.textContent = '✅ Page Reset!';
+      btn.style.background = '#28a745';
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.style.background = '#007bff';
+        btn.style.display = 'none';
+      }, 2000);
+    }
+
+    function hideResetModal(){
+      // Keep this function for compatibility but make it do nothing
+      console.log('hideResetModal called (no-op in Teams)');
+    }
+
+    function confirmReset(){
+      // Keep this function for compatibility but make it do nothing
+      console.log('confirmReset called (no-op in Teams)');
     }
 
     async function submitAllOperations(){
