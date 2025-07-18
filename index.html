@@ -1,72 +1,158 @@
-<!-- File: provisioning.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial‑scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>MSOE Teams Phone User Provisioning</title>
   <style>
-    /* your existing CSS here… */
+    * { margin:0; padding:0; box‑sizing:border‑box; }
+    body { font-family:Arial,sans-serif; background:#f5f5f5; padding:20px; }
+    .container { max-width:1400px; margin:0 auto; }
+    .columns { display:flex; gap:20px; flex-wrap:wrap; margin-bottom:20px; }
+    .column {
+      flex:1;
+      background:#e8e8e8;
+      border:2px solid #999;
+      border-radius:4px;
+      padding:20px;
+      display:flex;
+      flex-direction:column;
+      min-width:280px;
+    }
+    .column-header {
+      background:#d0d0d0;
+      margin:-20px -20px 20px -20px;
+      padding:10px 20px;
+      font-weight:bold;
+      font-size:16px;
+      border-bottom:1px solid #999;
+    }
+    .form-group { margin-bottom:15px; }
+    .form-group label {
+      display:block;
+      margin-bottom:5px;
+      font-weight:bold;
+      color:#333;
+    }
+    .form-control {
+      width:100%;
+      padding:8px 12px;
+      border:1px solid #999;
+      border-radius:4px;
+      background:#fff;
+      font-size:14px;
+      color:#333;
+    }
+    .form-control:focus {
+      outline:none;
+      border-color:#c41e3a;
+      box-shadow:0 0 5px rgba(196,30,58,0.3);
+    }
+    .radio-group { display:flex; gap:15px; margin-top:5px; }
+    .radio-group label { font-weight:normal; }
+    .btn {
+      padding:8px 15px;
+      border:none;
+      border-radius:4px;
+      cursor:pointer;
+      font-size:14px;
+      margin-top:auto;
+    }
+    .btn-primary {
+      background:#c41e3a; color:#fff;
+    }
+    .btn-primary:disabled {
+      background:#ccc; cursor:not-allowed;
+    }
+    .success {
+      padding:10px;
+      background:#e6ffe6;
+      border:1px solid #006600;
+      color:#006600;
+      border-radius:4px;
+      margin-bottom:15px;
+    }
+    @media (max-width:800px) {
+      .columns { flex-direction:column; }
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Column 1: Add a Teams Phone User -->
-    <div class="column">
-      <h2>Add a Teams Phone User</h2>
-      <div id="addUserMessages"></div>
+    <div class="columns">
+      <!-- Column 1: Add a Teams Phone User -->
+      <div class="column">
+        <div class="column-header">Add a Teams Phone User</div>
+        <div id="addUserMessages"></div>
 
-      <div class="form-group">
-        <label for="addUsername">Select User:</label>
-        <select id="addUsername" class="form-control">
-          <option value="">Loading users…</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="addPhoneNumber">Pick an available phone number:</label>
-        <select id="addPhoneNumber" class="form-control">
-          <option value="">Loading numbers…</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>International Calling:</label>
-        <div class="radio-group">
-          <label><input type="radio" name="addIntlCalling" id="addIntlYes" value="yes"> Yes</label>
-          <label><input type="radio" name="addIntlCalling" id="addIntlNo"  value="no" checked> No</label>
+        <div class="form-group">
+          <label for="addUsername">Select User:</label>
+          <select id="addUsername" class="form-control">
+            <option value="">Loading users…</option>
+          </select>
         </div>
+
+        <div class="form-group">
+          <label for="addPhoneNumber">Pick an available phone number:</label>
+          <select id="addPhoneNumber" class="form-control">
+            <option value="">Loading numbers…</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>International Calling:</label>
+          <div class="radio-group">
+            <label><input type="radio" name="addIntlCalling" id="addIntlYes" value="yes"> Yes</label>
+            <label><input type="radio" name="addIntlCalling" id="addIntlNo" value="no" checked> No</label>
+          </div>
+        </div>
+
+        <!-- …any other form groups you had here… -->
+
+        <button id="addUserSubmit" class="btn btn-primary" disabled>
+          Activate Phone User
+        </button>
       </div>
 
-      <!-- … other groups … -->
+      <!-- Column 2: Modify a Teams Phone User -->
+      <div class="column">
+        <div class="column-header">Modify a Teams Phone User</div>
+        <!-- your existing Modify form markup goes here unchanged -->
+      </div>
 
-      <button id="addUserSubmit" class="btn btn-primary" disabled>Activate Phone User</button>
+      <!-- Column 3: Deprovision a Teams Phone User -->
+      <div class="column">
+        <div class="column-header">Deprovision a Teams Phone User</div>
+        <!-- your existing Deprovision form markup goes here unchanged -->
+      </div>
     </div>
-
-    <!-- Columns 2 & 3: Modify / Deprovision (unchanged) -->
   </div>
 
   <script>
     const API = {
-      url:  'https://availablephonenumberapi.azurewebsites.net/api/GetAvailablePhoneNumbers',
-      key:  'EsQlM7c0jssk1pzk83F5IYFV6SkZm6AXto3KSbXSA4JlAzFuN7cgbw=='
+      url: 'https://availablephonenumberapi.azurewebsites.net/api/GetAvailablePhoneNumbers',
+      key: 'EsQlM7c0jssk1pzk83F5IYFV6SkZm6AXto3KSbXSA4JlAzFuN7cgbw=='
     };
 
     let phoneNumbers = [], dropdownData = null;
 
     document.addEventListener('DOMContentLoaded', () => {
       loadPhoneNumbers();
-      document.getElementById('addUsername').addEventListener('change', validateAddForm);
-      document.getElementById('addPhoneNumber').addEventListener('change', validateAddForm);
-      document.getElementById('addUserSubmit').onclick = submitAddUser;
+      document.getElementById('addUsername')
+              .addEventListener('change', validateAddForm);
+      document.getElementById('addPhoneNumber')
+              .addEventListener('change', validateAddForm);
+      document.getElementById('addUserSubmit')
+              .addEventListener('click', submitAddUser);
     });
 
     async function loadPhoneNumbers() {
       // GET phone numbers
       const resp1 = await fetch(`${API.url}?code=${API.key}`);
-      if (!resp1.ok) return console.error('Phone‑number fetch failed');
+      if (!resp1.ok) return console.error('Phone-number fetch failed');
       phoneNumbers = await resp1.json();
       populatePhoneDropdowns();
+
       // POST dropdown data
       const resp2 = await fetch(`${API.url}?code=${API.key}`, {
         method: 'POST',
@@ -79,22 +165,24 @@
     }
 
     function populateDropdowns() {
-      // Users
+      // Populate "Select User"
       const userSel = document.getElementById('addUsername');
-      userSel.innerHTML = '<option value=\"\">Select a user…</option>';
-      (dropdownData.a5Users || []).forEach(u => {
-        userSel.appendChild(new Option(u, u));
+      userSel.innerHTML = '<option value="">Select a user…</option>';
+      (dropdownData.a5Users||[]).forEach(u => {
+        userSel.appendChild(new Option(u,u));
       });
 
-      // … callQueueGroups / autoAttendants / callQueues if needed …
+      // …and similarly for callQueueGroups, autoAttendants, callQueues if needed…
     }
 
     function populatePhoneDropdowns() {
       const phoneSel = document.getElementById('addPhoneNumber');
-      phoneSel.innerHTML = '<option value=\"\">Select a phone number…</option>';
+      phoneSel.innerHTML = '<option value="">Select a phone number…</option>';
       phoneNumbers
         .filter(i => i.AvailablePhoneNumber.startsWith('1414277'))
-        .forEach(i => phoneSel.appendChild(new Option(i.AvailablePhoneNumber, i.AvailablePhoneNumber)));
+        .forEach(i => {
+          phoneSel.appendChild(new Option(i.AvailablePhoneNumber, i.AvailablePhoneNumber));
+        });
     }
 
     function validateAddForm() {
@@ -105,15 +193,17 @@
 
     async function submitAddUser() {
       const body = {
-        action:            'add',
-        username:          document.getElementById('addUsername').value,
-        phoneNumber:       document.getElementById('addPhoneNumber').value,
-        a5Licensed:        true,
+        action: 'add',
+        username: document.getElementById('addUsername').value,
+        phoneNumber: document.getElementById('addPhoneNumber').value,
+        a5Licensed: true,
         internationalCalling: document.getElementById('addIntlYes').checked,
-        // callQueueGroups, autoAttendants, callQueueManagers…
+        // …include any other arrays here…
       };
       const resp = await fetch(`${API.url}?code=${API.key}`, {
-        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(body)
       });
       if (!resp.ok) {
         const err = await resp.json();
@@ -121,7 +211,9 @@
       }
       const result = await resp.json();
       document.getElementById('addUserMessages').innerHTML =
-        `<div class="success">User ${result.username} (${result.phoneNumber}) added!</div>`;
+        `<div class="success">
+           User ${result.username} (${result.phoneNumber}) added!
+         </div>`;
       populatePhoneDropdowns();
     }
   </script>
