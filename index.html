@@ -333,7 +333,7 @@
                     <button type="button" class="btn btn-secondary btn-small" onclick="addCallQueueManager('add')">Add Another Call Queue</button>
                 </div>
 
-                <button id="addUserSubmit" class="btn btn-primary submit-button" disabled>Add Phone User</button>
+                <button id="addUserSubmit" class="btn btn-primary submit-button" disabled>Activate Phone User</button>
                 
                 </div> <!-- End of addUserFields -->
             </div>
@@ -479,7 +479,6 @@
                 } else {
                     fieldsContainer.style.opacity = '0.5';
                     fieldsContainer.style.pointerEvents = 'none';
-                    // Reset form when unchecked
                     resetAddForm();
                 }
             });
@@ -507,7 +506,6 @@
                 }
                 const data = await response.json();
                 
-                // Filter and sort numbers
                 availableNumbers = data
                     .filter(item => 
                         item.AvailablePhoneNumber && 
@@ -516,8 +514,6 @@
                     .sort((a, b) => a.AvailablePhoneNumber.localeCompare(b.AvailablePhoneNumber));
 
                 populatePhoneDropdowns();
-                
-                // Load dropdown data for call queue groups, auto attendants, etc.
                 await loadDropdownData();
                 
             } catch (error) {
@@ -528,63 +524,22 @@
 
         async function loadDropdownData() {
             try {
-                console.log('Trying GET method with data=dropdowns parameter...');
-                
-                // Try GET method first (this should work with the updated function)
-                const getResponse = await fetch(`${API_CONFIG.functionUrl}?code=${API_CONFIG.functionKey}&data=dropdowns`);
-                console.log('GET Response status:', getResponse.status);
-                
-                const getResponseText = await getResponse.text();
-                console.log('GET Raw response text:', getResponseText);
-                
-                if (getResponse.ok && !getResponseText.includes('"error"')) {
-                    try {
-                        dropdownData = JSON.parse(getResponseText);
-                        console.log('GET Success - parsed dropdown data:', dropdownData);
-                        
-                        if (dropdownData && typeof dropdownData === 'object' && !Array.isArray(dropdownData)) {
-                            populateDropdowns();
-                            return; // Success!
-                        }
-                    } catch (parseError) {
-                        console.error('GET Parse error:', parseError);
-                    }
-                }
-                
-                console.log('GET method failed or returned wrong data, trying direct endpoint approach...');
-                
-                // If GET fails, try POST with exact action name from your function
-                console.log('Trying POST with exact switch case name...');
-                
                 const response = await fetch(`${API_CONFIG.functionUrl}?code=${API_CONFIG.functionKey}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        action: 'getdropdowndata'  // Exact match from switch statement
+                        action: 'getdropdowndata'
                     })
                 });
                 
-                console.log('POST Response status:', response.status);
-                const responseText = await response.text();
-                console.log('POST Raw response text:', responseText);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
                 
-                // For debugging - let's see what happens with an invalid action
-                console.log('Testing with invalid action to see default behavior...');
-                const testResponse = await fetch(`${API_CONFIG.functionUrl}?code=${API_CONFIG.functionKey}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'invalid_action_test'
-                    })
-                });
-                const testText = await testResponse.text();
-                console.log('Invalid action response:', testText);
-                
-                throw new Error('Unable to load dropdown data with any method');
+                dropdownData = await response.json();
+                populateDropdowns();
                 
             } catch (error) {
                 console.error('Error loading dropdown data:', error);
@@ -593,92 +548,56 @@
         }
 
         function populateDropdowns() {
-            if (!dropdownData) {
-                console.error('No dropdown data available');
-                return;
-            }
-
-            console.log('Dropdown data structure:', dropdownData);
-            console.log('Type of dropdownData:', typeof dropdownData);
-            console.log('Is array:', Array.isArray(dropdownData));
-
-            // Handle case where API returns an array instead of object
-            if (Array.isArray(dropdownData)) {
-                console.error('API returned an array instead of an object. This suggests the database tables are empty or there\'s an issue with the GetDropdownData function.');
-                showMessage('addUserMessages', 'Database tables appear to be empty or inaccessible. Please check the database connection and table contents.', 'error');
-                return;
-            }
-
-            // Check if the expected properties exist
-            if (!dropdownData.callQueueGroups || !Array.isArray(dropdownData.callQueueGroups)) {
-                console.error('callQueueGroups not found or not an array:', dropdownData.callQueueGroups);
-                showMessage('addUserMessages', 'Invalid dropdown data structure received - missing callQueueGroups', 'error');
-                return;
-            }
+            if (!dropdownData) return;
 
             // Populate Call Queue Group dropdowns
             const cqGroupSelects = document.querySelectorAll('.cq-group-select');
             cqGroupSelects.forEach(select => {
-                // Clear existing options except first
                 select.innerHTML = '<option value="">Select Call Queue Group...</option>';
-                
-                // Add call queue groups from database
-                dropdownData.callQueueGroups.forEach(group => {
-                    const option = document.createElement('option');
-                    option.value = group;
-                    option.textContent = group;
-                    select.appendChild(option);
-                });
+                if (dropdownData.callQueueGroups) {
+                    dropdownData.callQueueGroups.forEach(group => {
+                        const option = document.createElement('option');
+                        option.value = group;
+                        option.textContent = group;
+                        select.appendChild(option);
+                    });
+                }
             });
 
             // Populate Auto Attendant dropdowns
-            if (dropdownData.autoAttendants && Array.isArray(dropdownData.autoAttendants)) {
-                const aaSelects = document.querySelectorAll('.aa-select');
-                aaSelects.forEach(select => {
-                    // Clear existing options except first
-                    select.innerHTML = '<option value="">Select Auto Attendant...</option>';
-                    
-                    // Add auto attendants from database
+            const aaSelects = document.querySelectorAll('.aa-select');
+            aaSelects.forEach(select => {
+                select.innerHTML = '<option value="">Select Auto Attendant...</option>';
+                if (dropdownData.autoAttendants) {
                     dropdownData.autoAttendants.forEach(attendant => {
                         const option = document.createElement('option');
                         option.value = attendant;
                         option.textContent = attendant;
                         select.appendChild(option);
                     });
-                });
-            } else {
-                console.error('autoAttendants not found or not an array:', dropdownData.autoAttendants);
-            }
+                }
+            });
 
             // Populate Call Queue dropdowns
-            if (dropdownData.callQueues && Array.isArray(dropdownData.callQueues)) {
-                const cqSelects = document.querySelectorAll('.cq-select');
-                cqSelects.forEach(select => {
-                    // Clear existing options except first
-                    select.innerHTML = '<option value="">Select Call Queue...</option>';
-                    
-                    // Add call queues from database
+            const cqSelects = document.querySelectorAll('.cq-select');
+            cqSelects.forEach(select => {
+                select.innerHTML = '<option value="">Select Call Queue...</option>';
+                if (dropdownData.callQueues) {
                     dropdownData.callQueues.forEach(queue => {
                         const option = document.createElement('option');
                         option.value = queue;
                         option.textContent = queue;
                         select.appendChild(option);
                     });
-                });
-            } else {
-                console.error('callQueues not found or not an array:', dropdownData.callQueues);
-            }
-
-            console.log('Dropdown population completed');
+                }
+            });
         }
 
         function populatePhoneDropdowns() {
             const dropdowns = ['addPhoneNumber', 'modifyPhoneNumber'];
-            
             dropdowns.forEach(id => {
                 const dropdown = document.getElementById(id);
                 dropdown.innerHTML = '<option value="">Select a phone number...</option>';
-                
                 availableNumbers.forEach(item => {
                     const option = document.createElement('option');
                     option.value = item.AvailablePhoneNumber;
@@ -722,17 +641,12 @@
                 return;
             }
             
-            // Clear any previous messages
             showMessage('deprovisionUserMessages', '', '');
-            
-            // Call API to lookup user
             lookupUserData(username, 'deprovision');
         }
 
         async function lookupUserData(username, context) {
             try {
-                console.log(`Looking up user: ${username} for context: ${context}`);
-                
                 const response = await fetch(`${API_CONFIG.functionUrl}?code=${API_CONFIG.functionKey}`, {
                     method: 'POST',
                     headers: {
@@ -744,26 +658,12 @@
                     })
                 });
 
-                console.log(`Lookup response status for ${username}:`, response.status);
-                
-                const responseText = await response.text();
-                console.log(`Lookup raw response for ${username}:`, responseText);
-
                 if (!response.ok) {
-                    let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-                    try {
-                        const errorData = JSON.parse(responseText);
-                        if (errorData.error) {
-                            errorMessage = errorData.error;
-                        }
-                    } catch (parseError) {
-                        errorMessage = responseText;
-                    }
-                    throw new Error(errorMessage);
+                    const errorData = await response.json().catch(() => null);
+                    throw new Error(errorData?.error || `HTTP ${response.status}: ${response.statusText}`);
                 }
 
-                const userData = JSON.parse(responseText);
-                console.log(`Parsed user data for ${username}:`, userData);
+                const userData = await response.json();
                 
                 if (context === 'deprovision') {
                     displayDeprovisionUserSettings(userData);
@@ -778,7 +678,6 @@
                 console.error(`Error looking up user ${username}:`, error);
                 const messageContainer = context === 'deprovision' ? 'deprovisionUserMessages' : 'modifyUserMessages';
                 
-                // Provide specific error messages
                 let userFriendlyMessage = `Failed to lookup user: ${error.message}`;
                 if (error.message.includes('User not found')) {
                     userFriendlyMessage = `User ${username} has not been provisioned for Teams Phone yet. Please add them first using the "Add a Teams Phone User" section.`;
@@ -792,13 +691,17 @@
             const settingsDiv = document.getElementById('deprovisionSettings');
             const formattedPhone = formatPhoneNumber(user.phoneNumber);
             
+            const callQueueGroups = Array.isArray(user.callQueueGroups) ? user.callQueueGroups : [];
+            const autoAttendants = Array.isArray(user.autoAttendants) ? user.autoAttendants : [];
+            const callQueueManagers = Array.isArray(user.callQueueManagers) ? user.callQueueManagers : [];
+            
             settingsDiv.innerHTML = `
                 <div class="current-setting"><strong>Username:</strong> ${user.username}</div>
                 <div class="current-setting"><strong>Phone Number:</strong> ${formattedPhone}</div>
                 <div class="current-setting"><strong>International Calling:</strong> ${user.internationalCalling ? 'Yes' : 'No'}</div>
-                <div class="current-setting"><strong>Call Queue Groups:</strong> ${user.callQueueGroups.join(', ')}</div>
-                <div class="current-setting"><strong>Auto Attendants Manager:</strong> ${user.autoAttendants.join(', ')}</div>
-                <div class="current-setting"><strong>Call Queue Manager:</strong> ${user.callQueueManagers.join(', ')}</div>
+                <div class="current-setting"><strong>Call Queue Groups:</strong> ${callQueueGroups.length > 0 ? callQueueGroups.join(', ') : 'None'}</div>
+                <div class="current-setting"><strong>Auto Attendants Manager:</strong> ${autoAttendants.length > 0 ? autoAttendants.join(', ') : 'None'}</div>
+                <div class="current-setting"><strong>Call Queue Manager:</strong> ${callQueueManagers.length > 0 ? callQueueManagers.join(', ') : 'None'}</div>
                 <div style="margin-top: 15px; padding: 10px; background-color: #ffebee; border: 1px solid #f44336; border-radius: 4px; color: #c62828;">
                     <strong>Warning:</strong> All Teams Phone functionality for this user will be removed.
                 </div>
@@ -818,40 +721,25 @@
                 const a5Licensed = document.getElementById('a5LicenseConfirm').checked;
                 const internationalCalling = document.getElementById('addIntlYes').checked;
                 
-                // Collect Call Queue Groups
                 const callQueueGroups = [];
                 document.querySelectorAll('#addCallQueueGroups .cq-group-select').forEach(select => {
                     if (select.value) callQueueGroups.push(select.value);
                 });
                 
-                // Collect Auto Attendants
                 const autoAttendants = [];
                 document.querySelectorAll('#addAutoAttendants .aa-select').forEach(select => {
                     if (select.value) autoAttendants.push(select.value);
                 });
                 
-                // Collect Call Queue Managers
                 const callQueueManagers = [];
                 document.querySelectorAll('#addCallQueueManagers .cq-select').forEach(select => {
                     if (select.value) callQueueManagers.push(select.value);
                 });
                 
-                console.log('Form data being submitted:', {
-                    username,
-                    phoneNumber,
-                    a5Licensed,
-                    internationalCalling,
-                    callQueueGroups,
-                    autoAttendants,
-                    callQueueManagers
-                });
-                
-                // Disable button during submission
                 const submitBtn = document.getElementById('addUserSubmit');
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Processing...';
                 
-                // Make API call to submit the user data
                 const response = await fetch(`${API_CONFIG.functionUrl}?code=${API_CONFIG.functionKey}`, {
                     method: 'POST',
                     headers: {
@@ -869,57 +757,35 @@
                     })
                 });
 
-                console.log('Response status:', response.status);
-                console.log('Response ok:', response.ok);
-
-                const responseText = await response.text();
-                console.log('Raw response text:', responseText);
-
                 if (!response.ok) {
-                    let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-                    try {
-                        const errorData = JSON.parse(responseText);
-                        if (errorData.error) {
-                            errorMessage += ` - ${errorData.error}`;
-                        }
-                    } catch (parseError) {
-                        errorMessage += ` - ${responseText}`;
-                    }
-                    throw new Error(errorMessage);
+                    const errorData = await response.json().catch(() => null);
+                    throw new Error(errorData?.error || `HTTP ${response.status}: ${response.statusText}`);
                 }
 
-                const result = JSON.parse(responseText);
-                console.log('Parsed result:', result);
-                
-                // Format phone number for display
+                const result = await response.json();
                 const formattedPhone = formatPhoneNumber(phoneNumber);
                 
-                // Show success message with Start New button
                 const successHTML = `
                     <div style="font-weight: bold; font-size: 18px; margin-bottom: 10px;">${username}</div>
                     <div style="font-weight: bold; font-size: 18px; margin-bottom: 10px;">${formattedPhone}</div>
                     <div style="font-weight: bold; margin-bottom: 15px;">***provisioning complete***</div>
-                    <button type="button" class="btn btn-secondary" onclick="startNewAdd()" style="margin-top: 10px;">Reset Form</button>
+                    <button type="button" class="btn btn-secondary" onclick="startNewAdd()" style="margin-top: 10px;">Start New User</button>
                 `;
                 showMessage('addUserMessages', successHTML, 'success');
                 
-                // Remove the number from available list and refresh dropdowns
                 availableNumbers = availableNumbers.filter(item => 
                     item.AvailablePhoneNumber !== phoneNumber
                 );
                 populatePhoneDropdowns();
-                
-                // Hide the submit button
                 submitBtn.style.display = 'none';
                 
             } catch (error) {
                 console.error('Error submitting user:', error);
                 showMessage('addUserMessages', `Failed to add user: ${error.message}`, 'error');
                 
-                // Re-enable button
                 const submitBtn = document.getElementById('addUserSubmit');
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Add Phone User';
+                submitBtn.textContent = 'Activate Phone User';
             }
         }
 
@@ -927,12 +793,10 @@
             try {
                 const username = document.getElementById('deprovisionUsername').value;
                 
-                // Disable button during submission
                 const submitBtn = document.getElementById('deprovisionUserSubmit');
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Processing...';
                 
-                // Make API call to deprovision the user
                 const response = await fetch(`${API_CONFIG.functionUrl}?code=${API_CONFIG.functionKey}`, {
                     method: 'POST',
                     headers: {
@@ -950,15 +814,13 @@
 
                 const result = await response.json();
                 
-                // Show success message with Start New button
                 const successHTML = `
                     <div style="font-weight: bold; font-size: 18px; margin-bottom: 10px;">${username}</div>
                     <div style="font-weight: bold; margin-bottom: 15px;">***deprovisioning complete***</div>
-                    <button type="button" class="btn btn-secondary" onclick="startNewDeprovision()" style="margin-top: 10px;">Reset Form</button>
+                    <button type="button" class="btn btn-secondary" onclick="startNewDeprovision()" style="margin-top: 10px;">Start New Deprovisioning</button>
                 `;
                 showMessage('deprovisionUserMessages', successHTML, 'success');
                 
-                // Hide user info and submit button
                 document.getElementById('deprovisionUserInfo').style.display = 'none';
                 submitBtn.style.display = 'none';
                 
@@ -966,7 +828,6 @@
                 console.error('Error deprovisioning user:', error);
                 showMessage('deprovisionUserMessages', `Failed to deprovision user: ${error.message}`, 'error');
                 
-                // Re-enable button
                 const submitBtn = document.getElementById('deprovisionUserSubmit');
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Deprovision User';
@@ -981,10 +842,7 @@
                 return;
             }
             
-            // Clear any previous messages
             showMessage('modifyUserMessages', '', '');
-            
-            // Call API to lookup user
             lookupUserData(username, 'modify');
         }
 
@@ -992,59 +850,81 @@
             const settingsDiv = document.getElementById('currentSettings');
             const formattedPhone = formatPhoneNumber(currentUser.phoneNumber);
             
+            const callQueueGroups = Array.isArray(currentUser.callQueueGroups) ? currentUser.callQueueGroups : [];
+            const autoAttendants = Array.isArray(currentUser.autoAttendants) ? currentUser.autoAttendants : [];
+            const callQueueManagers = Array.isArray(currentUser.callQueueManagers) ? currentUser.callQueueManagers : [];
+            
             settingsDiv.innerHTML = `
                 <div class="current-setting"><strong>Phone Number:</strong> ${formattedPhone}</div>
                 <div class="current-setting"><strong>International Calling:</strong> ${currentUser.internationalCalling ? 'Yes' : 'No'}</div>
-                <div class="current-setting"><strong>Call Queue Groups:</strong> ${currentUser.callQueueGroups.join(', ')}</div>
-                <div class="current-setting"><strong>Auto Attendants Manager:</strong> ${currentUser.autoAttendants.join(', ')}</div>
-                <div class="current-setting"><strong>Call Queue Manager:</strong> ${currentUser.callQueueManagers.join(', ')}</div>
+                <div class="current-setting"><strong>Call Queue Groups:</strong> ${callQueueGroups.length > 0 ? callQueueGroups.join(', ') : 'None'}</div>
+                <div class="current-setting"><strong>Auto Attendants Manager:</strong> ${autoAttendants.length > 0 ? autoAttendants.join(', ') : 'None'}</div>
+                <div class="current-setting"><strong>Call Queue Manager:</strong> ${callQueueManagers.length > 0 ? callQueueManagers.join(', ') : 'None'}</div>
             `;
             
-            // Display current memberships with remove buttons
-            displayCurrentMemberships();
+            currentUser.callQueueGroups = callQueueGroups;
+            currentUser.autoAttendants = autoAttendants;
+            currentUser.callQueueManagers = callQueueManagers;
             
+            displayCurrentMemberships();
             document.getElementById('currentUserInfo').style.display = 'block';
         }
 
         function displayCurrentMemberships() {
+            if (!Array.isArray(currentUser.callQueueGroups)) currentUser.callQueueGroups = [];
+            if (!Array.isArray(currentUser.autoAttendants)) currentUser.autoAttendants = [];
+            if (!Array.isArray(currentUser.callQueueManagers)) currentUser.callQueueManagers = [];
+
             // Display current call queue groups
             const callQueueGroupsList = document.getElementById('currentCallQueueGroupsList');
             callQueueGroupsList.innerHTML = '';
-            currentUser.callQueueGroups.forEach(group => {
-                const item = document.createElement('div');
-                item.className = 'current-setting';
-                item.innerHTML = `
-                    <span>${group}</span>
-                    <button type="button" class="btn btn-danger btn-small" onclick="removeCurrentMembership('callQueueGroups', '${group}')">Remove</button>
-                `;
-                callQueueGroupsList.appendChild(item);
-            });
+            if (currentUser.callQueueGroups.length === 0) {
+                callQueueGroupsList.innerHTML = '<div class="current-setting"><em>No current memberships</em></div>';
+            } else {
+                currentUser.callQueueGroups.forEach(group => {
+                    const item = document.createElement('div');
+                    item.className = 'current-setting';
+                    item.innerHTML = `
+                        <span>${group}</span>
+                        <button type="button" class="btn btn-danger btn-small" onclick="removeCurrentMembership('callQueueGroups', '${group}')">Remove</button>
+                    `;
+                    callQueueGroupsList.appendChild(item);
+                });
+            }
 
             // Display current auto attendants
             const autoAttendantsList = document.getElementById('currentAutoAttendantsList');
             autoAttendantsList.innerHTML = '';
-            currentUser.autoAttendants.forEach(attendant => {
-                const item = document.createElement('div');
-                item.className = 'current-setting';
-                item.innerHTML = `
-                    <span>${attendant}</span>
-                    <button type="button" class="btn btn-danger btn-small" onclick="removeCurrentMembership('autoAttendants', '${attendant}')">Remove</button>
-                `;
-                autoAttendantsList.appendChild(item);
-            });
+            if (currentUser.autoAttendants.length === 0) {
+                autoAttendantsList.innerHTML = '<div class="current-setting"><em>No current roles</em></div>';
+            } else {
+                currentUser.autoAttendants.forEach(attendant => {
+                    const item = document.createElement('div');
+                    item.className = 'current-setting';
+                    item.innerHTML = `
+                        <span>${attendant}</span>
+                        <button type="button" class="btn btn-danger btn-small" onclick="removeCurrentMembership('autoAttendants', '${attendant}')">Remove</button>
+                    `;
+                    autoAttendantsList.appendChild(item);
+                });
+            }
 
             // Display current call queue managers
             const callQueueManagersList = document.getElementById('currentCallQueueManagersList');
             callQueueManagersList.innerHTML = '';
-            currentUser.callQueueManagers.forEach(queue => {
-                const item = document.createElement('div');
-                item.className = 'current-setting';
-                item.innerHTML = `
-                    <span>${queue}</span>
-                    <button type="button" class="btn btn-danger btn-small" onclick="removeCurrentMembership('callQueueManagers', '${queue}')">Remove</button>
-                `;
-                callQueueManagersList.appendChild(item);
-            });
+            if (currentUser.callQueueManagers.length === 0) {
+                callQueueManagersList.innerHTML = '<div class="current-setting"><em>No current roles</em></div>';
+            } else {
+                currentUser.callQueueManagers.forEach(queue => {
+                    const item = document.createElement('div');
+                    item.className = 'current-setting';
+                    item.innerHTML = `
+                        <span>${queue}</span>
+                        <button type="button" class="btn btn-danger btn-small" onclick="removeCurrentMembership('callQueueManagers', '${queue}')">Remove</button>
+                    `;
+                    callQueueManagersList.appendChild(item);
+                });
+            }
         }
 
         function showModifyFields() {
@@ -1054,7 +934,6 @@
             });
             document.getElementById('modifyUserSubmit').style.display = 'block';
             
-            // Set current values
             document.getElementById('modifyIntlYes').checked = currentUser.internationalCalling;
             document.getElementById('modifyIntlNo').checked = !currentUser.internationalCalling;
         }
@@ -1065,7 +944,6 @@
             document.getElementById('addIntlNo').checked = true;
             document.getElementById('a5LicenseConfirm').checked = false;
             
-            // Reset the fields container to disabled state
             const fieldsContainer = document.getElementById('addUserFields');
             fieldsContainer.style.opacity = '0.5';
             fieldsContainer.style.pointerEvents = 'none';
@@ -1103,7 +981,6 @@
             `;
             container.appendChild(newItem);
             
-            // Populate the new dropdown with current data
             if (dropdownData && dropdownData.callQueueGroups) {
                 const select = newItem.querySelector('.cq-group-select');
                 dropdownData.callQueueGroups.forEach(group => {
@@ -1127,7 +1004,6 @@
             `;
             container.appendChild(newItem);
             
-            // Populate the new dropdown with current data
             if (dropdownData && dropdownData.autoAttendants) {
                 const select = newItem.querySelector('.aa-select');
                 dropdownData.autoAttendants.forEach(attendant => {
@@ -1151,7 +1027,6 @@
             `;
             container.appendChild(newItem);
             
-            // Populate the new dropdown with current data
             if (dropdownData && dropdownData.callQueues) {
                 const select = newItem.querySelector('.cq-select');
                 dropdownData.callQueues.forEach(queue => {
@@ -1173,35 +1048,14 @@
                 const phoneNumber = document.getElementById('modifyPhoneNumber').value;
                 const internationalCalling = document.getElementById('modifyIntlYes').checked;
                 
-                // Collect new Call Queue Groups (from add sections, not current ones)
-                const callQueueGroups = [];
-                document.querySelectorAll('#modifyCallQueueGroupsGroup .cq-group-select').forEach(select => {
-                    if (select.value) callQueueGroups.push(select.value);
-                });
+                const finalCallQueueGroups = currentUser.callQueueGroups || [];
+                const finalAutoAttendants = currentUser.autoAttendants || [];
+                const finalCallQueueManagers = currentUser.callQueueManagers || [];
                 
-                // Collect new Auto Attendants (from add sections, not current ones)
-                const autoAttendants = [];
-                document.querySelectorAll('#modifyAutoAttendantsGroup .aa-select').forEach(select => {
-                    if (select.value) autoAttendants.push(select.value);
-                });
-                
-                // Collect new Call Queue Managers (from add sections, not current ones)
-                const callQueueManagers = [];
-                document.querySelectorAll('#modifyCallQueueManagersGroup .cq-select').forEach(select => {
-                    if (select.value) callQueueManagers.push(select.value);
-                });
-                
-                // Merge with existing data that hasn't been removed
-                const finalCallQueueGroups = [...currentUser.callQueueGroups, ...callQueueGroups];
-                const finalAutoAttendants = [...currentUser.autoAttendants, ...autoAttendants];
-                const finalCallQueueManagers = [...currentUser.callQueueManagers, ...callQueueManagers];
-                
-                // Disable button during submission
                 const submitBtn = document.getElementById('modifyUserSubmit');
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Processing...';
                 
-                // Make API call to modify the user
                 const response = await fetch(`${API_CONFIG.functionUrl}?code=${API_CONFIG.functionKey}`, {
                     method: 'POST',
                     headers: {
@@ -1224,15 +1078,13 @@
 
                 const result = await response.json();
                 
-                // Show success message with Start New button
                 const successHTML = `
                     <div style="font-weight: bold; font-size: 18px; margin-bottom: 10px;">${username}</div>
                     <div style="font-weight: bold; margin-bottom: 15px;">***modification complete***</div>
-                    <button type="button" class="btn btn-secondary" onclick="startNewModify()" style="margin-top: 10px;">Reset Form</button>
+                    <button type="button" class="btn btn-secondary" onclick="startNewModify()" style="margin-top: 10px;">Start New Modification</button>
                 `;
                 showMessage('modifyUserMessages', successHTML, 'success');
                 
-                // Hide modify sections and button
                 const fieldsToHide = ['modifyPhoneGroup', 'modifyIntlGroup', 'modifyCallQueueGroupsGroup', 'modifyAutoAttendantsGroup', 'modifyCallQueueManagersGroup'];
                 fieldsToHide.forEach(id => {
                     document.getElementById(id).style.display = 'none';
@@ -1244,7 +1096,6 @@
                 console.error('Error modifying user:', error);
                 showMessage('modifyUserMessages', `Failed to modify user: ${error.message}`, 'error');
                 
-                // Re-enable button
                 const submitBtn = document.getElementById('modifyUserSubmit');
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Modify Phone User';
@@ -1254,139 +1105,119 @@
         function addCallQueueGroupMembership() {
             const select = document.getElementById('newCallQueueGroupSelect');
             const selectedValue = select.value;
-            const selectedText = select.options[select.selectedIndex].text;
             
             if (!selectedValue) {
-                alert('Please select a Call Queue Group to add.');
+                alert('Please select a Call Queue Group first');
                 return;
             }
             
-            // Check if already added
-            if (currentUser.callQueueGroups.includes(selectedValue)) {
-                alert('This Call Queue Group membership is already assigned to the user.');
+            if (!currentUser) return;
+            
+            let currentRoles = currentUser.callQueueGroups ? currentUser.callQueueGroups : [];
+            
+            if (currentRoles.includes(selectedValue)) {
+                alert('This Call Queue Group membership is already assigned');
                 return;
             }
             
-            // Add to current user data
-            currentUser.callQueueGroups.push(selectedValue);
+            currentRoles.push(selectedValue);
+            currentUser.callQueueGroups = currentRoles;
             
-            // Refresh the display
-            displayCurrentMemberships();
-            
-            // Reset the dropdown
             select.value = '';
+            displayCurrentMemberships();
         }
 
         function addAutoAttendantRole() {
             const select = document.getElementById('newAutoAttendantSelect');
             const selectedValue = select.value;
-            const selectedText = select.options[select.selectedIndex].text;
             
             if (!selectedValue) {
-                alert('Please select an Auto Attendant to add.');
+                alert('Please select an Auto Attendant first');
                 return;
             }
             
-            // Check if already added
-            if (currentUser.autoAttendants.includes(selectedValue)) {
-                alert('This Auto Attendant role is already assigned to the user.');
+            if (!currentUser) return;
+            
+            let currentRoles = currentUser.autoAttendants ? currentUser.autoAttendants : [];
+            
+            if (currentRoles.includes(selectedValue)) {
+                alert('This Auto Attendant role is already assigned');
                 return;
             }
             
-            // Add to current user data
-            currentUser.autoAttendants.push(selectedValue);
+            currentRoles.push(selectedValue);
+            currentUser.autoAttendants = currentRoles;
             
-            // Refresh the display
-            displayCurrentMemberships();
-            
-            // Reset the dropdown
             select.value = '';
+            displayCurrentMemberships();
         }
 
         function addCallQueueRole() {
             const select = document.getElementById('newCallQueueSelect');
             const selectedValue = select.value;
-            const selectedText = select.options[select.selectedIndex].text;
             
             if (!selectedValue) {
-                alert('Please select a Call Queue to add.');
+                alert('Please select a Call Queue first');
                 return;
             }
             
-            // Check if already added
-            if (currentUser.callQueueManagers.includes(selectedValue)) {
-                alert('This Call Queue role is already assigned to the user.');
+            if (!currentUser) return;
+            
+            let currentRoles = currentUser.callQueueManagers ? currentUser.callQueueManagers : [];
+            
+            if (currentRoles.includes(selectedValue)) {
+                alert('This Call Queue role is already assigned');
                 return;
             }
             
-            // Add to current user data
-            currentUser.callQueueManagers.push(selectedValue);
+            currentRoles.push(selectedValue);
+            currentUser.callQueueManagers = currentRoles;
             
-            // Refresh the display
-            displayCurrentMemberships();
-            
-            // Reset the dropdown
             select.value = '';
+            displayCurrentMemberships();
+        }
+
+        function removeCurrentMembership(type, item) {
+            const index = currentUser[type].indexOf(item);
+            if (index > -1) {
+                currentUser[type].splice(index, 1);
+            }
+            displayCurrentMemberships();
         }
 
         function startNewAdd() {
-            // Clear messages
             showMessage('addUserMessages', '', '');
-            
-            // Reset form
             resetAddForm();
             
-            // Show submit button again
             const submitBtn = document.getElementById('addUserSubmit');
             submitBtn.style.display = 'block';
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Add Phone User';
+            submitBtn.textContent = 'Activate Phone User';
         }
 
         function startNewModify() {
-            // Clear messages
             showMessage('modifyUserMessages', '', '');
             
-            // Reset form
             document.getElementById('modifyUsername').value = '';
             document.getElementById('modifyPhoneNumber').value = '';
             document.getElementById('modifyIntlNo').checked = true;
             
-            // Hide all modify sections
             const fieldsToHide = ['modifyPhoneGroup', 'modifyIntlGroup', 'modifyCallQueueGroupsGroup', 'modifyAutoAttendantsGroup', 'modifyCallQueueManagersGroup'];
             fieldsToHide.forEach(id => {
                 document.getElementById(id).style.display = 'none';
             });
             
-            // Hide user info and submit button
             document.getElementById('currentUserInfo').style.display = 'none';
             document.getElementById('modifyUserSubmit').style.display = 'none';
             
-            // Reset current user
             currentUser = null;
         }
 
         function startNewDeprovision() {
-            // Clear messages
             showMessage('deprovisionUserMessages', '', '');
-            
-            // Reset form
             document.getElementById('deprovisionUsername').value = '';
-            
-            // Hide user info and submit button
             document.getElementById('deprovisionUserInfo').style.display = 'none';
             document.getElementById('deprovisionUserSubmit').style.display = 'none';
-        }
-
-        function removeCurrentMembership(type, item) {
-            // Remove from current user data
-            const index = currentUser[type].indexOf(item);
-            if (index > -1) {
-                currentUser[type].splice(index, 1);
-            }
-            
-            // Refresh the display
-            displayCurrentMemberships();
         }
     </script>
 </body>
