@@ -355,14 +355,10 @@
     }
 
     function populateDropdowns() {
-      if (!dropdownData) return; // Don't populate if data isn't loaded yet
-      
       // Users
       const uSel = document.getElementById('addUsername');
-      if (uSel) {
-        uSel.innerHTML = '<option value="">Select a user…</option>';
-        (dropdownData.a5Users||[]).forEach(u=>uSel.appendChild(new Option(u,u)));
-      }
+      uSel.innerHTML = '<option value="">Select a user…</option>';
+      (dropdownData.a5Users||[]).forEach(u=>uSel.appendChild(new Option(u,u)));
 
       // Call‑Queue Groups
       document.querySelectorAll('.cq-group-select').forEach(sel=>{
@@ -370,7 +366,7 @@
         (dropdownData.callQueueGroups||[]).forEach(g=>sel.appendChild(new Option(g,g)));
       });
 
-      // Auto‑Attendants  
+      // Auto‑Attendants
       document.querySelectorAll('.aa-select').forEach(sel=>{
         sel.innerHTML = '<option value="">Select Auto Attendant…</option>';
         (dropdownData.autoAttendants||[]).forEach(a=>sel.appendChild(new Option(a,a)));
@@ -381,25 +377,6 @@
         sel.innerHTML = '<option value="">Select Call Queue…</option>';
         (dropdownData.callQueues||[]).forEach(q=>sel.appendChild(new Option(q,q)));
       });
-
-      // Modify section dropdowns
-      const newCQGroupSel = document.getElementById('newCallQueueGroupSelect');
-      if (newCQGroupSel) {
-        newCQGroupSel.innerHTML = '<option value="">Select to add…</option>';
-        (dropdownData.callQueueGroups||[]).forEach(g=>newCQGroupSel.appendChild(new Option(g,g)));
-      }
-
-      const newAASel = document.getElementById('newAutoAttendantSelect'); 
-      if (newAASel) {
-        newAASel.innerHTML = '<option value="">Select to add…</option>';
-        (dropdownData.autoAttendants||[]).forEach(a=>newAASel.appendChild(new Option(a,a)));
-      }
-
-      const newCQSel = document.getElementById('newCallQueueSelect');
-      if (newCQSel) {
-        newCQSel.innerHTML = '<option value="">Select to add…</option>';
-        (dropdownData.callQueues||[]).forEach(q=>newCQSel.appendChild(new Option(q,q)));
-      }
     }
 
     function populatePhoneDropdowns() {
@@ -648,7 +625,7 @@
       document.getElementById('addCallQueueGroups').innerHTML = `
         <div class="dynamic-item">
           <select class="form-control cq-group-select">
-            <option value="">Loading Call Queue Groups…</option>
+            <option value="">Select Call Queue Group…</option>
           </select>
           <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
         </div>`;
@@ -656,7 +633,7 @@
       document.getElementById('addAutoAttendants').innerHTML = `
         <div class="dynamic-item">
           <select class="form-control aa-select">
-            <option value="">Loading Auto Attendants…</option>
+            <option value="">Select Auto Attendant…</option>
           </select>
           <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
         </div>`;
@@ -664,16 +641,13 @@
       document.getElementById('addCallQueueManagers').innerHTML = `
         <div class="dynamic-item">
           <select class="form-control cq-select">
-            <option value="">Loading Call Queues…</option>
+            <option value="">Select Call Queue…</option>
           </select>
           <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
         </div>`;
       
-      // Repopulate all dropdowns after clearing
-      setTimeout(() => {
-        populateDropdowns();
-        validateAddForm();
-      }, 100);
+      populateDropdowns();
+      validateAddForm();
     }
 
     function clearModifyForm(){
@@ -779,18 +753,10 @@
       div.className='dynamic-item';
       div.innerHTML=`
         <select class="form-control cq-group-select">
-          <option value="">Loading Call Queue Groups…</option>
+          <option value="">Select Call Queue Group…</option>
         </select>
         <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>`;
-      c.appendChild(div);
-      // Populate the new dropdown
-      setTimeout(() => {
-        const newSelect = div.querySelector('.cq-group-select');
-        if (newSelect && dropdownData) {
-          newSelect.innerHTML = '<option value="">Select Call Queue Group…</option>';
-          (dropdownData.callQueueGroups||[]).forEach(g=>newSelect.appendChild(new Option(g,g)));
-        }
-      }, 10);
+      c.appendChild(div);populateDropdowns();
     }
     function addAutoAttendant(){
       let c=document.getElementById('addAutoAttendants');
@@ -798,18 +764,10 @@
       div.className='dynamic-item';
       div.innerHTML=`
         <select class="form-control aa-select">
-          <option value="">Loading Auto Attendants…</option>
+          <option value="">Select Auto Attendant…</option>
         </select>
         <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>`;
-      c.appendChild(div);
-      // Populate the new dropdown
-      setTimeout(() => {
-        const newSelect = div.querySelector('.aa-select');
-        if (newSelect && dropdownData) {
-          newSelect.innerHTML = '<option value="">Select Auto Attendant…</option>';
-          (dropdownData.autoAttendants||[]).forEach(a=>newSelect.appendChild(new Option(a,a)));
-        }
-      }, 10);
+      c.appendChild(div);populateDropdowns();
     }
     function addCallQueueManager(){
       let c=document.getElementById('addCallQueueManagers');
@@ -817,18 +775,10 @@
       div.className='dynamic-item';
       div.innerHTML=`
         <select class="form-control cq-select">
-          <option value="">Loading Call Queues…</option>
+          <option value="">Select Call Queue…</option>
         </select>
         <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>`;
-      c.appendChild(div);
-      // Populate the new dropdown
-      setTimeout(() => {
-        const newSelect = div.querySelector('.cq-select');
-        if (newSelect && dropdownData) {
-          newSelect.innerHTML = '<option value="">Select Call Queue…</option>';
-          (dropdownData.callQueues||[]).forEach(q=>newSelect.appendChild(new Option(q,q)));
-        }
-      }, 10);
+      c.appendChild(div);populateDropdowns();
     }
 
     // Modify section dynamic functions (placeholder - can be enhanced)
