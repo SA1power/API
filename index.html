@@ -292,6 +292,9 @@
             <button id="clearAllBatch" class="btn btn-secondary" style="width:100%; margin-top:10px; display:none">
               Clear All
             </button>
+            <button id="resetPageBtn" class="btn btn-primary" style="width:100%; margin-top:10px; display:none">
+              Reset Page
+            </button>
           </div>
 
           <div id="batchResults" style="margin-top:15px;"></div>
@@ -334,6 +337,7 @@
       // NEW: BATCH OPERATIONS
       document.getElementById('submitAllBatch').onclick = submitAllOperations;
       document.getElementById('clearAllBatch').onclick = clearAllBatch;
+      document.getElementById('resetPageBtn').onclick = resetPage;
     });
 
     // UNCHANGED: Keep exact working dropdown logic
@@ -533,6 +537,30 @@
         batchOperations = [];
         updateBatchTable();
         document.getElementById('batchResults').innerHTML = '';
+        document.getElementById('resetPageBtn').style.display = 'none';
+      }
+    }
+
+    function resetPage(){
+      if(confirm('Are you sure you want to reset the entire page? This will clear all forms and results.')){
+        // Clear all batch operations and results
+        batchOperations = [];
+        updateBatchTable();
+        document.getElementById('batchResults').innerHTML = '';
+        document.getElementById('resetPageBtn').style.display = 'none';
+        
+        // Reset all forms to initial state
+        clearAddForm();
+        clearModifyForm();
+        clearDeprovisionForm();
+        
+        // Clear all success messages
+        document.getElementById('addUserMessages').innerHTML = '';
+        document.getElementById('modifyUserMessages').innerHTML = '';
+        document.getElementById('deprovisionUserMessages').innerHTML = '';
+        
+        // Reload fresh data
+        loadPhoneNumbers();
       }
     }
 
@@ -613,6 +641,11 @@
       });
 
       resultsDiv.innerHTML = html;
+
+      // Show reset button if all operations were successful
+      if (errorCount === 0 && successCount > 0) {
+        document.getElementById('resetPageBtn').style.display = 'block';
+      }
     }
 
     // NEW: Form clearing functions
