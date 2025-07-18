@@ -5,74 +5,71 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>MSOE Teams Phone User Provisioning</title>
   <style>
-    * { margin:0; padding:0; box‑sizing:border‑box; }
+    * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:Arial,sans-serif; background:#f5f5f5; padding:20px; }
     .container { max-width:1400px; margin:0 auto; }
     .columns { display:flex; gap:20px; flex-wrap:wrap; margin-bottom:20px; }
     .column {
-      flex:1;
-      background:#e8e8e8;
-      border:2px solid #999;
-      border-radius:4px;
-      padding:20px;
-      display:flex;
-      flex-direction:column;
-      min-width:280px;
+      flex:1; background:#e8e8e8; border:2px solid #999;
+      border-radius:4px; padding:20px; display:flex;
+      flex-direction:column; min-width:300px;
     }
     .column-header {
-      background:#d0d0d0;
-      margin:-20px -20px 20px -20px;
-      padding:10px 20px;
-      font-weight:bold;
-      font-size:16px;
+      background:#d0d0d0; margin:-20px -20px 20px -20px;
+      padding:10px 20px; font-weight:bold; font-size:16px;
       border-bottom:1px solid #999;
     }
     .form-group { margin-bottom:15px; }
     .form-group label {
-      display:block;
-      margin-bottom:5px;
-      font-weight:bold;
-      color:#333;
+      display:block; margin-bottom:5px; font-weight:bold; color:#333;
     }
     .form-control {
-      width:100%;
-      padding:8px 12px;
-      border:1px solid #999;
-      border-radius:4px;
-      background:#fff;
-      font-size:14px;
-      color:#333;
+      width:100%; padding:8px 12px; border:1px solid #999;
+      border-radius:4px; background:#fff; font-size:14px; color:#333;
     }
     .form-control:focus {
-      outline:none;
-      border-color:#c41e3a;
+      outline:none; border-color:#c41e3a;
       box-shadow:0 0 5px rgba(196,30,58,0.3);
     }
     .radio-group { display:flex; gap:15px; margin-top:5px; }
     .radio-group label { font-weight:normal; }
     .btn {
-      padding:8px 15px;
-      border:none;
-      border-radius:4px;
-      cursor:pointer;
-      font-size:14px;
-      margin-top:auto;
+      padding:8px 15px; border:none; border-radius:4px;
+      cursor:pointer; font-size:14px; margin-top:auto;
     }
-    .btn-primary {
-      background:#c41e3a; color:#fff;
+    .btn-primary { background:#c41e3a; color:#fff; }
+    .btn-primary:disabled { background:#ccc; cursor:not-allowed; }
+    .btn-secondary { background:#0066cc; color:#fff; }
+    .btn-secondary:hover { background:#0052a3; }
+    .btn-danger { background:#dc3545; color:#fff; }
+    .btn-danger:hover { background:#c82333; }
+    .btn-small { padding:4px 8px; font-size:12px; }
+    .submit-button { margin-top:auto; font-weight:bold; }
+    .dynamic-section {
+      border:1px solid #ccc; border-radius:4px;
+      padding:10px; background:#f9f9f9; margin-bottom:10px;
     }
-    .btn-primary:disabled {
-      background:#ccc; cursor:not-allowed;
+    .dynamic-item {
+      display:flex; justify-content:space-between;
+      align-items:center; margin:5px 0; padding:5px;
+      background:#fff; border-radius:3px;
+    }
+    .user-info {
+      background:#e3f2fd; border:1px solid #2196f3;
+      border-radius:4px; padding:10px; margin-bottom:15px;
+    }
+    .user-info h4 { margin-bottom:10px; color:#1976d2; }
+    .current-setting {
+      display:flex; justify-content:space-between;
+      padding:5px; background:#fff; border-radius:3px;
+      margin:3px 0;
     }
     .success {
-      padding:10px;
-      background:#e6ffe6;
-      border:1px solid #006600;
-      color:#006600;
-      border-radius:4px;
+      padding:10px; background:#e6ffe6; color:#006600;
+      border:1px solid #006600; border-radius:4px;
       margin-bottom:15px;
     }
-    @media (max-width:800px) {
+    @media(max-width:800px) {
       .columns { flex-direction:column; }
     }
   </style>
@@ -107,9 +104,46 @@
           </div>
         </div>
 
-        <!-- …any other form groups you had here… -->
+        <div class="form-group">
+          <label>Teams Call Queue Group Membership(s):</label>
+          <div id="addCallQueueGroups" class="dynamic-section">
+            <div class="dynamic-item">
+              <select class="form-control cq-group-select">
+                <option value="">Loading Call Queue Groups…</option>
+              </select>
+              <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+            </div>
+          </div>
+          <button class="btn btn-secondary btn-small" onclick="addCallQueueGroup()">Add Another Group</button>
+        </div>
 
-        <button id="addUserSubmit" class="btn btn-primary" disabled>
+        <div class="form-group">
+          <label>Teams Auto Attendant Authorized User (Manager):</label>
+          <div id="addAutoAttendants" class="dynamic-section">
+            <div class="dynamic-item">
+              <select class="form-control aa-select">
+                <option value="">Loading Auto Attendants…</option>
+              </select>
+              <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+            </div>
+          </div>
+          <button class="btn btn-secondary btn-small" onclick="addAutoAttendant()">Add Another AA</button>
+        </div>
+
+        <div class="form-group">
+          <label>Teams Call Queue Authorized User (Manager):</label>
+          <div id="addCallQueueManagers" class="dynamic-section">
+            <div class="dynamic-item">
+              <select class="form-control cq-select">
+                <option value="">Loading Call Queues…</option>
+              </select>
+              <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+            </div>
+          </div>
+          <button class="btn btn-secondary btn-small" onclick="addCallQueueManager()">Add Another CQ</button>
+        </div>
+
+        <button id="addUserSubmit" class="btn btn-primary submit-button" disabled>
           Activate Phone User
         </button>
       </div>
@@ -117,78 +151,190 @@
       <!-- Column 2: Modify a Teams Phone User -->
       <div class="column">
         <div class="column-header">Modify a Teams Phone User</div>
-        <!-- your existing Modify form markup goes here unchanged -->
+        <div id="modifyUserMessages"></div>
+
+        <div class="form-group">
+          <label for="modifyUsername">Username:</label>
+          <input type="text" id="modifyUsername" class="form-control"
+                 placeholder="Enter MSOE email to lookup user"/>
+          <button class="btn btn-secondary" style="margin-top:10px"
+                  onclick="lookupUser()">Lookup User</button>
+        </div>
+
+        <div id="currentUserInfo" class="user-info" style="display:none">
+          <h4>Current User Settings:</h4>
+          <div id="currentSettings"></div>
+        </div>
+
+        <div id="modifyPhoneGroup" class="form-group" style="display:none">
+          <label>Change Phone Number:</label>
+          <select id="modifyPhoneNumber" class="form-control">
+            <option value="">Select new phone number…</option>
+          </select>
+        </div>
+
+        <div id="modifyIntlGroup" class="form-group" style="display:none">
+          <label>International Calling:</label>
+          <div class="radio-group">
+            <label><input type="radio" id="modifyIntlYes" name="modifyIntlCalling" value="yes"> Yes</label>
+            <label><input type="radio" id="modifyIntlNo"  name="modifyIntlCalling" value="no"> No</label>
+          </div>
+        </div>
+
+        <div id="modifyCallQueueGroupsGroup" class="form-group" style="display:none">
+          <label>Teams Call Queue Group Membership(s):</label>
+          <div id="currentCallQueueGroups">
+            <h5 style="color:#1976d2">Current Group Memberships:</h5>
+            <div id="currentCallQueueGroupsList"></div>
+          </div>
+          <div class="dynamic-section">
+            <div class="dynamic-item">
+              <select id="newCallQueueGroupSelect" class="form-control cq-group-select">
+                <option value="">Select to add…</option>
+              </select>
+              <button class="btn btn-secondary btn-small" onclick="addCallQueueGroupMembership()">Add</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="modifyAutoAttendantsGroup" class="form-group" style="display:none">
+          <label>Add Auto Attendant Manager:</label>
+          <div id="currentAutoAttendants">
+            <h5 style="color:#1976d2">Current Auto Attendants:</h5>
+            <div id="currentAutoAttendantsList"></div>
+          </div>
+          <div class="dynamic-section">
+            <div class="dynamic-item">
+              <select id="newAutoAttendantSelect" class="form-control aa-select">
+                <option value="">Select to add…</option>
+              </select>
+              <button class="btn btn-secondary btn-small" onclick="addAutoAttendantRole()">Add</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="modifyCallQueueManagersGroup" class="form-group" style="display:none">
+          <label>Add Call Queue Manager:</label>
+          <div id="currentCallQueueManagers">
+            <h5 style="color:#1976d2">Current CQ Managers:</h5>
+            <div id="currentCallQueueManagersList"></div>
+          </div>
+          <div class="dynamic-section">
+            <div class="dynamic-item">
+              <select id="newCallQueueSelect" class="form-control cq-select">
+                <option value="">Select to add…</option>
+              </select>
+              <button class="btn btn-secondary btn-small" onclick="addCallQueueRole()">Add</button>
+            </div>
+          </div>
+        </div>
+
+        <button id="modifyUserSubmit" class="btn btn-primary submit-button"
+                style="display:none">Modify Phone User</button>
       </div>
 
       <!-- Column 3: Deprovision a Teams Phone User -->
       <div class="column">
         <div class="column-header">Deprovision a Teams Phone User</div>
-        <!-- your existing Deprovision form markup goes here unchanged -->
+        <div id="deprovisionUserMessages"></div>
+
+        <div class="form-group">
+          <label for="deprovisionUsername">Username:</label>
+          <input type="text" id="deprovisionUsername" class="form-control"
+                 placeholder="Enter MSOE email"/>
+          <button class="btn btn-secondary" style="margin-top:10px"
+                  onclick="lookupDeprovisionUser()">Lookup User</button>
+        </div>
+
+        <div id="deprovisionUserInfo" class="user-info" style="display:none">
+          <h4>User to be Deprovisioned:</h4>
+          <div id="deprovisionSettings"></div>
+        </div>
+
+        <button id="deprovisionUserSubmit" class="btn btn-danger submit-button"
+                style="display:none">Deprovision User</button>
       </div>
     </div>
   </div>
 
   <script>
     const API = {
-      url: 'https://availablephonenumberapi.azurewebsites.net/api/GetAvailablePhoneNumbers',
-      key: 'EsQlM7c0jssk1pzk83F5IYFV6SkZm6AXto3KSbXSA4JlAzFuN7cgbw=='
+      url:  'https://availablephonenumberapi.azurewebsites.net/api/GetAvailablePhoneNumbers',
+      key:  'EsQlM7c0jssk1pzk83F5IYFV6SkZm6AXto3KSbXSA4JlAzFuN7cgbw=='
     };
 
-    let phoneNumbers = [], dropdownData = null;
+    let phoneNumbers = [], dropdownData = null, currentUser = null;
 
     document.addEventListener('DOMContentLoaded', () => {
       loadPhoneNumbers();
-      document.getElementById('addUsername')
-              .addEventListener('change', validateAddForm);
-      document.getElementById('addPhoneNumber')
-              .addEventListener('change', validateAddForm);
-      document.getElementById('addUserSubmit')
-              .addEventListener('click', submitAddUser);
+      document.getElementById('addUsername').addEventListener('change', validateAddForm);
+      document.getElementById('addPhoneNumber').addEventListener('change', validateAddForm);
+      document.getElementById('addUserSubmit').onclick = submitAddUser;
+      document.getElementById('modifyUserSubmit').onclick = submitModifyUser;
+      document.getElementById('deprovisionUserSubmit').onclick = submitDeprovisionUser;
     });
 
     async function loadPhoneNumbers() {
-      // GET phone numbers
-      const resp1 = await fetch(`${API.url}?code=${API.key}`);
-      if (!resp1.ok) return console.error('Phone-number fetch failed');
-      phoneNumbers = await resp1.json();
+      // GET available phone numbers
+      let resp = await fetch(`${API.url}?code=${API.key}`);
+      if (!resp.ok) return console.error('Phone fetch failed');
+      phoneNumbers = await resp.json();
       populatePhoneDropdowns();
 
       // POST dropdown data
-      const resp2 = await fetch(`${API.url}?code=${API.key}`, {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({action:'getdropdowndata'})
+      resp = await fetch(`${API.url}?code=${API.key}`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'getdropdowndata'})
       });
-      if (!resp2.ok) return console.error('Dropdown fetch failed');
-      dropdownData = await resp2.json();
+      if (!resp.ok) return console.error('Dropdown fetch failed');
+      dropdownData = await resp.json();
       populateDropdowns();
     }
 
     function populateDropdowns() {
-      // Populate "Select User"
-      const userSel = document.getElementById('addUsername');
-      userSel.innerHTML = '<option value="">Select a user…</option>';
-      (dropdownData.a5Users||[]).forEach(u => {
-        userSel.appendChild(new Option(u,u));
+      // Users
+      let sel = document.getElementById('addUsername');
+      sel.innerHTML = '<option value="">Select a user…</option>';
+      (dropdownData.a5Users||[]).forEach(u => sel.appendChild(new Option(u,u)));
+
+      // Call Queue Groups
+      document.querySelectorAll('.cq-group-select').forEach(s => {
+        s.innerHTML = '<option value="">Select Call Queue Group…</option>';
+        (dropdownData.callQueueGroups||[]).forEach(g => s.appendChild(new Option(g,g)));
       });
 
-      // …and similarly for callQueueGroups, autoAttendants, callQueues if needed…
+      // Auto Attendants
+      document.querySelectorAll('.aa-select').forEach(s => {
+        s.innerHTML = '<option value="">Select Auto Attendant…</option>';
+        (dropdownData.autoAttendants||[]).forEach(a => s.appendChild(new Option(a,a)));
+      });
+
+      // Call Queues
+      document.querySelectorAll('.cq-select').forEach(s => {
+        s.innerHTML = '<option value="">Select Call Queue…</option>';
+        (dropdownData.callQueues||[]).forEach(q => s.appendChild(new Option(q,q)));
+      });
     }
 
     function populatePhoneDropdowns() {
-      const phoneSel = document.getElementById('addPhoneNumber');
-      phoneSel.innerHTML = '<option value="">Select a phone number…</option>';
-      phoneNumbers
-        .filter(i => i.AvailablePhoneNumber.startsWith('1414277'))
-        .forEach(i => {
-          phoneSel.appendChild(new Option(i.AvailablePhoneNumber, i.AvailablePhoneNumber));
-        });
+      let sel = document.getElementById('addPhoneNumber');
+      sel.innerHTML = '<option value="">Select a phone number…</option>';
+      phoneNumbers.filter(i => i.AvailablePhoneNumber.startsWith('1414277'))
+        .forEach(i => sel.appendChild(new Option(i.AvailablePhoneNumber,i.AvailablePhoneNumber)));
+
+      sel = document.getElementById('modifyPhoneNumber');
+      if (sel) {
+        sel.innerHTML = '<option value="">Select a phone number…</option>';
+        phoneNumbers.filter(i => i.AvailablePhoneNumber.startsWith('1414277'))
+          .forEach(i => sel.appendChild(new Option(i.AvailablePhoneNumber,i.AvailablePhoneNumber)));
+      }
     }
 
     function validateAddForm() {
-      const u = !!document.getElementById('addUsername').value;
-      const p = !!document.getElementById('addPhoneNumber').value;
-      document.getElementById('addUserSubmit').disabled = !(u && p);
+      let u = !!document.getElementById('addUsername').value;
+      let p = !!document.getElementById('addPhoneNumber').value;
+      document.getElementById('addUserSubmit').disabled = !(u&&p);
     }
 
     async function submitAddUser() {
@@ -198,24 +344,28 @@
         phoneNumber: document.getElementById('addPhoneNumber').value,
         a5Licensed: true,
         internationalCalling: document.getElementById('addIntlYes').checked,
-        // …include any other arrays here…
+        callQueueGroups: Array.from(document.querySelectorAll('#addCallQueueGroups .cq-group-select'))
+                              .map(s=>s.value).filter(v=>v),
+        autoAttendants:  Array.from(document.querySelectorAll('#addAutoAttendants .aa-select'))
+                              .map(s=>s.value).filter(v=>v),
+        callQueueManagers:Array.from(document.querySelectorAll('#addCallQueueManagers .cq-select'))
+                              .map(s=>s.value).filter(v=>v)
       };
       const resp = await fetch(`${API.url}?code=${API.key}`, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify(body)
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
       });
       if (!resp.ok) {
-        const err = await resp.json();
+        let err = await resp.json();
         return document.getElementById('addUserMessages').innerText = err.error;
       }
-      const result = await resp.json();
+      let res = await resp.json();
       document.getElementById('addUserMessages').innerHTML =
-        `<div class="success">
-           User ${result.username} (${result.phoneNumber}) added!
-         </div>`;
+        `<div class="success">User ${res.username} (${res.phoneNumber}) added!</div>`;
       populatePhoneDropdowns();
     }
+
+    // … include your existing lookupUserData, display*, submitModifyUser, submitDeprovisionUser,
+    //     addCallQueueGroup, addAutoAttendant, addCallQueueManager, removeItem, etc. …
   </script>
 </body>
 </html>
