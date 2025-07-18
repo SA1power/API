@@ -337,7 +337,15 @@
       // NEW: BATCH OPERATIONS
       document.getElementById('submitAllBatch').onclick = submitAllOperations;
       document.getElementById('clearAllBatch').onclick = clearAllBatch;
-      document.getElementById('resetPageBtn').onclick = resetPage;
+      
+      // Add event listener for reset button
+      const resetBtn = document.getElementById('resetPageBtn');
+      if (resetBtn) {
+        resetBtn.onclick = resetPage;
+        console.log('Reset button event listener attached');
+      } else {
+        console.error('Reset button not found in DOM');
+      }
     });
 
     // UNCHANGED: Keep exact working dropdown logic
@@ -542,7 +550,10 @@
     }
 
     function resetPage(){
+      console.log('Reset page function called');
       if(confirm('Are you sure you want to reset the entire page? This will clear all forms and results.')){
+        console.log('User confirmed reset');
+        
         // Clear all batch operations and results
         batchOperations = [];
         updateBatchTable();
@@ -597,10 +608,14 @@
         
         // Reload fresh data (this should work in Teams iframe)
         setTimeout(() => {
+          console.log('Reloading phone numbers and dropdown data...');
           loadPhoneNumbers();
         }, 100);
         
-        console.log('Page reset completed - reloading data...');
+        console.log('Page reset completed');
+        alert('Page has been reset successfully!'); // Temporary feedback
+      } else {
+        console.log('User cancelled reset');
       }
     }
 
