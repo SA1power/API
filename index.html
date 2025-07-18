@@ -327,6 +327,116 @@
 
                 <button id="addUserSubmit" class="btn btn-primary submit-button" disabled>Activate Phone User</button>
             </div>
+
+            <!-- Column 2: Modify a Teams Phone User -->
+            <div class="column">
+                <div class="column-header">Modify a Teams Phone User</div>
+                
+                <div id="modifyUserMessages"></div>
+                
+                <div class="form-group">
+                    <label for="modifyUsername">Username:</label>
+                    <input type="text" id="modifyUsername" class="form-control" placeholder="Enter MSOE email to lookup user" />
+                    <button type="button" class="btn btn-secondary" onclick="lookupUser()" style="margin-top: 10px;">Lookup User</button>
+                </div>
+
+                <div id="currentUserInfo" class="user-info" style="display: none;">
+                    <h4>Current User Settings:</h4>
+                    <div id="currentSettings"></div>
+                </div>
+
+                <div class="form-group" style="display: none;" id="modifyPhoneGroup">
+                    <label>Change Phone Number:</label>
+                    <select id="modifyPhoneNumber" class="form-control">
+                        <option value="">Select new phone number...</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="display: none;" id="modifyIntlGroup">
+                    <label>International Calling:</label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="modifyIntlYes" name="modifyIntlCalling" value="yes">
+                            <label for="modifyIntlYes">Yes</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="modifyIntlNo" name="modifyIntlCalling" value="no">
+                            <label for="modifyIntlNo">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="display: none;" id="modifyCallQueueGroupsGroup">
+                    <label>Teams Call Queue Group Membership(s):</label>
+                    <div id="currentCallQueueGroups">
+                        <h5 style="margin: 10px 0 5px 0; color: #1976d2;">Current Group Memberships:</h5>
+                        <div id="currentCallQueueGroupsList"></div>
+                    </div>
+                    <div class="dynamic-section">
+                        <div class="dynamic-item">
+                            <select id="newCallQueueGroupSelect" class="form-control cq-group-select" style="width: 70%;">
+                                <option value="">Select Call Queue Group to Add...</option>
+                            </select>
+                            <button type="button" class="btn btn-secondary btn-small" onclick="addCallQueueGroupMembership()">Add</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="display: none;" id="modifyAutoAttendantsGroup">
+                    <label>Add user as Teams Auto Attendant Authorized User (Manager):</label>
+                    <div id="currentAutoAttendants">
+                        <h5 style="margin: 10px 0 5px 0; color: #1976d2;">Current Auto Attendant Authorized User Roles:</h5>
+                        <div id="currentAutoAttendantsList"></div>
+                    </div>
+                    <div class="dynamic-section">
+                        <div class="dynamic-item">
+                            <select id="newAutoAttendantSelect" class="form-control aa-select" style="width: 70%;">
+                                <option value="">Select Auto Attendant to Add...</option>
+                            </select>
+                            <button type="button" class="btn btn-secondary btn-small" onclick="addAutoAttendantRole()">Add</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="display: none;" id="modifyCallQueueManagersGroup">
+                    <label>Add user as Teams Call Queue Authorized User (Manager):</label>
+                    <div id="currentCallQueueManagers">
+                        <h5 style="margin: 10px 0 5px 0; color: #1976d2;">Current Call Queue Authorized User Roles:</h5>
+                        <div id="currentCallQueueManagersList"></div>
+                    </div>
+                    <div class="dynamic-section">
+                        <div class="dynamic-item">
+                            <select id="newCallQueueSelect" class="form-control cq-select" style="width: 70%;">
+                                <option value="">Select Call Queue to Add...</option>
+                            </select>
+                            <button type="button" class="btn btn-secondary btn-small" onclick="addCallQueueRole()">Add</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="modifyUserSubmit" class="btn btn-primary submit-button" style="display: none;">Modify Phone User</button>
+            </div>
+
+            <!-- Column 3: Deprovision a Teams Phone User -->
+            <div class="column">
+                <div class="column-header">Deprovision a Teams Phone User</div>
+                
+                <div id="deprovisionUserMessages"></div>
+                
+                <div class="form-group">
+                    <label for="deprovisionUsername">Username:</label>
+                    <input type="text" id="deprovisionUsername" class="form-control" placeholder="Enter MSOE email" />
+                    <button type="button" class="btn btn-secondary" onclick="lookupDeprovisionUser()" style="margin-top: 10px;">Lookup User</button>
+                </div>
+
+                <div id="deprovisionUserInfo" class="user-info" style="display: none;">
+                    <h4>User to be Deprovisioned:</h4>
+                    <div id="deprovisionSettings"></div>
+                </div>
+
+                <button id="deprovisionUserSubmit" class="btn btn-danger submit-button" style="display: none;">Deprovision User</button>
+            </div>
+        </div>
             </div>
 
             <!-- Column 2: Modify a Teams Phone User -->
@@ -497,6 +607,8 @@
 
         async function loadDropdownData() {
             try {
+                console.log('Loading dropdown data...');
+                
                 const response = await fetch(`${API_CONFIG.functionUrl}?code=${API_CONFIG.functionKey}`, {
                     method: 'POST',
                     headers: {
@@ -507,11 +619,22 @@
                     })
                 });
                 
+                console.log('Dropdown response status:', response.status);
+                
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 
                 dropdownData = await response.json();
+                console.log('Parsed dropdown data:', dropdownData);
+                
+                // Check if A5 users are in the response
+                if (dropdownData.a5Users) {
+                    console.log('A5 Users found:', dropdownData.a5Users.length);
+                } else {
+                    console.log('A5 Users NOT found in response');
+                }
+                
                 populateDropdowns();
                 
             } catch (error) {
@@ -521,18 +644,33 @@
         }
 
         function populateDropdowns() {
-            if (!dropdownData) return;
+            if (!dropdownData) {
+                console.log('No dropdown data available');
+                return;
+            }
+
+            console.log('Populating dropdowns with data:', dropdownData);
 
             // Populate A5 User dropdown
             const addUsernameSelect = document.getElementById('addUsername');
-            if (addUsernameSelect && dropdownData.a5Users) {
-                addUsernameSelect.innerHTML = '<option value="">Select a user...</option>';
-                dropdownData.a5Users.forEach(user => {
-                    const option = document.createElement('option');
-                    option.value = user;
-                    option.textContent = user;
-                    addUsernameSelect.appendChild(option);
-                });
+            if (addUsernameSelect) {
+                console.log('Found addUsername select element');
+                if (dropdownData.a5Users && Array.isArray(dropdownData.a5Users)) {
+                    console.log('Populating A5 users:', dropdownData.a5Users.length);
+                    addUsernameSelect.innerHTML = '<option value="">Select a user...</option>';
+                    dropdownData.a5Users.forEach(user => {
+                        const option = document.createElement('option');
+                        option.value = user;
+                        option.textContent = user;
+                        addUsernameSelect.appendChild(option);
+                    });
+                    console.log('A5 users populated successfully');
+                } else {
+                    console.log('A5 users data not found or not an array:', dropdownData.a5Users);
+                    addUsernameSelect.innerHTML = '<option value="">No A5 users found</option>';
+                }
+            } else {
+                console.log('addUsername select element not found');
             }
 
             // Populate Call Queue Group dropdowns
@@ -576,6 +714,8 @@
                     });
                 }
             });
+
+            console.log('All dropdowns populated');
         }
 
         function populatePhoneDropdowns() {
