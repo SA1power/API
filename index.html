@@ -337,46 +337,72 @@
     });
 
     async function loadPhoneNumbers() {
-      // GET numbers
-      let r = await fetch(`${API.url}?code=${API.key}`);
-      if (!r.ok) return console.error('Phone fetch failed');
-      phoneNumbers = await r.json();
-      populatePhoneDropdowns();
+      try {
+        // GET numbers
+        console.log('Loading phone numbers...');
+        let r = await fetch(`${API.url}?code=${API.key}`);
+        if (!r.ok) return console.error('Phone fetch failed');
+        phoneNumbers = await r.json();
+        console.log('Phone numbers loaded:', phoneNumbers.length);
+        populatePhoneDropdowns();
 
-      // POST dropdowns
-      r = await fetch(`${API.url}?code=${API.key}`, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({action:'getdropdowndata'})
-      });
-      if (!r.ok) return console.error('Dropdown fetch failed');
-      dropdownData = await r.json();
-      populateDropdowns();
+        // POST dropdowns
+        console.log('Loading dropdown data...');
+        r = await fetch(`${API.url}?code=${API.key}`, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({action:'getdropdowndata'})
+        });
+        if (!r.ok) return console.error('Dropdown fetch failed');
+        dropdownData = await r.json();
+        console.log('Dropdown data loaded:', dropdownData);
+        populateDropdowns();
+      } catch (error) {
+        console.error('Error in loadPhoneNumbers:', error);
+      }
     }
 
     function populateDropdowns() {
+      console.log('populateDropdowns called, dropdownData:', dropdownData);
+      if (!dropdownData) {
+        console.log('No dropdown data available yet');
+        return; // Exit if data not loaded yet
+      }
+      
       // Users
       const uSel = document.getElementById('addUsername');
-      uSel.innerHTML = '<option value="">Select a user…</option>';
-      (dropdownData.a5Users||[]).forEach(u=>uSel.appendChild(new Option(u,u)));
+      if (uSel) {
+        uSel.innerHTML = '<option value="">Select a user…</option>';
+        (dropdownData.a5Users||[]).forEach(u=>uSel.appendChild(new Option(u,u)));
+        console.log('Populated users:', dropdownData.a5Users?.length || 0);
+      }
 
       // Call‑Queue Groups
-      document.querySelectorAll('.cq-group-select').forEach(sel=>{
+      const cqGroups = document.querySelectorAll('.cq-group-select');
+      console.log('Found CQ group selects:', cqGroups.length);
+      cqGroups.forEach(sel=>{
         sel.innerHTML = '<option value="">Select Call Queue Group…</option>';
         (dropdownData.callQueueGroups||[]).forEach(g=>sel.appendChild(new Option(g,g)));
       });
+      console.log('Populated CQ groups:', dropdownData.callQueueGroups?.length || 0);
 
       // Auto‑Attendants
-      document.querySelectorAll('.aa-select').forEach(sel=>{
+      const aaSelects = document.querySelectorAll('.aa-select');
+      console.log('Found AA selects:', aaSelects.length);
+      aaSelects.forEach(sel=>{
         sel.innerHTML = '<option value="">Select Auto Attendant…</option>';
         (dropdownData.autoAttendants||[]).forEach(a=>sel.appendChild(new Option(a,a)));
       });
+      console.log('Populated AAs:', dropdownData.autoAttendants?.length || 0);
 
       // Call‑Queues
-      document.querySelectorAll('.cq-select').forEach(sel=>{
+      const cqSelects = document.querySelectorAll('.cq-select');
+      console.log('Found CQ selects:', cqSelects.length);
+      cqSelects.forEach(sel=>{
         sel.innerHTML = '<option value="">Select Call Queue…</option>';
         (dropdownData.callQueues||[]).forEach(q=>sel.appendChild(new Option(q,q)));
       });
+      console.log('Populated CQs:', dropdownData.callQueues?.length || 0);
     }
 
     function populatePhoneDropdowns() {
