@@ -259,18 +259,10 @@
                 <div id="addUserMessages"></div>
                 
                 <div class="form-group">
-                    <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; margin-bottom: 15px;">
-                        <input type="checkbox" id="a5LicenseConfirm" style="transform: scale(1.2);">
-                        <label for="a5LicenseConfirm" style="margin: 0; font-weight: bold; color: #856404;">Confirm user is A5 licensed</label>
-                    </div>
-                </div>
-
-                <div id="addUserFields" style="opacity: 0.5; pointer-events: none;">
-                
-                <div class="form-group">
-                    <label for="addUsername">Username:</label>
-                    <input type="text" id="addUsername" class="form-control" placeholder="Enter MSOE email (e.g., user@msoe.edu)" />
-                    <div id="addUsernameError" class="error" style="display: none; margin-top: 5px; padding: 5px;">Username must end with @msoe.edu</div>
+                    <label for="addUsername">Select User:</label>
+                    <select id="addUsername" class="form-control">
+                        <option value="">Loading A5 licensed users...</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
@@ -334,8 +326,7 @@
                 </div>
 
                 <button id="addUserSubmit" class="btn btn-primary submit-button" disabled>Activate Phone User</button>
-                
-                </div> <!-- End of addUserFields -->
+            </div>
             </div>
 
             <!-- Column 2: Modify a Teams Phone User -->
@@ -468,27 +459,9 @@
         });
 
         function setupEventListeners() {
-            // A5 License confirmation checkbox
-            document.getElementById('a5LicenseConfirm').addEventListener('change', function() {
-                const isChecked = this.checked;
-                const fieldsContainer = document.getElementById('addUserFields');
-                
-                if (isChecked) {
-                    fieldsContainer.style.opacity = '1';
-                    fieldsContainer.style.pointerEvents = 'auto';
-                } else {
-                    fieldsContainer.style.opacity = '0.5';
-                    fieldsContainer.style.pointerEvents = 'none';
-                    resetAddForm();
-                }
-            });
-            
-            // Add User Column
+            // Add User Column - simplified without A5 checkbox
             document.getElementById('addPhoneNumber').addEventListener('change', validateAddForm);
-            document.getElementById('addUsername').addEventListener('input', function() {
-                validateUsername('add');
-                validateAddForm();
-            });
+            document.getElementById('addUsername').addEventListener('change', validateAddForm);
             document.getElementById('addUserSubmit').addEventListener('click', submitAddUser);
 
             // Modify User Column
@@ -549,6 +522,18 @@
 
         function populateDropdowns() {
             if (!dropdownData) return;
+
+            // Populate A5 User dropdown
+            const addUsernameSelect = document.getElementById('addUsername');
+            if (addUsernameSelect && dropdownData.a5Users) {
+                addUsernameSelect.innerHTML = '<option value="">Select a user...</option>';
+                dropdownData.a5Users.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user;
+                    option.textContent = user;
+                    addUsernameSelect.appendChild(option);
+                });
+            }
 
             // Populate Call Queue Group dropdowns
             const cqGroupSelects = document.querySelectorAll('.cq-group-select');
@@ -626,11 +611,10 @@
         }
 
         function validateAddForm() {
-            const a5Licensed = document.getElementById('a5LicenseConfirm').checked;
+            const userSelected = document.getElementById('addUsername').value !== '';
             const phoneSelected = document.getElementById('addPhoneNumber').value !== '';
-            const usernameValid = validateUsername('add');
             
-            document.getElementById('addUserSubmit').disabled = !(a5Licensed && phoneSelected && usernameValid);
+            document.getElementById('addUserSubmit').disabled = !(userSelected && phoneSelected);
         }
 
         function lookupDeprovisionUser() {
@@ -718,7 +702,6 @@
             try {
                 const phoneNumber = document.getElementById('addPhoneNumber').value;
                 const username = document.getElementById('addUsername').value;
-                const a5Licensed = document.getElementById('a5LicenseConfirm').checked;
                 const internationalCalling = document.getElementById('addIntlYes').checked;
                 
                 const callQueueGroups = [];
@@ -749,7 +732,7 @@
                         action: 'add',
                         username: username,
                         phoneNumber: phoneNumber,
-                        a5Licensed: a5Licensed,
+                        a5Licensed: true, // Always true since coming from A5 table
                         internationalCalling: internationalCalling,
                         callQueueGroups: callQueueGroups,
                         autoAttendants: autoAttendants,
@@ -942,12 +925,6 @@
             document.getElementById('addPhoneNumber').value = '';
             document.getElementById('addUsername').value = '';
             document.getElementById('addIntlNo').checked = true;
-            document.getElementById('a5LicenseConfirm').checked = false;
-            
-            const fieldsContainer = document.getElementById('addUserFields');
-            fieldsContainer.style.opacity = '0.5';
-            fieldsContainer.style.pointerEvents = 'none';
-            
             validateAddForm();
         }
 
