@@ -559,8 +559,48 @@
         document.getElementById('modifyUserMessages').innerHTML = '';
         document.getElementById('deprovisionUserMessages').innerHTML = '';
         
-        // Reload fresh data
-        loadPhoneNumbers();
+        // Reset dropdowns to loading state
+        document.getElementById('addUsername').innerHTML = '<option value="">Loading users…</option>';
+        document.getElementById('addPhoneNumber').innerHTML = '<option value="">Loading numbers…</option>';
+        
+        // Reset all dynamic sections to single empty items
+        document.getElementById('addCallQueueGroups').innerHTML = `
+          <div class="dynamic-item">
+            <select class="form-control cq-group-select">
+              <option value="">Loading Call Queue Groups…</option>
+            </select>
+            <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+          </div>`;
+        
+        document.getElementById('addAutoAttendants').innerHTML = `
+          <div class="dynamic-item">
+            <select class="form-control aa-select">
+              <option value="">Loading Auto Attendants…</option>
+            </select>
+            <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+          </div>`;
+        
+        document.getElementById('addCallQueueManagers').innerHTML = `
+          <div class="dynamic-item">
+            <select class="form-control cq-select">
+              <option value="">Loading Call Queues…</option>
+            </select>
+            <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+          </div>`;
+        
+        // Reset radio buttons
+        document.getElementById('addIntlNo').checked = true;
+        document.getElementById('addIntlYes').checked = false;
+        
+        // Clear and reset currentUser
+        currentUser = null;
+        
+        // Reload fresh data (this should work in Teams iframe)
+        setTimeout(() => {
+          loadPhoneNumbers();
+        }, 100);
+        
+        console.log('Page reset completed - reloading data...');
       }
     }
 
