@@ -1,83 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>MSOE Teams Phone User Provisioning</title>
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:Arial,sans-serif; background:#f5f5f5; padding:20px; }
-    .container { max-width:1400px; margin:0 auto; }
-    .columns { display:flex; gap:20px; flex-wrap:wrap; margin-bottom:20px; }
-    .column {
-      flex:1; background:#e8e8e8; border:2px solid #999;
-      border-radius:4px; padding:20px; display:flex;
-      flex-direction:column; min-width:300px;
-    }
-    .column-header {
-      background:#d0d0d0; margin:-20px -20px 20px -20px;
-      padding:10px 20px; font-weight:bold; font-size:16px;
-      border-bottom:1px solid #999;
-    }
-    .form-group { margin-bottom:15px; }
-    .form-group label {
-      display:block; margin-bottom:5px; font-weight:bold; color:#333;
-    }
-    .form-control {
-      width:100%; padding:8px 12px; border:1px solid #999;
-      border-radius:4px; background:#fff; font-size:14px; color:#333;
-    }
-    .form-control:focus {
-      outline:none; border-color:#c41e3a;
-      box-shadow:0 0 5px rgba(196,30,58,0.3);
-    }
-    .radio-group { display:flex; gap:15px; margin-top:5px; }
-    .radio-group label { font-weight:normal; }
-    .btn {
-      padding:8px 15px; border:none; border-radius:4px;
-      cursor:pointer; font-size:14px; margin-top:auto;
-    }
-    .btn-primary { background:#c41e3a; color:#fff; }
-    .btn-primary:disabled { background:#ccc; cursor:not-allowed; }
-    .btn-secondary { background:#0066cc; color:#fff; }
-    .btn-secondary:hover { background:#0052a3; }
-    .btn-danger { background:#dc3545; color:#fff; }
-    .btn-danger:hover { background:#c82333; }
-    .btn-small { padding:4px 8px; font-size:12px; }
-    .submit-button { margin-top:auto; font-weight:bold; }
-    .dynamic-section {
-      border:1px solid #ccc; border-radius:4px;
-      padding:10px; background:#f9f9f9; margin-bottom:10px;
-    }
-    .dynamic-item {
-      display:flex; justify-content:space-between;
-      align-items:center; margin:5px 0; padding:5px;
-      background:#fff; border-radius:3px;
-    }
-    .user-info {
-      background:#e3f2fd; border:1px solid #2196f3;
-      border-radius:4px; padding:10px; margin-bottom:15px;
-    }
-    .user-info h4 { margin-bottom:10px; color:#1976d2; }
-    .current-setting {
-      display:flex; justify-content:space-between;
-      padding:5px; background:#fff; border-radius:3px;
-      margin:3px 0;
-    }
-    .success {
-      padding:10px; background:#e6ffe6; color:#006600;
-      border:1px solid #006600; border-radius:4px;
-      margin-bottom:15px;
-    }
-    @media(max-width:800px) {
-      .columns { flex-direction:column; }
-    }
+    /* … your existing CSS from before … */
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:Arial,sans-serif;background:#f5f5f5;padding:20px}
+    .container{max-width:1400px;margin:0 auto}
+    .columns{display:flex;gap:20px;flex-wrap:wrap}
+    .column{flex:1;background:#e8e8e8;border:2px solid #999;border-radius:4px;
+      padding:20px;display:flex;flex-direction:column;min-width:300px}
+    .column-header{background:#d0d0d0;margin:-20px -20px 20px -20px;
+      padding:10px 20px;font-weight:bold;border-bottom:1px solid #999}
+    .form-group{margin-bottom:15px}
+    .form-group label{display:block;margin-bottom:5px;font-weight:bold}
+    .form-control{width:100%;padding:8px;border:1px solid #999;border-radius:4px}
+    .radio-group{display:flex;gap:15px;margin-top:5px}
+    .btn{padding:8px 15px;border:none;border-radius:4px;cursor:pointer;margin-top:auto}
+    .btn-primary{background:#c41e3a;color:#fff}
+    .btn-primary:disabled{background:#ccc;cursor:not-allowed}
+    .btn-secondary{background:#0066cc;color:#fff}
+    .btn-secondary:hover{background:#0052a3}
+    .btn-danger{background:#dc3545;color:#fff}
+    .btn-danger:hover{background:#c82333}
+    .btn-small{padding:4px 8px;font-size:12px}
+    .dynamic-section{border:1px solid #ccc;padding:10px;border-radius:4px;background:#f9f9f9;margin-bottom:10px}
+    .dynamic-item{display:flex;justify-content:space-between;align-items:center;
+      background:#fff;padding:5px;border-radius:3px;margin:5px 0}
+    .user-info{background:#e3f2fd;border:1px solid #2196f3;padding:10px;border-radius:4px;margin-bottom:15px}
+    .user-info h4{color:#1976d2;margin-bottom:10px}
+    .current-setting{display:flex;justify-content:space-between;
+      background:#fff;padding:5px;border-radius:3px;margin:3px 0}
+    .success{background:#e6ffe6;color:#006600;padding:10px;border:1px solid #006600;border-radius:4px;margin-bottom:15px}
+    @media(max-width:800px){.columns{flex-direction:column}}
   </style>
 </head>
 <body>
+
   <div class="container">
     <div class="columns">
-      <!-- Column 1: Add a Teams Phone User -->
+
+      <!-- ADD -->
       <div class="column">
         <div class="column-header">Add a Teams Phone User</div>
         <div id="addUserMessages"></div>
@@ -100,7 +65,7 @@
           <label>International Calling:</label>
           <div class="radio-group">
             <label><input type="radio" name="addIntlCalling" id="addIntlYes" value="yes"> Yes</label>
-            <label><input type="radio" name="addIntlCalling" id="addIntlNo" value="no" checked> No</label>
+            <label><input type="radio" name="addIntlCalling" id="addIntlNo"  value="no" checked> No</label>
           </div>
         </div>
 
@@ -148,7 +113,8 @@
         </button>
       </div>
 
-      <!-- Column 2: Modify a Teams Phone User -->
+
+      <!-- MODIFY -->
       <div class="column">
         <div class="column-header">Modify a Teams Phone User</div>
         <div id="modifyUserMessages"></div>
@@ -157,8 +123,8 @@
           <label for="modifyUsername">Username:</label>
           <input type="text" id="modifyUsername" class="form-control"
                  placeholder="Enter MSOE email to lookup user"/>
-          <button class="btn btn-secondary" style="margin-top:10px"
-                  onclick="lookupUser()">Lookup User</button>
+          <button id="modifyLookupBtn" class="btn btn-secondary"
+                  style="margin-top:10px">Lookup User</button>
         </div>
 
         <div id="currentUserInfo" class="user-info" style="display:none">
@@ -233,7 +199,8 @@
                 style="display:none">Modify Phone User</button>
       </div>
 
-      <!-- Column 3: Deprovision a Teams Phone User -->
+
+      <!-- DEPROVISION -->
       <div class="column">
         <div class="column-header">Deprovision a Teams Phone User</div>
         <div id="deprovisionUserMessages"></div>
@@ -242,8 +209,8 @@
           <label for="deprovisionUsername">Username:</label>
           <input type="text" id="deprovisionUsername" class="form-control"
                  placeholder="Enter MSOE email"/>
-          <button class="btn btn-secondary" style="margin-top:10px"
-                  onclick="lookupDeprovisionUser()">Lookup User</button>
+          <button id="deprovLookupBtn" class="btn btn-secondary"
+                  style="margin-top:10px">Lookup User</button>
         </div>
 
         <div id="deprovisionUserInfo" class="user-info" style="display:none">
@@ -254,118 +221,294 @@
         <button id="deprovisionUserSubmit" class="btn btn-danger submit-button"
                 style="display:none">Deprovision User</button>
       </div>
+
     </div>
   </div>
 
   <script>
     const API = {
-      url:  'https://availablephonenumberapi.azurewebsites.net/api/GetAvailablePhoneNumbers',
-      key:  'EsQlM7c0jssk1pzk83F5IYFV6SkZm6AXto3KSbXSA4JlAzFuN7cgbw=='
+      url: 'https://availablephonenumberapi.azurewebsites.net/api/GetAvailablePhoneNumbers',
+      key: 'EsQlM7c0jssk1pzk83F5IYFV6SkZm6AXto3KSbXSA4JlAzFuN7cgbw=='
     };
-
     let phoneNumbers = [], dropdownData = null, currentUser = null;
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', ()=> {
       loadPhoneNumbers();
+
+      // ADD
       document.getElementById('addUsername').addEventListener('change', validateAddForm);
       document.getElementById('addPhoneNumber').addEventListener('change', validateAddForm);
       document.getElementById('addUserSubmit').onclick = submitAddUser;
+
+      // MODIFY
+      document.getElementById('modifyLookupBtn').addEventListener('click', ()=>{
+        console.log('Modify Lookup clicked');
+        lookupUser();
+      });
       document.getElementById('modifyUserSubmit').onclick = submitModifyUser;
+
+      // DEPROVISION
+      document.getElementById('deprovLookupBtn').addEventListener('click', ()=>{
+        console.log('Deprov Lookup clicked');
+        lookupDeprovisionUser();
+      });
       document.getElementById('deprovisionUserSubmit').onclick = submitDeprovisionUser;
     });
 
     async function loadPhoneNumbers() {
-      // GET available phone numbers
-      let resp = await fetch(`${API.url}?code=${API.key}`);
-      if (!resp.ok) return console.error('Phone fetch failed');
-      phoneNumbers = await resp.json();
+      // GET numbers
+      let r = await fetch(`${API.url}?code=${API.key}`);
+      if (!r.ok) return console.error('Phone fetch failed');
+      phoneNumbers = await r.json();
       populatePhoneDropdowns();
 
-      // POST dropdown data
-      resp = await fetch(`${API.url}?code=${API.key}`, {
+      // POST dropdowns
+      r = await fetch(`${API.url}?code=${API.key}`, {
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({action:'getdropdowndata'})
       });
-      if (!resp.ok) return console.error('Dropdown fetch failed');
-      dropdownData = await resp.json();
+      if (!r.ok) return console.error('Dropdown fetch failed');
+      dropdownData = await r.json();
       populateDropdowns();
     }
 
     function populateDropdowns() {
       // Users
-      let sel = document.getElementById('addUsername');
-      sel.innerHTML = '<option value="">Select a user…</option>';
-      (dropdownData.a5Users||[]).forEach(u => sel.appendChild(new Option(u,u)));
+      const uSel = document.getElementById('addUsername');
+      uSel.innerHTML = '<option value="">Select a user…</option>';
+      (dropdownData.a5Users||[]).forEach(u=>uSel.appendChild(new Option(u,u)));
 
-      // Call Queue Groups
-      document.querySelectorAll('.cq-group-select').forEach(s => {
-        s.innerHTML = '<option value="">Select Call Queue Group…</option>';
-        (dropdownData.callQueueGroups||[]).forEach(g => s.appendChild(new Option(g,g)));
+      // Call‑Queue Groups
+      document.querySelectorAll('.cq-group-select').forEach(sel=>{
+        sel.innerHTML = '<option value="">Select Call Queue Group…</option>';
+        (dropdownData.callQueueGroups||[]).forEach(g=>sel.appendChild(new Option(g,g)));
       });
 
-      // Auto Attendants
-      document.querySelectorAll('.aa-select').forEach(s => {
-        s.innerHTML = '<option value="">Select Auto Attendant…</option>';
-        (dropdownData.autoAttendants||[]).forEach(a => s.appendChild(new Option(a,a)));
+      // Auto‑Attendants
+      document.querySelectorAll('.aa-select').forEach(sel=>{
+        sel.innerHTML = '<option value="">Select Auto Attendant…</option>';
+        (dropdownData.autoAttendants||[]).forEach(a=>sel.appendChild(new Option(a,a)));
       });
 
-      // Call Queues
-      document.querySelectorAll('.cq-select').forEach(s => {
-        s.innerHTML = '<option value="">Select Call Queue…</option>';
-        (dropdownData.callQueues||[]).forEach(q => s.appendChild(new Option(q,q)));
+      // Call‑Queues
+      document.querySelectorAll('.cq-select').forEach(sel=>{
+        sel.innerHTML = '<option value="">Select Call Queue…</option>';
+        (dropdownData.callQueues||[]).forEach(q=>sel.appendChild(new Option(q,q)));
       });
     }
 
     function populatePhoneDropdowns() {
-      let sel = document.getElementById('addPhoneNumber');
-      sel.innerHTML = '<option value="">Select a phone number…</option>';
-      phoneNumbers.filter(i => i.AvailablePhoneNumber.startsWith('1414277'))
-        .forEach(i => sel.appendChild(new Option(i.AvailablePhoneNumber,i.AvailablePhoneNumber)));
-
-      sel = document.getElementById('modifyPhoneNumber');
-      if (sel) {
-        sel.innerHTML = '<option value="">Select a phone number…</option>';
-        phoneNumbers.filter(i => i.AvailablePhoneNumber.startsWith('1414277'))
-          .forEach(i => sel.appendChild(new Option(i.AvailablePhoneNumber,i.AvailablePhoneNumber)));
+      const p1 = document.getElementById('addPhoneNumber');
+      p1.innerHTML = '<option value="">Select a phone number…</option>';
+      phoneNumbers.filter(i=>i.AvailablePhoneNumber.startsWith('1414277'))
+        .forEach(i=>p1.appendChild(new Option(i.AvailablePhoneNumber,i.AvailablePhoneNumber)));
+      const p2 = document.getElementById('modifyPhoneNumber');
+      if(p2){
+        p2.innerHTML = '<option value="">Select a phone number…</option>';
+        phoneNumbers.filter(i=>i.AvailablePhoneNumber.startsWith('1414277'))
+          .forEach(i=>p2.appendChild(new Option(i.AvailablePhoneNumber,i.AvailablePhoneNumber)));
       }
     }
 
-    function validateAddForm() {
-      let u = !!document.getElementById('addUsername').value;
-      let p = !!document.getElementById('addPhoneNumber').value;
-      document.getElementById('addUserSubmit').disabled = !(u&&p);
+    function validateAddForm(){
+      const u=!!document.getElementById('addUsername').value;
+      const p=!!document.getElementById('addPhoneNumber').value;
+      document.getElementById('addUserSubmit').disabled=!(u&&p);
     }
 
-    async function submitAddUser() {
-      const body = {
-        action: 'add',
-        username: document.getElementById('addUsername').value,
-        phoneNumber: document.getElementById('addPhoneNumber').value,
-        a5Licensed: true,
-        internationalCalling: document.getElementById('addIntlYes').checked,
-        callQueueGroups: Array.from(document.querySelectorAll('#addCallQueueGroups .cq-group-select'))
+    async function submitAddUser(){
+      const body={
+        action:'add',
+        username:document.getElementById('addUsername').value,
+        phoneNumber:document.getElementById('addPhoneNumber').value,
+        a5Licensed:true,
+        internationalCalling:document.getElementById('addIntlYes').checked,
+        callQueueGroups:Array.from(document.querySelectorAll('#addCallQueueGroups .cq-group-select'))
                               .map(s=>s.value).filter(v=>v),
-        autoAttendants:  Array.from(document.querySelectorAll('#addAutoAttendants .aa-select'))
+        autoAttendants: Array.from(document.querySelectorAll('#addAutoAttendants .aa-select'))
                               .map(s=>s.value).filter(v=>v),
         callQueueManagers:Array.from(document.querySelectorAll('#addCallQueueManagers .cq-select'))
                               .map(s=>s.value).filter(v=>v)
       };
-      const resp = await fetch(`${API.url}?code=${API.key}`, {
-        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+      const r=await fetch(`${API.url}?code=${API.key}`,{
+        method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)
       });
-      if (!resp.ok) {
-        let err = await resp.json();
-        return document.getElementById('addUserMessages').innerText = err.error;
+      if(!r.ok){
+        const e=await r.json();
+        return document.getElementById('addUserMessages').innerText=e.error;
       }
-      let res = await resp.json();
-      document.getElementById('addUserMessages').innerHTML =
+      const res=await r.json();
+      document.getElementById('addUserMessages').innerHTML=
         `<div class="success">User ${res.username} (${res.phoneNumber}) added!</div>`;
       populatePhoneDropdowns();
     }
 
-    // … include your existing lookupUserData, display*, submitModifyUser, submitDeprovisionUser,
-    //     addCallQueueGroup, addAutoAttendant, addCallQueueManager, removeItem, etc. …
+    // ─── MODIFY FUNCTIONS ───────────────────────────────────────────
+    function lookupUser(){
+      console.log('lookupUser()');
+      const u=document.getElementById('modifyUsername').value.trim();
+      if(!u||!u.endsWith('@msoe.edu')) return showMessage('modifyUserMessages','Enter a valid MSOE email','error');
+      showMessage('modifyUserMessages','',null);
+      _lookup(u,'modify');
+    }
+    function _lookup(username,ctx){
+      fetch(`${API.url}?code=${API.key}`,{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'lookup',username})
+      })
+      .then(r=>r.ok? r.json(): r.json().then(e=>Promise.reject(e)))
+      .then(user=>{
+        if(ctx==='modify'){
+          currentUser=user;
+          displayCurrentUserSettings();
+          showModifyFields();
+        } else {
+          displayDeprovisionUserSettings(user);
+        }
+      })
+      .catch(err=>{
+        console.error(err);
+        showMessage(ctx==='modify'?'modifyUserMessages':'deprovisionUserMessages',
+                    err.error||err.message,'error');
+      });
+    }
+    function displayCurrentUserSettings(){
+      const s=document.getElementById('currentSettings');
+      s.innerHTML=`
+        <div class="current-setting"><strong>Phone Number:</strong> ${formatPhoneNumber(currentUser.phoneNumber)}</div>
+        <div class="current-setting"><strong>Intl Calling:</strong> ${currentUser.internationalCalling?'Yes':'No'}</div>
+        <div class="current-setting"><strong>CQ Groups:</strong> ${(currentUser.callQueueGroups||[]).join(', ')||'None'}</div>
+        <div class="current-setting"><strong>AAs:</strong> ${(currentUser.autoAttendants||[]).join(', ')||'None'}</div>
+        <div class="current-setting"><strong>CQMgrs:</strong> ${(currentUser.callQueueManagers||[]).join(', ')||'None'}</div>`;
+      document.getElementById('currentUserInfo').style.display='block';
+    }
+    function showModifyFields(){
+      ['modifyPhoneGroup','modifyIntlGroup',
+       'modifyCallQueueGroupsGroup','modifyAutoAttendantsGroup',
+       'modifyCallQueueManagersGroup'].forEach(id=>document.getElementById(id).style.display='block');
+      document.getElementById('modifyUserSubmit').style.display='block';
+      document.getElementById('modifyIntlYes').checked=currentUser.internationalCalling;
+      document.getElementById('modifyIntlNo').checked=!currentUser.internationalCalling;
+    }
+    async function submitModifyUser(){
+      const u=document.getElementById('modifyUsername').value.trim();
+      const body={action:'modify',username:u,
+        phoneNumber:document.getElementById('modifyPhoneNumber').value||'',
+        internationalCalling:document.getElementById('modifyIntlYes').checked,
+        callQueueGroups:currentUser.callQueueGroups||[],
+        autoAttendants:currentUser.autoAttendants||[],
+        callQueueManagers:currentUser.callQueueManagers||[]
+      };
+      const btn=document.getElementById('modifyUserSubmit');
+      btn.disabled=true;btn.textContent='Processing…';
+      try{
+        let r=await fetch(`${API.url}?code=${API.key}`,{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify(body)
+        });
+        if(!r.ok) throw await r.json();
+        showMessage('modifyUserMessages',
+          `<div class="success">Modification queued for ${u}</div>`);
+        ['modifyPhoneGroup','modifyIntlGroup',
+         'modifyCallQueueGroupsGroup','modifyAutoAttendantsGroup',
+         'modifyCallQueueManagersGroup','currentUserInfo'].forEach(id=>
+           document.getElementById(id).style.display='none');
+        btn.style.display='none';
+      }catch(e){
+        console.error(e);
+        showMessage('modifyUserMessages',e.error||e.message,'error');
+        btn.disabled=false;btn.textContent='Modify Phone User';
+      }
+    }
+
+    // ─── DEPROVISION FUNCTIONS ───────────────────────────────────────
+    function lookupDeprovisionUser(){
+      console.log('lookupDeprovisionUser()');
+      const u=document.getElementById('deprovisionUsername').value.trim();
+      if(!u||!u.endsWith('@msoe.edu')) return showMessage('deprovisionUserMessages','Enter valid MSOE email','error');
+      showMessage('deprovisionUserMessages','',null);
+      _lookup(u,'deprovision');
+    }
+    function displayDeprovisionUserSettings(user){
+      const d=document.getElementById('deprovisionSettings');
+      d.innerHTML=`
+        <div class="current-setting"><strong>Username:</strong> ${user.username}</div>
+        <div class="current-setting"><strong>Phone:</strong> ${formatPhoneNumber(user.phoneNumber)}</div>
+        <div class="current-setting"><strong>Intl Calling:</strong> ${user.internationalCalling?'Yes':'No'}</div>
+        <div class="current-setting"><strong>CQ Groups:</strong> ${(user.callQueueGroups||[]).join(', ')||'None'}</div>
+        <div class="current-setting"><strong>AAs:</strong> ${(user.autoAttendants||[]).join(', ')||'None'}</div>
+        <div class="current-setting"><strong>CQMgrs:</strong> ${(user.callQueueManagers||[]).join(', ')||'None'}</div>`;
+      document.getElementById('deprovisionUserInfo').style.display='block';
+      document.getElementById('deprovisionUserSubmit').style.display='block';
+    }
+    async function submitDeprovisionUser(){
+      const u=document.getElementById('deprovisionUsername').value.trim();
+      const btn=document.getElementById('deprovisionUserSubmit');
+      btn.disabled=true;btn.textContent='Processing…';
+      try{
+        let r=await fetch(`${API.url}?code=${API.key}`,{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({action:'deprovision',username:u})
+        });
+        if(!r.ok) throw await r.json();
+        showMessage('deprovisionUserMessages',
+          `<div class="success">${u} queued for deprovisioning</div>`);
+        document.getElementById('deprovisionUserInfo').style.display='none';
+        btn.style.display='none';
+      }catch(e){
+        console.error(e);
+        showMessage('deprovisionUserMessages',e.error||e.message,'error');
+        btn.disabled=false;btn.textContent='Deprovision User';
+      }
+    }
+
+    // ─── UTILITIES ─────────────────────────────────────────────────────
+    function formatPhoneNumber(p){
+      let d=p.replace(/\D/g,'');
+      if(d.length===11&&d.startsWith('1')) return `+1 ${d.slice(1,4)} ${d.slice(4,7)} ${d.slice(7)}`;
+      if(d.length===10) return `+1 ${d.slice(0,3)} ${d.slice(3,6)} ${d.slice(6)}`;
+      return p;
+    }
+    function showMessage(id,msg,type){
+      let c=document.getElementById(id);
+      c.innerHTML=type?`<div class="${type}">${msg}</div>`:msg;
+    }
+    function removeItem(btn){btn.parentNode.remove();}
+    function addCallQueueGroup(){
+      let c=document.getElementById('addCallQueueGroups');
+      let div=document.createElement('div');
+      div.className='dynamic-item';
+      div.innerHTML=`
+        <select class="form-control cq-group-select">
+          <option value="">Select Call Queue Group…</option>
+        </select>
+        <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>`;
+      c.appendChild(div);populateDropdowns();
+    }
+    function addAutoAttendant(){
+      let c=document.getElementById('addAutoAttendants');
+      let div=document.createElement('div');
+      div.className='dynamic-item';
+      div.innerHTML=`
+        <select class="form-control aa-select">
+          <option value="">Select Auto Attendant…</option>
+        </select>
+        <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>`;
+      c.appendChild(div);populateDropdowns();
+    }
+    function addCallQueueManager(){
+      let c=document.getElementById('addCallQueueManagers');
+      let div=document.createElement('div');
+      div.className='dynamic-item';
+      div.innerHTML=`
+        <select class="form-control cq-select">
+          <option value="">Select Call Queue…</option>
+        </select>
+        <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>`;
+      c.appendChild(div);populateDropdowns();
+    }
   </script>
+
 </body>
 </html>
