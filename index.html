@@ -485,15 +485,22 @@
 
     function addModifyToBatch(){
       const username = document.getElementById('modifyUsername').value.trim();
+      
+      // Ensure we preserve existing call queue groups, auto attendants, and call queue managers
+      // unless they have been explicitly modified through the UI
+      let preservedCallQueueGroups = currentUser.callQueueGroups || [];
+      let preservedAutoAttendants = currentUser.autoAttendants || [];
+      let preservedCallQueueManagers = currentUser.callQueueManagers || [];
+      
       const operation = {
         id: Date.now(),
         action: 'modify',
         username: username,
         phoneNumber: document.getElementById('modifyPhoneNumber').value || currentUser.phoneNumber,
         internationalCalling: document.getElementById('modifyIntlYes').checked,
-        callQueueGroups: currentUser.callQueueGroups || [],
-        autoAttendants: currentUser.autoAttendants || [],
-        callQueueManagers: currentUser.callQueueManagers || [],
+        callQueueGroups: preservedCallQueueGroups,
+        autoAttendants: preservedAutoAttendants,
+        callQueueManagers: preservedCallQueueManagers,
         originalUser: {...currentUser}
       };
 
@@ -987,6 +994,62 @@
         <div class="current-setting"><strong>AAs:</strong> ${(currentUser.autoAttendants||[]).join(', ')||'None'}</div>
         <div class="current-setting"><strong>CQMgrs:</strong> ${(currentUser.callQueueManagers||[]).join(', ')||'None'}</div>`;
       document.getElementById('currentUserInfo').style.display='block';
+      
+      // Populate the current memberships in the modify sections
+      populateCurrentMemberships();
+    }
+
+    function populateCurrentMemberships(){
+      // Populate Call Queue Groups
+      const cqGroupsList = document.getElementById('currentCallQueueGroupsList');
+      cqGroupsList.innerHTML = '';
+      if (currentUser.callQueueGroups && currentUser.callQueueGroups.length > 0) {
+        currentUser.callQueueGroups.forEach(group => {
+          const groupItem = document.createElement('div');
+          groupItem.className = 'dynamic-item';
+          groupItem.innerHTML = `
+            <span>${group}</span>
+            <button class="btn btn-danger btn-small" onclick="removeCallQueueGroupMembership('${group}')">Remove</button>
+          `;
+          cqGroupsList.appendChild(groupItem);
+        });
+      } else {
+        cqGroupsList.innerHTML = '<div style="padding:5px; color:#666; font-style:italic;">No current memberships</div>';
+      }
+
+      // Populate Auto Attendants
+      const aaList = document.getElementById('currentAutoAttendantsList');
+      aaList.innerHTML = '';
+      if (currentUser.autoAttendants && currentUser.autoAttendants.length > 0) {
+        currentUser.autoAttendants.forEach(aa => {
+          const aaItem = document.createElement('div');
+          aaItem.className = 'dynamic-item';
+          aaItem.innerHTML = `
+            <span>${aa}</span>
+            <button class="btn btn-danger btn-small" onclick="removeAutoAttendantRole('${aa}')">Remove</button>
+          `;
+          aaList.appendChild(aaItem);
+        });
+      } else {
+        aaList.innerHTML = '<div style="padding:5px; color:#666; font-style:italic;">No current roles</div>';
+      }
+
+      // Populate Call Queue Managers
+      const cqMgrList = document.getElementById('currentCallQueueManagersList');
+      cqMgrList.innerHTML = '';
+      if (currentUser.callQueueManagers && currentUser.callQueueManagers.length > 0) {
+        currentUser.callQueueManagers.forEach(cq => {
+          const cqItem = document.createElement('div');
+          cqItem.className = 'dynamic-item';
+          cqItem.innerHTML = `
+            <span>${cq}</span>
+            <button class="btn btn-danger btn-small" onclick="removeCallQueueRole('${cq}')">Remove</button>
+          `;
+          cqMgrList.appendChild(cqItem);
+        });
+      } else {
+        cqMgrList.innerHTML = '<div style="padding:5px; color:#666; font-style:italic;">No current roles</div>';
+      }
     }
     function showModifyFields(){
       ['modifyPhoneGroup','modifyIntlGroup',
@@ -1073,26 +1136,73 @@
       c.appendChild(div);populateDropdowns();
     }
 
-    // Modify section dynamic functions (placeholder)
+    // Enhanced modify section dynamic functions
     function addCallQueueGroupMembership(){
       const select = document.getElementById('newCallQueueGroupSelect');
-      if(select.value) {
-        alert(`Added ${select.value} to call queue groups (feature to be implemented)`);
-        select.value = '';
+      if(select.value && currentUser) {
+        // Add to current user's call queue groups if not already present
+        if (!currentUser.callQueueGroups) currentUser.callQueueGroups = [];
+        if (!currentUser.callQueueGroups.includes(select.value)) {
+          currentUser.callQueueGroups.push(select.value);
+          populateCurrentMemberships(); // Refresh the display
+          select.value = ''; // Clear the selection
+        } else {
+          alert('User is already a member of this Call Queue Group');
+          select.value = '';
+        }
       }
     }
+
+    function removeCallQueueGroupMembership(groupName){
+      if (currentUser && currentUser.callQueueGroups) {
+        currentUser.callQueueGroups = currentUser.callQueueGroups.filter(group => group !== groupName);
+        populateCurrentMemberships(); // Refresh the display
+      }
+    }
+
     function addAutoAttendantRole(){
       const select = document.getElementById('newAutoAttendantSelect');
-      if(select.value) {
-        alert(`Added ${select.value} to auto attendants (feature to be implemented)`);
-        select.value = '';
+      if(select.value && currentUser) {
+        // Add to current user's auto attendants if not already present
+        if (!currentUser.autoAttendants) currentUser.autoAttendants = [];
+        if (!currentUser.autoAttendants.includes(select.value)) {
+          currentUser.autoAttendants.push(select.value);
+          populateCurrentMemberships(); // Refresh the display
+          select.value = ''; // Clear the selection
+        } else {
+          alert('User is already authorized for this Auto Attendant');
+          select.value = '';
+        }
       }
     }
+
+    function removeAutoAttendantRole(aaName){
+      if (currentUser && currentUser.autoAttendants) {
+        currentUser.autoAttendants = currentUser.autoAttendants.filter(aa => aa !== aaName);
+        populateCurrentMemberships(); // Refresh the display
+      }
+    }
+
     function addCallQueueRole(){
       const select = document.getElementById('newCallQueueSelect');
-      if(select.value) {
-        alert(`Added ${select.value} to call queue managers (feature to be implemented)`);
-        select.value = '';
+      if(select.value && currentUser) {
+        // Add to current user's call queue managers if not already present
+        if (!currentUser.callQueueManagers) currentUser.callQueueManagers = [];
+        if (!currentUser.callQueueManagers.includes(select.value)) {
+          currentUser.callQueueManagers.push(select.value);
+          populateCurrentMemberships(); // Refresh the display
+          select.value = ''; // Clear the selection
+        } else {
+          alert('User is already a manager for this Call Queue');
+          select.value = '';
+        }
+      }
+    }
+
+    function removeCallQueueRole(cqName){
+      if (currentUser && currentUser.callQueueManagers) {
+        currentUser.callQueueManagers = currentUser.callQueueManagers.filter(cq => cq !== cqName);
+        populateCurrentMemberships(); // Refresh the display
       }
     }
 
