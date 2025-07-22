@@ -337,7 +337,7 @@
       key: 'EsQlM7c0jssk1pzk83F5IYFV6SkZm6AXto3KSbXSA4JlAzFuN7cgbw=='
     };
     let phoneNumbers = [], dropdownData = null, currentUser = null;
-    let batchOperations = []; // NEW: Store all pending operations
+    let batchOperations = []; // Store all pending operations
 
     document.addEventListener('DOMContentLoaded', ()=> {
       loadPhoneNumbers();
@@ -345,7 +345,7 @@
       // ADD
       document.getElementById('addUsername').addEventListener('change', validateAddForm);
       document.getElementById('addPhoneNumber').addEventListener('change', validateAddForm);
-      document.getElementById('addUserSubmit').onclick = addToBatch; // CHANGED: was submitAddUser
+      document.getElementById('addUserSubmit').onclick = addToBatch;
 
       // ADD - Clear Form button
       document.getElementById('clearAddForm').onclick = clearAddFormOnly;
@@ -355,7 +355,7 @@
         console.log('Modify Lookup clicked');
         lookupUser();
       });
-      document.getElementById('modifyUserSubmit').onclick = addModifyToBatch; // CHANGED: was submitModifyUser
+      document.getElementById('modifyUserSubmit').onclick = addModifyToBatch;
       document.getElementById('clearModifyForm').onclick = clearModifyFormOnly;
       
       // Add real-time validation for modify username field
@@ -370,7 +370,7 @@
         console.log('Deprov Lookup clicked');
         lookupDeprovisionUser();
       });
-      document.getElementById('deprovisionUserSubmit').onclick = addDeprovisionToBatch; // CHANGED: was submitDeprovisionUser
+      document.getElementById('deprovisionUserSubmit').onclick = addDeprovisionToBatch;
       document.getElementById('clearDeprovisionForm').onclick = clearDeprovisionFormOnly;
       
       // Add real-time validation for deprovision username field
@@ -380,7 +380,7 @@
         validateUsername(deprovisionField, modifyField, 'deprovisionUserMessages', 'Modify');
       });
 
-      // NEW: BATCH OPERATIONS
+      // BATCH OPERATIONS
       document.getElementById('submitAllBatch').onclick = submitAllOperations;
       document.getElementById('clearAllBatch').onclick = clearAllBatch;
       
@@ -459,7 +459,7 @@
       document.getElementById('addUserSubmit').disabled=!(u&&p);
     }
 
-    // NEW: Batch functions replace the original submit functions
+    // Batch functions
     function addToBatch(){
       const callQueueGroups = Array.from(document.querySelectorAll('#addCallQueueGroups .cq-group-select'))
                               .map(s=>s.value).filter(v=>v);
@@ -471,7 +471,7 @@
         phoneNumber: document.getElementById('addPhoneNumber').value,
         a5Licensed: true,
         internationalCalling: document.getElementById('addIntlYes').checked,
-        callQueueGroups: callQueueGroups, // These should already be in the correct format from dropdown
+        callQueueGroups: callQueueGroups,
         autoAttendants: Array.from(document.querySelectorAll('#addAutoAttendants .aa-select'))
                               .map(s=>s.value).filter(v=>v),
         callQueueManagers: Array.from(document.querySelectorAll('#addCallQueueManagers .cq-select'))
@@ -527,7 +527,6 @@
       const username = document.getElementById('modifyUsername').value.trim();
       
       // Ensure we preserve existing call queue groups, auto attendants, and call queue managers
-      // unless they have been explicitly modified through the UI
       let preservedCallQueueGroups = currentUser.callQueueGroups || [];
       let preservedAutoAttendants = currentUser.autoAttendants || [];
       let preservedCallQueueManagers = currentUser.callQueueManagers || [];
@@ -535,7 +534,6 @@
       // Map the call queue group names to match the CQ_Members table naming convention
       let mappedCallQueueGroups = mapCallQueueGroupNames(preservedCallQueueGroups);
       
-      // Debug logging to see what we're sending
       console.log('Original group names:', preservedCallQueueGroups);
       console.log('Mapped group names:', mappedCallQueueGroups);
       console.log('Sending modification request:', {
@@ -579,7 +577,7 @@
         `<div class="success">Deprovision for ${username} added to batch queue</div>`);
     }
 
-    // NEW: Batch table management
+    // Batch table management
     function updateBatchTable(){
       const addCount = batchOperations.filter(op => op.action === 'add').length;
       const modifyCount = batchOperations.filter(op => op.action === 'modify').length;
@@ -646,13 +644,28 @@
       updateBatchTable();
     }
 
+    // FIXED: Clear All Batch function - removed confirm() dialog for Teams compatibility
     function clearAllBatch(){
-      if(confirm('Are you sure you want to clear all queued operations?')){
-        batchOperations = [];
-        updateBatchTable();
-        document.getElementById('batchResults').innerHTML = '';
-        document.getElementById('resetPageBtn').style.display = 'none';
-      }
+      console.log('Clear All Batch function called');
+      
+      // Execute immediately without confirmation for Teams iframe compatibility
+      batchOperations = [];
+      updateBatchTable();
+      document.getElementById('batchResults').innerHTML = '';
+      document.getElementById('resetPageBtn').style.display = 'none';
+      
+      // Show visual feedback
+      const btn = document.getElementById('clearAllBatch');
+      const originalText = btn.textContent;
+      btn.textContent = '✅ Cleared!';
+      btn.style.background = '#28a745';
+      
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.style.background = '#6c757d';
+      }, 2000);
+      
+      console.log('Batch operations cleared successfully');
     }
 
     function resetPage(){
@@ -852,7 +865,7 @@
       }
     }
 
-    // NEW: Individual form clearing functions for clear buttons
+    // Individual form clearing functions for clear buttons
     function clearAddFormOnly(){
       document.getElementById('addUsername').value = '';
       document.getElementById('addPhoneNumber').value = '';
@@ -931,7 +944,7 @@
       console.log('Deprovision form cleared');
     }
 
-    // NEW: Form clearing functions
+    // Form clearing functions
     function clearAddForm(){
       document.getElementById('addUsername').value = '';
       document.getElementById('addPhoneNumber').value = '';
@@ -967,7 +980,7 @@
       validateAddForm();
     }
 
-    // UPDATED: Add real-time validation as user types
+    // Add real-time validation as user types
     function validateUsername(field, otherField, messageId, sectionName) {
       const currentValue = field.value.trim();
       const otherValue = otherField.value.trim();
@@ -1009,7 +1022,7 @@
       }
     }
 
-    // UPDATED: Add duplicate username validation
+    // Add duplicate username validation
     function lookupUser(){
       console.log('lookupUser()');
       const u=document.getElementById('modifyUsername').value.trim();
@@ -1120,7 +1133,7 @@
       document.getElementById('modifyIntlNo').checked=!currentUser.internationalCalling;
     }
 
-    // UPDATED: Add duplicate username validation
+    // Add duplicate username validation
     function lookupDeprovisionUser(){
       console.log('lookupDeprovisionUser()');
       const u=document.getElementById('deprovisionUsername').value.trim();
@@ -1148,7 +1161,7 @@
       document.getElementById('deprovisionUserSubmit').style.display='block';
     }
 
-    // UNCHANGED: Keep exact working utility functions
+    // Keep exact working utility functions
     function formatPhoneNumber(p){
       let d=p.replace(/\D/g,'');
       if(d.length===11&&d.startsWith('1')) return `+1 ${d.slice(1,4)} ${d.slice(4,7)} ${d.slice(7)}`;
@@ -1161,7 +1174,7 @@
     }
     function removeItem(btn){btn.parentNode.remove();}
     
-    // UNCHANGED: Keep exact working dynamic dropdown functions
+    // Keep exact working dynamic dropdown functions
     function addCallQueueGroup(){
       let c=document.getElementById('addCallQueueGroups');
       let div=document.createElement('div');
