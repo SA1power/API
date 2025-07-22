@@ -149,9 +149,14 @@
               <button class="btn btn-secondary btn-small" onclick="addCallQueueManager()">Add Another CQ</button>
             </div>
 
-            <button id="addUserSubmit" class="btn btn-primary submit-button" disabled>
-              Add to Batch Queue
-            </button>
+            <div style="display:flex; gap:10px; margin-top:auto;">
+              <button id="addUserSubmit" class="btn btn-primary submit-button" disabled style="flex:1;">
+                Add to Batch Queue
+              </button>
+              <button id="clearAddForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                Clear Form
+              </button>
+            </div>
           </div>
 
 
@@ -236,8 +241,13 @@
               </div>
             </div>
 
-            <button id="modifyUserSubmit" class="btn btn-primary submit-button"
-                    style="display:none">Add Modification to Batch</button>
+            <div id="modifyButtonGroup" style="display:flex; gap:10px; margin-top:auto;">
+              <button id="modifyUserSubmit" class="btn btn-primary submit-button"
+                      style="display:none; flex:1;">Add Modification to Batch</button>
+              <button id="clearModifyForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                Clear Form
+              </button>
+            </div>
           </div>
 
 
@@ -259,8 +269,13 @@
               <div id="deprovisionSettings"></div>
             </div>
 
-            <button id="deprovisionUserSubmit" class="btn btn-danger submit-button"
-                    style="display:none">Add Deprovision to Batch</button>
+            <div id="deprovisionButtonGroup" style="display:flex; gap:10px; margin-top:auto;">
+              <button id="deprovisionUserSubmit" class="btn btn-danger submit-button"
+                      style="display:none; flex:1;">Add Deprovision to Batch</button>
+              <button id="clearDeprovisionForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                Clear Form
+              </button>
+            </div>
           </div>
 
         </div>
@@ -332,12 +347,16 @@
       document.getElementById('addPhoneNumber').addEventListener('change', validateAddForm);
       document.getElementById('addUserSubmit').onclick = addToBatch; // CHANGED: was submitAddUser
 
+      // ADD - Clear Form button
+      document.getElementById('clearAddForm').onclick = clearAddFormOnly;
+      
       // MODIFY
       document.getElementById('modifyLookupBtn').addEventListener('click', ()=>{
         console.log('Modify Lookup clicked');
         lookupUser();
       });
       document.getElementById('modifyUserSubmit').onclick = addModifyToBatch; // CHANGED: was submitModifyUser
+      document.getElementById('clearModifyForm').onclick = clearModifyFormOnly;
       
       // Add real-time validation for modify username field
       document.getElementById('modifyUsername').addEventListener('input', ()=>{
@@ -352,6 +371,7 @@
         lookupDeprovisionUser();
       });
       document.getElementById('deprovisionUserSubmit').onclick = addDeprovisionToBatch; // CHANGED: was submitDeprovisionUser
+      document.getElementById('clearDeprovisionForm').onclick = clearDeprovisionFormOnly;
       
       // Add real-time validation for deprovision username field
       document.getElementById('deprovisionUsername').addEventListener('input', ()=>{
@@ -763,6 +783,85 @@
       if (errorCount > 0 && successCount === 0) {
         document.getElementById('resetPageBtn').style.display = 'block';
       }
+    }
+
+    // NEW: Individual form clearing functions for clear buttons
+    function clearAddFormOnly(){
+      document.getElementById('addUsername').value = '';
+      document.getElementById('addPhoneNumber').value = '';
+      document.getElementById('addIntlNo').checked = true;
+      document.getElementById('addIntlYes').checked = false;
+      
+      // Reset dynamic sections to single empty item
+      document.getElementById('addCallQueueGroups').innerHTML = `
+        <div class="dynamic-item">
+          <select class="form-control cq-group-select">
+            <option value="">Select Call Queue Group…</option>
+          </select>
+          <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+        </div>`;
+      
+      document.getElementById('addAutoAttendants').innerHTML = `
+        <div class="dynamic-item">
+          <select class="form-control aa-select">
+            <option value="">Select Auto Attendant…</option>
+          </select>
+          <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+        </div>`;
+      
+      document.getElementById('addCallQueueManagers').innerHTML = `
+        <div class="dynamic-item">
+          <select class="form-control cq-select">
+            <option value="">Select Call Queue…</option>
+          </select>
+          <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+        </div>`;
+      
+      // Clear any messages
+      document.getElementById('addUserMessages').innerHTML = '';
+      
+      populateDropdowns();
+      validateAddForm();
+      
+      console.log('Add form cleared');
+    }
+
+    function clearModifyFormOnly(){
+      document.getElementById('modifyUsername').value = '';
+      ['modifyPhoneGroup','modifyIntlGroup',
+       'modifyCallQueueGroupsGroup','modifyAutoAttendantsGroup',
+       'modifyCallQueueManagersGroup','currentUserInfo'].forEach(id=>
+         document.getElementById(id).style.display='none');
+      document.getElementById('modifyUserSubmit').style.display='none';
+      currentUser = null;
+      
+      // Clear any messages
+      document.getElementById('modifyUserMessages').innerHTML = '';
+      
+      // Clear any duplicate validation messages in deprovision section
+      const deprovisionMessages = document.getElementById('deprovisionUserMessages');
+      if(deprovisionMessages.innerHTML.includes('already entered in the Modify section')) {
+        showMessage('deprovisionUserMessages', '', null);
+      }
+      
+      console.log('Modify form cleared');
+    }
+
+    function clearDeprovisionFormOnly(){
+      document.getElementById('deprovisionUsername').value = '';
+      document.getElementById('deprovisionUserInfo').style.display='none';
+      document.getElementById('deprovisionUserSubmit').style.display='none';
+      
+      // Clear any messages
+      document.getElementById('deprovisionUserMessages').innerHTML = '';
+      
+      // Clear any duplicate validation messages in modify section
+      const modifyMessages = document.getElementById('modifyUserMessages');
+      if(modifyMessages.innerHTML.includes('already entered in the Deprovision section')) {
+        showMessage('modifyUserMessages', '', null);
+      }
+      
+      console.log('Deprovision form cleared');
     }
 
     // NEW: Form clearing functions
