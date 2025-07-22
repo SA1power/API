@@ -336,6 +336,13 @@
         lookupUser();
       });
       document.getElementById('modifyUserSubmit').onclick = addModifyToBatch; // CHANGED: was submitModifyUser
+      
+      // Add real-time validation for modify username field
+      document.getElementById('modifyUsername').addEventListener('input', ()=>{
+        const modifyField = document.getElementById('modifyUsername');
+        const deprovisionField = document.getElementById('deprovisionUsername');
+        validateUsername(modifyField, deprovisionField, 'modifyUserMessages', 'Deprovision');
+      });
 
       // DEPROVISION
       document.getElementById('deprovLookupBtn').addEventListener('click', ()=>{
@@ -343,6 +350,13 @@
         lookupDeprovisionUser();
       });
       document.getElementById('deprovisionUserSubmit').onclick = addDeprovisionToBatch; // CHANGED: was submitDeprovisionUser
+      
+      // Add real-time validation for deprovision username field
+      document.getElementById('deprovisionUsername').addEventListener('input', ()=>{
+        const deprovisionField = document.getElementById('deprovisionUsername');
+        const modifyField = document.getElementById('modifyUsername');
+        validateUsername(deprovisionField, modifyField, 'deprovisionUserMessages', 'Modify');
+      });
 
       // NEW: BATCH OPERATIONS
       document.getElementById('submitAllBatch').onclick = submitAllOperations;
@@ -785,6 +799,20 @@
       validateAddForm();
     }
 
+    // UPDATED: Add real-time validation as user types
+    function validateUsername(field, otherField, messageId, sectionName) {
+      const currentValue = field.value.trim();
+      const otherValue = otherField.value.trim();
+      
+      if (currentValue && otherValue && currentValue.toLowerCase() === otherValue.toLowerCase()) {
+        showMessage(messageId, `This user is already entered in the ${sectionName} section. Please clear that entry first.`, 'error');
+        return false;
+      } else {
+        showMessage(messageId, '', null);
+        return true;
+      }
+    }
+
     function clearModifyForm(){
       document.getElementById('modifyUsername').value = '';
       ['modifyPhoneGroup','modifyIntlGroup',
@@ -793,19 +821,38 @@
          document.getElementById(id).style.display='none');
       document.getElementById('modifyUserSubmit').style.display='none';
       currentUser = null;
+      
+      // Clear any duplicate validation messages in deprovision section
+      const deprovisionMessages = document.getElementById('deprovisionUserMessages');
+      if(deprovisionMessages.innerHTML.includes('already entered in the Modify section')) {
+        showMessage('deprovisionUserMessages', '', null);
+      }
     }
 
     function clearDeprovisionForm(){
       document.getElementById('deprovisionUsername').value = '';
       document.getElementById('deprovisionUserInfo').style.display='none';
       document.getElementById('deprovisionUserSubmit').style.display='none';
+      
+      // Clear any duplicate validation messages in modify section
+      const modifyMessages = document.getElementById('modifyUserMessages');
+      if(modifyMessages.innerHTML.includes('already entered in the Deprovision section')) {
+        showMessage('modifyUserMessages', '', null);
+      }
     }
 
-    // UNCHANGED: Keep exact working modify/deprovision logic
+    // UPDATED: Add duplicate username validation
     function lookupUser(){
       console.log('lookupUser()');
       const u=document.getElementById('modifyUsername').value.trim();
       if(!u||!u.endsWith('@msoe.edu')) return showMessage('modifyUserMessages','Enter a valid MSOE email','error');
+      
+      // Check if this username is already in the deprovision field
+      const deprovisionUser = document.getElementById('deprovisionUsername').value.trim();
+      if(deprovisionUser && deprovisionUser.toLowerCase() === u.toLowerCase()) {
+        return showMessage('modifyUserMessages','This user is already entered in the Deprovision section. Please clear that entry first.','error');
+      }
+      
       showMessage('modifyUserMessages','',null);
       _lookup(u,'modify');
     }
@@ -849,11 +896,18 @@
       document.getElementById('modifyIntlNo').checked=!currentUser.internationalCalling;
     }
 
-    // UNCHANGED: Keep exact working deprovision logic
+    // UPDATED: Add duplicate username validation
     function lookupDeprovisionUser(){
       console.log('lookupDeprovisionUser()');
       const u=document.getElementById('deprovisionUsername').value.trim();
       if(!u||!u.endsWith('@msoe.edu')) return showMessage('deprovisionUserMessages','Enter valid MSOE email','error');
+      
+      // Check if this username is already in the modify field
+      const modifyUser = document.getElementById('modifyUsername').value.trim();
+      if(modifyUser && modifyUser.toLowerCase() === u.toLowerCase()) {
+        return showMessage('deprovisionUserMessages','This user is already entered in the Modify section. Please clear that entry first.','error');
+      }
+      
       showMessage('deprovisionUserMessages','',null);
       _lookup(u,'deprovision');
     }
