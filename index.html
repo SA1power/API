@@ -461,6 +461,9 @@
 
     // NEW: Batch functions replace the original submit functions
     function addToBatch(){
+      const callQueueGroups = Array.from(document.querySelectorAll('#addCallQueueGroups .cq-group-select'))
+                              .map(s=>s.value).filter(v=>v);
+      
       const operation = {
         id: Date.now(),
         action: 'add',
@@ -468,8 +471,7 @@
         phoneNumber: document.getElementById('addPhoneNumber').value,
         a5Licensed: true,
         internationalCalling: document.getElementById('addIntlYes').checked,
-        callQueueGroups: Array.from(document.querySelectorAll('#addCallQueueGroups .cq-group-select'))
-                              .map(s=>s.value).filter(v=>v),
+        callQueueGroups: callQueueGroups, // These should already be in the correct format from dropdown
         autoAttendants: Array.from(document.querySelectorAll('#addAutoAttendants .aa-select'))
                               .map(s=>s.value).filter(v=>v),
         callQueueManagers: Array.from(document.querySelectorAll('#addCallQueueManagers .cq-select'))
@@ -483,6 +485,44 @@
         `<div class="success">User ${operation.username} added to batch queue</div>`);
     }
 
+    // Mapping function to convert user membership names to CQ_Members table names
+    function mapCallQueueGroupNames(userMembershipNames) {
+      const nameMapping = {
+        'Q_HelpdeskCQ1': 'Helpdesk CallQueue',
+        'Q_PhoneDemoLab': 'PhoneDemoLab',
+        'Q_Sysadmin_MFA_CQ': 'Sysadmin_MFA_CQ',
+        'Q Admissions': 'Q G Admissions',
+        'Q Athletics': 'Q G Athletics',
+        'Q Benefits': 'Q G Benefits',
+        'Q Career Connections': 'Q G Career Connections',
+        'Q Counseling Services': 'Q G Counseling Services',
+        'Q CPE': 'Q G CPE',
+        'Q CREATE': 'Q G Create',
+        'Q Custodial Hotline': 'Q G Custodial Hotline',
+        'Q Dean of Students': 'Q G Dean of Students',
+        'Q ECBE Department': 'Q G ECBE Department',
+        'Q Financial Aid': 'Q G Financial Aid',
+        'Q Grohmann Museum': 'Q G Grohmann Museum',
+        'Q Housing': 'Q G Housing',
+        'Q Human Resources': 'Q G Human Resources',
+        'Q Library': 'Q G Library',
+        'Q Mailroom': 'Q G Mailroom',
+        'Q Payroll': 'Q G Payroll',
+        'Q Public Safety': 'Q G Public Safety',
+        'Q Raider Shop': 'Q G Raider Shop',
+        'Q Registrar': 'Q G Registrar',
+        'Q RPC': 'Q G RPC',
+        'Q STEM Center': 'Q G STEM Center',
+        'Q Student Accounts': 'Q G Student Accounts',
+        'Q WMSE Main Line': 'Q G WMSE Main Line',
+        'Q WMSE Pledge Line': 'Q G WMSE Pledge Line',
+        'Call Advancement': 'Q G Advancement Entryway',
+        'Call WMSE Pledge Line': 'Q G WMSE Pledge Line'
+      };
+      
+      return userMembershipNames.map(name => nameMapping[name] || name);
+    }
+
     function addModifyToBatch(){
       const username = document.getElementById('modifyUsername').value.trim();
       
@@ -492,13 +532,26 @@
       let preservedAutoAttendants = currentUser.autoAttendants || [];
       let preservedCallQueueManagers = currentUser.callQueueManagers || [];
       
+      // Map the call queue group names to match the CQ_Members table naming convention
+      let mappedCallQueueGroups = mapCallQueueGroupNames(preservedCallQueueGroups);
+      
+      // Debug logging to see what we're sending
+      console.log('Original group names:', preservedCallQueueGroups);
+      console.log('Mapped group names:', mappedCallQueueGroups);
+      console.log('Sending modification request:', {
+        username: username,
+        callQueueGroups: mappedCallQueueGroups,
+        autoAttendants: preservedAutoAttendants,
+        callQueueManagers: preservedCallQueueManagers
+      });
+      
       const operation = {
         id: Date.now(),
         action: 'modify',
         username: username,
         phoneNumber: document.getElementById('modifyPhoneNumber').value || currentUser.phoneNumber,
         internationalCalling: document.getElementById('modifyIntlYes').checked,
-        callQueueGroups: preservedCallQueueGroups,
+        callQueueGroups: mappedCallQueueGroups,
         autoAttendants: preservedAutoAttendants,
         callQueueManagers: preservedCallQueueManagers,
         originalUser: {...currentUser}
@@ -703,6 +756,11 @@
 
       for(let operation of batchOperations) {
         try {
+          // Debug logging for modify operations
+          if(operation.action === 'modify') {
+            console.log('Submitting modify operation:', JSON.stringify(operation, null, 2));
+          }
+          
           const response = await fetch(`${API.url}?code=${API.key}`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -719,6 +777,7 @@
             successCount++;
           } else {
             const error = await response.json();
+            console.error('API Error Response:', error);
             results.push({
               operation: operation,
               success: false,
@@ -727,6 +786,7 @@
             errorCount++;
           }
         } catch(error) {
+          console.error('Network Error:', error);
           results.push({
             operation: operation,
             success: false,
