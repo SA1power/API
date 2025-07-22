@@ -647,4 +647,301 @@
     }
 
     async function submitAllOperations(){
-      if(batchOperations.
+      if(batchOperations.length === 0) return;
+
+      const submitBtn = document.getElementById('submitAllBatch');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Processing...';
+
+      const results = [];
+      let successCount = 0;
+      let errorCount = 0;
+
+      for(let operation of batchOperations) {
+        try {
+          const response = await fetch(`${API.url}?code=${API.key}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(operation)
+          });
+
+          if(response.ok) {
+            const result = await response.json();
+            results.push({
+              operation: operation,
+              success: true,
+              message: result.message || `${operation.action} successful`
+            });
+            successCount++;
+          } else {
+            const error = await response.json();
+            results.push({
+              operation: operation,
+              success: false,
+              message: error.error || 'Unknown error'
+            });
+            errorCount++;
+          }
+        } catch(error) {
+          results.push({
+            operation: operation,
+            success: false,
+            message: error.message || 'Network error'
+          });
+          errorCount++;
+        }
+      }
+
+      displayBatchResults(results, successCount, errorCount);
+      batchOperations = batchOperations.filter(op => 
+        !results.find(r => r.operation.id === op.id && r.success)
+      );
+
+      updateBatchTable();
+      populatePhoneDropdowns();
+
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+
+      // Add reload functionality for Teams iframe
+      if (successCount > 0) {
+        setTimeout(() => {
+          try {
+            window.location.reload(true);
+          } catch(e) {
+            // Teams iframe fallback
+            window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
+          }
+        }, 3000); // 3-second delay to show results
+      }
+    }
+
+    function displayBatchResults(results, successCount, errorCount){
+      const resultsDiv = document.getElementById('batchResults');
+      
+      let html = `<div class="batch-summary">
+        <strong>Batch Results:</strong><br>
+        Successful: ${successCount}<br>
+        Failed: ${errorCount}<br>
+        Total: ${results.length}
+      </div>`;
+
+      results.forEach(result => {
+        const className = result.success ? 'success' : 'error';
+        html += `<div class="${className}" style="margin-bottom:5px; padding:5px; font-size:12px;">
+          <strong>${result.operation.action.toUpperCase()}</strong> ${result.operation.username}: ${result.message}
+        </div>`;
+      });
+
+      // Add reload notice for successful operations
+      if (successCount > 0) {
+        html += `<div class="success" style="margin-top:10px; text-align:center;">
+          ✅ Page will reload in 3 seconds to refresh data...
+        </div>`;
+      }
+
+      resultsDiv.innerHTML = html;
+
+      // Show reset button if there were errors but no auto-reload
+      if (errorCount > 0 && successCount === 0) {
+        document.getElementById('resetPageBtn').style.display = 'block';
+      }
+    }
+
+    // NEW: Form clearing functions
+    function clearAddForm(){
+      document.getElementById('addUsername').value = '';
+      document.getElementById('addPhoneNumber').value = '';
+      document.getElementById('addIntlNo').checked = true;
+      document.getElementById('addIntlYes').checked = false;
+      
+      // Reset dynamic sections to single empty item
+      document.getElementById('addCallQueueGroups').innerHTML = `
+        <div class="dynamic-item">
+          <select class="form-control cq-group-select">
+            <option value="">Select Call Queue Group…</option>
+          </select>
+          <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+        </div>`;
+      
+      document.getElementById('addAutoAttendants').innerHTML = `
+        <div class="dynamic-item">
+          <select class="form-control aa-select">
+            <option value="">Select Auto Attendant…</option>
+          </select>
+          <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+        </div>`;
+      
+      document.getElementById('addCallQueueManagers').innerHTML = `
+        <div class="dynamic-item">
+          <select class="form-control cq-select">
+            <option value="">Select Call Queue…</option>
+          </select>
+          <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+        </div>`;
+      
+      populateDropdowns();
+      validateAddForm();
+    }
+
+    function clearModifyForm(){
+      document.getElementById('modifyUsername').value = '';
+      ['modifyPhoneGroup','modifyIntlGroup',
+       'modifyCallQueueGroupsGroup','modifyAutoAttendantsGroup',
+       'modifyCallQueueManagersGroup','currentUserInfo'].forEach(id=>
+         document.getElementById(id).style.display='none');
+      document.getElementById('modifyUserSubmit').style.display='none';
+      currentUser = null;
+    }
+
+    function clearDeprovisionForm(){
+      document.getElementById('deprovisionUsername').value = '';
+      document.getElementById('deprovisionUserInfo').style.display='none';
+      document.getElementById('deprovisionUserSubmit').style.display='none';
+    }
+
+    // UNCHANGED: Keep exact working modify/deprovision logic
+    function lookupUser(){
+      console.log('lookupUser()');
+      const u=document.getElementById('modifyUsername').value.trim();
+      if(!u||!u.endsWith('@msoe.edu')) return showMessage('modifyUserMessages','Enter a valid MSOE email','error');
+      showMessage('modifyUserMessages','',null);
+      _lookup(u,'modify');
+    }
+    function _lookup(username,ctx){
+      fetch(`${API.url}?code=${API.key}`,{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'lookup',username})
+      })
+      .then(r=>r.ok? r.json(): r.json().then(e=>Promise.reject(e)))
+      .then(user=>{
+        if(ctx==='modify'){
+          currentUser=user;
+          displayCurrentUserSettings();
+          showModifyFields();
+        } else {
+          displayDeprovisionUserSettings(user);
+        }
+      })
+      .catch(err=>{
+        console.error(err);
+        showMessage(ctx==='modify'?'modifyUserMessages':'deprovisionUserMessages',
+                    err.error||err.message,'error');
+      });
+    }
+    function displayCurrentUserSettings(){
+      const s=document.getElementById('currentSettings');
+      s.innerHTML=`
+        <div class="current-setting"><strong>Phone Number:</strong> ${formatPhoneNumber(currentUser.phoneNumber)}</div>
+        <div class="current-setting"><strong>Intl Calling:</strong> ${currentUser.internationalCalling?'Yes':'No'}</div>
+        <div class="current-setting"><strong>CQ Groups:</strong> ${(currentUser.callQueueGroups||[]).join(', ')||'None'}</div>
+        <div class="current-setting"><strong>AAs:</strong> ${(currentUser.autoAttendants||[]).join(', ')||'None'}</div>
+        <div class="current-setting"><strong>CQMgrs:</strong> ${(currentUser.callQueueManagers||[]).join(', ')||'None'}</div>`;
+      document.getElementById('currentUserInfo').style.display='block';
+    }
+    function showModifyFields(){
+      ['modifyPhoneGroup','modifyIntlGroup',
+       'modifyCallQueueGroupsGroup','modifyAutoAttendantsGroup',
+       'modifyCallQueueManagersGroup'].forEach(id=>document.getElementById(id).style.display='block');
+      document.getElementById('modifyUserSubmit').style.display='block';
+      document.getElementById('modifyIntlYes').checked=currentUser.internationalCalling;
+      document.getElementById('modifyIntlNo').checked=!currentUser.internationalCalling;
+    }
+
+    // UNCHANGED: Keep exact working deprovision logic
+    function lookupDeprovisionUser(){
+      console.log('lookupDeprovisionUser()');
+      const u=document.getElementById('deprovisionUsername').value.trim();
+      if(!u||!u.endsWith('@msoe.edu')) return showMessage('deprovisionUserMessages','Enter valid MSOE email','error');
+      showMessage('deprovisionUserMessages','',null);
+      _lookup(u,'deprovision');
+    }
+    function displayDeprovisionUserSettings(user){
+      const d=document.getElementById('deprovisionSettings');
+      d.innerHTML=`
+        <div class="current-setting"><strong>Username:</strong> ${user.username}</div>
+        <div class="current-setting"><strong>Phone:</strong> ${formatPhoneNumber(user.phoneNumber)}</div>
+        <div class="current-setting"><strong>Intl Calling:</strong> ${user.internationalCalling?'Yes':'No'}</div>
+        <div class="current-setting"><strong>CQ Groups:</strong> ${(user.callQueueGroups||[]).join(', ')||'None'}</div>
+        <div class="current-setting"><strong>AAs:</strong> ${(user.autoAttendants||[]).join(', ')||'None'}</div>
+        <div class="current-setting"><strong>CQMgrs:</strong> ${(user.callQueueManagers||[]).join(', ')||'None'}</div>`;
+      document.getElementById('deprovisionUserInfo').style.display='block';
+      document.getElementById('deprovisionUserSubmit').style.display='block';
+    }
+
+    // UNCHANGED: Keep exact working utility functions
+    function formatPhoneNumber(p){
+      let d=p.replace(/\D/g,'');
+      if(d.length===11&&d.startsWith('1')) return `+1 ${d.slice(1,4)} ${d.slice(4,7)} ${d.slice(7)}`;
+      if(d.length===10) return `+1 ${d.slice(0,3)} ${d.slice(3,6)} ${d.slice(6)}`;
+      return p;
+    }
+    function showMessage(id,msg,type){
+      let c=document.getElementById(id);
+      c.innerHTML=type?`<div class="${type}">${msg}</div>`:msg;
+    }
+    function removeItem(btn){btn.parentNode.remove();}
+    
+    // UNCHANGED: Keep exact working dynamic dropdown functions
+    function addCallQueueGroup(){
+      let c=document.getElementById('addCallQueueGroups');
+      let div=document.createElement('div');
+      div.className='dynamic-item';
+      div.innerHTML=`
+        <select class="form-control cq-group-select">
+          <option value="">Select Call Queue Group…</option>
+        </select>
+        <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>`;
+      c.appendChild(div);populateDropdowns();
+    }
+    function addAutoAttendant(){
+      let c=document.getElementById('addAutoAttendants');
+      let div=document.createElement('div');
+      div.className='dynamic-item';
+      div.innerHTML=`
+        <select class="form-control aa-select">
+          <option value="">Select Auto Attendant…</option>
+        </select>
+        <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>`;
+      c.appendChild(div);populateDropdowns();
+    }
+    function addCallQueueManager(){
+      let c=document.getElementById('addCallQueueManagers');
+      let div=document.createElement('div');
+      div.className='dynamic-item';
+      div.innerHTML=`
+        <select class="form-control cq-select">
+          <option value="">Select Call Queue…</option>
+        </select>
+        <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>`;
+      c.appendChild(div);populateDropdowns();
+    }
+
+    // Modify section dynamic functions (placeholder)
+    function addCallQueueGroupMembership(){
+      const select = document.getElementById('newCallQueueGroupSelect');
+      if(select.value) {
+        alert(`Added ${select.value} to call queue groups (feature to be implemented)`);
+        select.value = '';
+      }
+    }
+    function addAutoAttendantRole(){
+      const select = document.getElementById('newAutoAttendantSelect');
+      if(select.value) {
+        alert(`Added ${select.value} to auto attendants (feature to be implemented)`);
+        select.value = '';
+      }
+    }
+    function addCallQueueRole(){
+      const select = document.getElementById('newCallQueueSelect');
+      if(select.value) {
+        alert(`Added ${select.value} to call queue managers (feature to be implemented)`);
+        select.value = '';
+      }
+    }
+
+  </script>
+
+</body>
+</html>
