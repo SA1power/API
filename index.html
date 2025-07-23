@@ -332,8 +332,18 @@
     </div>
   </div>
 
-  <!-- Teams SDK -->
-  <script src="https://res.cdn.office.net/teams-js/2.0.0/js/MicrosoftTeams.min.js"></script>
+  <!-- Teams SDK - Try multiple versions for compatibility -->
+  <script src="https://res.cdn.office.net/teams-js/2.0.0/js/MicrosoftTeams.min.js" 
+          onerror="console.log('Teams SDK 2.0 failed, trying 1.11'); loadTeamsSDKFallback();"></script>
+  <script>
+    function loadTeamsSDKFallback() {
+      const script = document.createElement('script');
+      script.src = 'https://statics.teams.cdn.office.net/sdk/v1.11.0/js/MicrosoftTeams.min.js';
+      script.onload = () => console.log('Teams SDK 1.11 loaded successfully');
+      script.onerror = () => console.log('Teams SDK 1.11 also failed');
+      document.head.appendChild(script);
+    }
+  </script>
 
   <script>
     // Configuration
@@ -353,112 +363,164 @@
     let teamsContext = null;
     let isTeamsEnvironment = false;
 
-    // Teams initialization with cross-origin fix
+    // Teams initialization with timeout and compatibility fixes
     async function initializeTeams() {
-      console.log('Starting Teams initialization...');
-      
-      // First, check if we're in an iframe (Teams apps run in iframes)
-      const inIframe = window.self !== window.top;
-      console.log('Running in iframe:', inIframe);
+      console.log('=== TEAMS INITIALIZATION START ===');
+      console.log('Current URL:', window.location.href);
+      console.log('In iframe:', window.self !== window.top);
+      console.log('User Agent:', navigator.userAgent);
       
       // Check if Teams SDK is available
       if (typeof microsoftTeams === 'undefined') {
-        console.log('Teams SDK not loaded - not in Teams environment');
+        console.log('Teams SDK not available');
         isTeamsEnvironment = false;
         updateTeamsStatus('⚠️ Teams SDK not available - using fallback authentication', 'warning');
         return;
       }
       
-      console.log('Teams SDK available, attempting initialization...');
+      console.log('Teams SDK available, version check...');
+      console.log('Teams SDK object:', microsoftTeams);
       
       try {
-        // For cross-origin issues, we need to initialize differently
-        // Use the newer Teams SDK approach that handles cross-origin frames
+        // Different initialization approaches based on SDK version
+        let initializationSuccessful = false;
         
-        // Set up Teams app initialization with cross-origin handling
-        const initOptions = {
-          allowedOrigins: ['https://teams.microsoft.com', 'https://teams.microsoft.us', 'https://gov.teams.microsoft.us']
-        };
-        
-        console.log('Initializing with cross-origin options...');
-        
-        // Try the initialization without checking parent location
-        await microsoftTeams.app.initialize();
-        console.log('Teams app.initialize() completed');
-        
-        // Instead of checking context immediately, wait a bit for Teams to settle
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Try to get context with a more permissive approach
-        try {
-          teamsContext = await microsoftTeams.app.getContext();
-          console.log('Teams context obtained:', teamsContext);
-        } catch (contextError) {
-          console.log('Direct context failed, trying alternative approach:', contextError);
-          
-          // Alternative: assume we're in Teams if we got this far and we're in an iframe
-          if (inIframe) {
-            console.log('Assuming Teams environment based on iframe context');
-            teamsContext = { app: { host: { name: 'Teams' } } }; // Minimal mock context
-          } else {
-            throw contextError;
+        // Try modern SDK approach first (v2.0+)
+        if (microsoftTeams.app && typeof microsoftTeams.app.initialize === 'function') {
+          console.log('Trying modern SDK (v2.0+) initialization...');
+          try {
+            await Promise.race([
+              microsoftTeams.app.initialize(),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('Modern init timeout')), 3000))
+            ]);
+            console.log('Modern SDK initialization successful');
+            initializationSuccessful = true;
+            
+            // Get context with modern SDK
+            try {
+              teamsContext = await Promise.race([
+                microsoftTeams.app.getContext(),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Context timeout')), 2000))
+              ]);
+              console.log('Modern context obtained:', teamsContext);
+            } catch (contextError) {
+              console.log('Modern context failed:', contextError);
+              teamsContext = { app: { host: { name: 'Teams' } } }; // Mock context
+            }
+            
+          } catch (modernError) {
+            console.log('Modern SDK failed:', modernError);
           }
         }
         
-        if (teamsContext) {
+        // Try legacy SDK approach (v1.x) if modern failed
+        if (!initializationSuccessful && microsoftTeams.initialize && typeof microsoftTeams.initialize === 'function') {
+          console.log('Trying legacy SDK (v1.x) initialization...');
+          try {
+            await new Promise((resolve, reject) => {
+              const timeout = setTimeout(() => reject(new Error('Legacy init timeout')), 3000);
+              microsoftTeams.initialize(() => {
+                clearTimeout(timeout);
+                console.log('Legacy SDK initialization successful');
+                resolve();
+              });
+            });
+            initializationSuccessful = true;
+            
+            // Get context with legacy SDK
+            try {
+              teamsContext = await new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => reject(new Error('Legacy context timeout')), 2000);
+                microsoftTeams.getContext((context) => {
+                  clearTimeout(timeout);
+                  console.log('Legacy context obtained:', context);
+                  resolve(context);
+                });
+              });
+            } catch (contextError) {
+              console.log('Legacy context failed:', contextError);
+              teamsContext = { entityId: 'teams-app' }; // Mock legacy context
+            }
+            
+          } catch (legacyError) {
+            console.log('Legacy SDK failed:', legacyError);
+          }
+        }
+        
+        // If we're in an iframe but initialization failed, assume Teams anyway
+        const inIframe = window.self !== window.top;
+        if (!initializationSuccessful && inIframe) {
+          console.log('Initialization failed but detected iframe - assuming Teams environment');
+          initializationSuccessful = true;
+          teamsContext = { app: { host: { name: 'Teams' } } };
+        }
+        
+        if (initializationSuccessful) {
           isTeamsEnvironment = true;
           updateTeamsStatus('✅ Teams detected - SSO enabled', 'authenticated');
           console.log('Teams environment confirmed');
           
-          // Test SSO capability with better error handling
-          try {
-            console.log('Testing SSO capability...');
-            const testToken = await microsoftTeams.authentication.getAuthToken({
-              resources: [`api://${AZURE_CONFIG.functionAppClientId}/.default`],
-              silent: true
-            });
-            updateTeamsStatus('✅ Teams authenticated - SSO confirmed working', 'authenticated');
-            console.log('SSO test successful');
-          } catch (ssoTest) {
-            console.warn('SSO test failed but Teams detected:', ssoTest);
-            // Still consider it a Teams environment even if SSO needs consent
-            updateTeamsStatus('✅ Teams detected - SSO available (may need consent)', 'authenticated');
-          }
+          // Test SSO with both SDK versions
+          await testSSOCapability();
           
         } else {
-          throw new Error('Teams context could not be established');
+          throw new Error('All initialization methods failed');
         }
         
       } catch (error) {
-        console.error('Teams initialization error:', error);
+        console.error('Teams initialization completely failed:', error);
+        isTeamsEnvironment = false;
+        updateTeamsStatus(`⚠️ Teams init failed: ${error.message} - using fallback`, 'warning');
+      }
+      
+      console.log('=== TEAMS INITIALIZATION END ===');
+      console.log('Final isTeamsEnvironment:', isTeamsEnvironment);
+    }
+    
+    async function testSSOCapability() {
+      try {
+        console.log('Testing SSO capability...');
         
-        // Special handling for cross-origin errors
-        if (error.message.includes('cross-origin') || error.message.includes('Blocked a frame')) {
-          console.log('Cross-origin error detected - trying iframe-based detection');
-          
-          // If we're in an iframe and have cross-origin issues, 
-          // we might still be in Teams but just can't access parent
-          if (inIframe) {
-            console.log('Detected iframe environment despite cross-origin issues');
-            isTeamsEnvironment = true;
-            teamsContext = { app: { host: { name: 'Teams' } } }; // Mock minimal context
-            updateTeamsStatus('✅ Teams detected (cross-origin) - SSO available', 'authenticated');
-            return;
+        let ssoToken = null;
+        
+        // Try modern SDK SSO
+        if (microsoftTeams.authentication && microsoftTeams.authentication.getAuthToken) {
+          try {
+            ssoToken = await microsoftTeams.authentication.getAuthToken({
+              resources: [`api://${AZURE_CONFIG.functionAppClientId}/.default`],
+              silent: true
+            });
+            console.log('Modern SSO successful');
+          } catch (modernSSOError) {
+            console.log('Modern SSO failed:', modernSSOError);
           }
         }
         
-        isTeamsEnvironment = false;
-        
-        // Provide more specific error messages
-        if (error.message.includes('timeout')) {
-          updateTeamsStatus('⚠️ Teams initialization timeout - using fallback', 'warning');
-        } else if (error.message.includes('cross-origin')) {
-          updateTeamsStatus('⚠️ Cross-origin issue - trying Teams SSO anyway', 'warning');
-          // Even with cross-origin issues, we might still be able to use SSO
-          isTeamsEnvironment = true;
-        } else {
-          updateTeamsStatus(`⚠️ Teams init failed: ${error.message.slice(0, 50)}... - using fallback`, 'warning');
+        // Try legacy SDK SSO if modern failed
+        if (!ssoToken && microsoftTeams.authentication && microsoftTeams.authentication.getAuthToken) {
+          try {
+            ssoToken = await new Promise((resolve, reject) => {
+              microsoftTeams.authentication.getAuthToken({
+                resources: [`api://${AZURE_CONFIG.functionAppClientId}/.default`],
+                successCallback: resolve,
+                failureCallback: reject
+              });
+            });
+            console.log('Legacy SSO successful');
+          } catch (legacySSOError) {
+            console.log('Legacy SSO failed:', legacySSOError);
+          }
         }
+        
+        if (ssoToken) {
+          updateTeamsStatus('✅ Teams authenticated - SSO confirmed working', 'authenticated');
+        } else {
+          updateTeamsStatus('✅ Teams detected - SSO available (may need consent)', 'authenticated');
+        }
+        
+      } catch (ssoError) {
+        console.warn('SSO test failed:', ssoError);
+        updateTeamsStatus('✅ Teams detected - SSO available (may need consent)', 'authenticated');
       }
     }
 
@@ -685,34 +747,65 @@
       debugButton.textContent = '🔍 Debug Teams Connection';
       debugButton.className = 'btn btn-secondary btn-small';
       debugButton.style.marginLeft = '10px';
-      debugButton.onclick = async () => {
-        console.log('=== TEAMS DEBUG INFO ===');
+      debugButton.onclick = function() {
+        console.log('=== MANUAL TEAMS DEBUG ===');
         console.log('Teams SDK available:', typeof microsoftTeams !== 'undefined');
         console.log('In iframe:', window.self !== window.top);
         console.log('URL:', window.location.href);
         console.log('Referrer:', document.referrer);
         console.log('User Agent:', navigator.userAgent);
+        console.log('Current isTeamsEnvironment:', isTeamsEnvironment);
+        console.log('Current teamsContext:', teamsContext);
         
+        // Test if Teams object has expected methods
         if (typeof microsoftTeams !== 'undefined') {
-          try {
-            await microsoftTeams.app.initialize();
-            const context = await microsoftTeams.app.getContext();
-            console.log('Teams context:', context);
-            
-            // Try SSO
-            try {
-              const token = await microsoftTeams.authentication.getAuthToken({
-                resources: [`api://${AZURE_CONFIG.functionAppClientId}/.default`]
-              });
-              console.log('SSO token obtained successfully');
-            } catch (ssoError) {
-              console.log('SSO error:', ssoError);
-            }
-          } catch (initError) {
-            console.log('Teams init error:', initError);
+          console.log('Teams object structure:');
+          console.log('- microsoftTeams.app:', typeof microsoftTeams.app);
+          console.log('- microsoftTeams.initialize:', typeof microsoftTeams.initialize);
+          console.log('- microsoftTeams.authentication:', typeof microsoftTeams.authentication);
+          
+          if (microsoftTeams.app) {
+            console.log('- microsoftTeams.app.initialize:', typeof microsoftTeams.app.initialize);
+            console.log('- microsoftTeams.app.getContext:', typeof microsoftTeams.app.getContext);
           }
+          
+          // Manual test of Teams initialization
+          console.log('Attempting manual Teams test...');
+          
+          if (microsoftTeams.app && microsoftTeams.app.initialize) {
+            microsoftTeams.app.initialize()
+              .then(() => {
+                console.log('Manual modern init: SUCCESS');
+                return microsoftTeams.app.getContext();
+              })
+              .then(context => {
+                console.log('Manual modern context: SUCCESS', context);
+              })
+              .catch(error => {
+                console.log('Manual modern test: FAILED', error);
+              });
+          } else if (microsoftTeams.initialize) {
+            microsoftTeams.initialize(() => {
+              console.log('Manual legacy init: SUCCESS');
+              microsoftTeams.getContext(context => {
+                console.log('Manual legacy context: SUCCESS', context);
+              });
+            });
+          }
+        } else {
+          console.log('Teams SDK not loaded at all');
         }
-        console.log('=== END DEBUG INFO ===');
+        
+        console.log('=== END MANUAL DEBUG ===');
+        
+        // Visual feedback
+        const originalText = debugButton.textContent;
+        debugButton.textContent = '✅ Debug Complete (check console)';
+        debugButton.style.background = '#28a745';
+        setTimeout(() => {
+          debugButton.textContent = originalText;
+          debugButton.style.background = '';
+        }, 3000);
       };
       teamsStatus.appendChild(debugButton);
       
