@@ -857,42 +857,79 @@
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({action:'getdropdowndata'})
       });
-      if (!r.ok) return console.error('Dropdown fetch failed');
-      dropdownData = await r.json();
-      populateDropdowns();
+        if (!r.ok) {
+          console.error('Dropdown fetch failed:', r.status, r.statusText);
+          return;
+        }
+        dropdownData = await r.json();
+        console.log('Dropdown data loaded:', dropdownData);
+        populateDropdowns();
+        
+      } catch (error) {
+        console.error('Error loading data:', error);
+        
+        // Show user-friendly error messages
+        const selects = document.querySelectorAll('select');
+        selects.forEach(select => {
+          if (select.innerHTML.includes('Loading')) {
+            select.innerHTML = '<option value="">Error loading data - check console</option>';
+          }
+        });
+      }
     }
 
+    // UNCHANGED: Keep exact working dropdown logic
     function populateDropdowns() {
+      console.log('Populating dropdowns with data:', dropdownData);
+      
+      // Users
       const uSel = document.getElementById('addUsername');
-      uSel.innerHTML = '<option value="">Select a user…</option>';
-      (dropdownData.a5Users||[]).forEach(u=>uSel.appendChild(new Option(u,u)));
+      if (uSel) {
+        uSel.innerHTML = '<option value="">Select a user…</option>';
+        (dropdownData.a5Users||[]).forEach(u=>uSel.appendChild(new Option(u,u)));
+        console.log('Users populated:', dropdownData.a5Users?.length || 0);
+      }
 
+      // Call‑Queue Groups
       document.querySelectorAll('.cq-group-select').forEach(sel=>{
         sel.innerHTML = '<option value="">Select Call Queue Group…</option>';
         (dropdownData.callQueueGroups||[]).forEach(g=>sel.appendChild(new Option(g,g)));
       });
+      console.log('Call Queue Groups populated:', dropdownData.callQueueGroups?.length || 0);
 
+      // Auto‑Attendants
       document.querySelectorAll('.aa-select').forEach(sel=>{
         sel.innerHTML = '<option value="">Select Auto Attendant…</option>';
         (dropdownData.autoAttendants||[]).forEach(a=>sel.appendChild(new Option(a,a)));
       });
+      console.log('Auto Attendants populated:', dropdownData.autoAttendants?.length || 0);
 
+      // Call‑Queues
       document.querySelectorAll('.cq-select').forEach(sel=>{
         sel.innerHTML = '<option value="">Select Call Queue…</option>';
         (dropdownData.callQueues||[]).forEach(q=>sel.appendChild(new Option(q,q)));
       });
+      console.log('Call Queues populated:', dropdownData.callQueues?.length || 0);
     }
 
+    // UNCHANGED: Keep exact working dropdown logic
     function populatePhoneDropdowns() {
+      console.log('Populating phone dropdowns...');
+      
       const p1 = document.getElementById('addPhoneNumber');
-      p1.innerHTML = '<option value="">Select a phone number…</option>';
-      phoneNumbers.filter(i=>i.AvailablePhoneNumber.startsWith('1414277'))
-        .forEach(i=>p1.appendChild(new Option(i.AvailablePhoneNumber,i.AvailablePhoneNumber)));
+      if (p1) {
+        p1.innerHTML = '<option value="">Select a phone number…</option>';
+        const filteredNumbers = phoneNumbers.filter(i=>i.AvailablePhoneNumber.startsWith('1414277'));
+        filteredNumbers.forEach(i=>p1.appendChild(new Option(i.AvailablePhoneNumber,i.AvailablePhoneNumber)));
+        console.log('Add phone numbers populated:', filteredNumbers.length);
+      }
+      
       const p2 = document.getElementById('modifyPhoneNumber');
       if(p2){
         p2.innerHTML = '<option value="">Select a phone number…</option>';
-        phoneNumbers.filter(i=>i.AvailablePhoneNumber.startsWith('1414277'))
-          .forEach(i=>p2.appendChild(new Option(i.AvailablePhoneNumber,i.AvailablePhoneNumber)));
+        const filteredNumbers = phoneNumbers.filter(i=>i.AvailablePhoneNumber.startsWith('1414277'));
+        filteredNumbers.forEach(i=>p2.appendChild(new Option(i.AvailablePhoneNumber,i.AvailablePhoneNumber)));
+        console.log('Modify phone numbers populated:', filteredNumbers.length);
       }
     }
 
