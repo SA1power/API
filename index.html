@@ -353,35 +353,84 @@
     let teamsContext = null;
     let isTeamsEnvironment = false;
 
-    // Teams initialization
+    // Teams initialization with enhanced debugging
     async function initializeTeams() {
+      console.log('Starting Teams initialization...');
+      
+      // First, check if we're in an iframe (Teams apps run in iframes)
+      const inIframe = window.self !== window.top;
+      console.log('Running in iframe:', inIframe);
+      
+      // Check if Teams SDK is available
+      if (typeof microsoftTeams === 'undefined') {
+        console.log('Teams SDK not loaded - not in Teams environment');
+        isTeamsEnvironment = false;
+        updateTeamsStatus('⚠️ Teams SDK not available - using fallback authentication', 'warning');
+        return;
+      }
+      
+      console.log('Teams SDK available, attempting initialization...');
+      
       try {
-        // Check if we're in a Teams environment
-        if (typeof microsoftTeams === 'undefined') {
-          console.log('Teams SDK not available - not in Teams environment');
-          isTeamsEnvironment = false;
-          updateTeamsStatus('⚠️ Running outside Teams - using fallback authentication', 'warning');
-          return;
-        }
-
-        // Try to initialize Teams
-        await microsoftTeams.app.initialize();
+        // Check if we're in a Teams environment by looking at the URL/referrer
+        const isTeamsUrl = window.location.href.includes('teams.microsoft.com') || 
+                          document.referrer.includes('teams.microsoft.com') ||
+                          window.parent.location.href.includes('teams.microsoft.com');
         
-        // Get Teams context to confirm we're properly initialized
-        teamsContext = await microsoftTeams.app.getContext();
+        console.log('Teams URL detected:', isTeamsUrl);
         
-        if (teamsContext && teamsContext.app) {
+        // Initialize Teams with timeout
+        const initPromise = microsoftTeams.app.initialize();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Teams initialization timeout')), 5000)
+        );
+        
+        await Promise.race([initPromise, timeoutPromise]);
+        console.log('Teams app.initialize() completed');
+        
+        // Try to get context with timeout
+        const contextPromise = microsoftTeams.app.getContext();
+        const contextTimeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Context timeout')), 3000)
+        );
+        
+        teamsContext = await Promise.race([contextPromise, contextTimeoutPromise]);
+        console.log('Teams context obtained:', teamsContext);
+        
+        if (teamsContext && (teamsContext.app || teamsContext.page)) {
           isTeamsEnvironment = true;
           updateTeamsStatus('✅ Teams authenticated - SSO enabled', 'authenticated');
-          console.log('Teams context obtained:', teamsContext);
+          console.log('Teams environment confirmed');
+          
+          // Test SSO capability
+          try {
+            console.log('Testing SSO capability...');
+            await microsoftTeams.authentication.getAuthToken({
+              resources: [`api://${AZURE_CONFIG.functionAppClientId}/.default`],
+              silent: true
+            });
+            updateTeamsStatus('✅ Teams authenticated - SSO confirmed working', 'authenticated');
+          } catch (ssoTest) {
+            console.warn('SSO test failed:', ssoTest);
+            updateTeamsStatus('✅ Teams detected - SSO may need consent', 'authenticated');
+          }
+          
         } else {
-          throw new Error('Failed to get Teams context');
+          throw new Error('Teams context invalid or missing required properties');
         }
         
       } catch (error) {
-        console.log('Teams initialization failed:', error);
+        console.error('Teams initialization error:', error);
         isTeamsEnvironment = false;
-        updateTeamsStatus('⚠️ Teams initialization failed - using fallback authentication', 'warning');
+        
+        // Provide more specific error messages
+        if (error.message.includes('timeout')) {
+          updateTeamsStatus('⚠️ Teams initialization timeout - using fallback', 'warning');
+        } else if (error.message.includes('not supported')) {
+          updateTeamsStatus('⚠️ Teams features not supported - using fallback', 'warning');
+        } else {
+          updateTeamsStatus(`⚠️ Teams init failed: ${error.message} - using fallback`, 'warning');
+        }
       }
     }
 
@@ -594,8 +643,50 @@
 
     // Initialize everything
     document.addEventListener('DOMContentLoaded', async () => {
+      console.log('DOM loaded, starting initialization...');
+      console.log('Current URL:', window.location.href);
+      console.log('Referrer:', document.referrer);
+      console.log('In iframe:', window.self !== window.top);
+      
       // Initialize Teams first
       await initializeTeams();
+      
+      // Add a manual Teams check button for debugging
+      const teamsStatus = document.getElementById('teamsStatus');
+      const debugButton = document.createElement('button');
+      debugButton.textContent = '🔍 Debug Teams Connection';
+      debugButton.className = 'btn btn-secondary btn-small';
+      debugButton.style.marginLeft = '10px';
+      debugButton.onclick = async () => {
+        console.log('=== TEAMS DEBUG INFO ===');
+        console.log('Teams SDK available:', typeof microsoftTeams !== 'undefined');
+        console.log('In iframe:', window.self !== window.top);
+        console.log('URL:', window.location.href);
+        console.log('Referrer:', document.referrer);
+        console.log('User Agent:', navigator.userAgent);
+        
+        if (typeof microsoftTeams !== 'undefined') {
+          try {
+            await microsoftTeams.app.initialize();
+            const context = await microsoftTeams.app.getContext();
+            console.log('Teams context:', context);
+            
+            // Try SSO
+            try {
+              const token = await microsoftTeams.authentication.getAuthToken({
+                resources: [`api://${AZURE_CONFIG.functionAppClientId}/.default`]
+              });
+              console.log('SSO token obtained successfully');
+            } catch (ssoError) {
+              console.log('SSO error:', ssoError);
+            }
+          } catch (initError) {
+            console.log('Teams init error:', initError);
+          }
+        }
+        console.log('=== END DEBUG INFO ===');
+      };
+      teamsStatus.appendChild(debugButton);
       
       // Load data
       loadPhoneNumbers();
