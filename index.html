@@ -356,17 +356,32 @@
     // Teams initialization
     async function initializeTeams() {
       try {
+        // Check if we're in a Teams environment
+        if (typeof microsoftTeams === 'undefined') {
+          console.log('Teams SDK not available - not in Teams environment');
+          isTeamsEnvironment = false;
+          updateTeamsStatus('⚠️ Running outside Teams - using fallback authentication', 'warning');
+          return;
+        }
+
+        // Try to initialize Teams
         await microsoftTeams.app.initialize();
-        teamsContext = await microsoftTeams.app.getContext();
-        isTeamsEnvironment = true;
         
-        updateTeamsStatus('✅ Teams authenticated - SSO enabled', 'authenticated');
-        console.log('Teams context:', teamsContext);
+        // Get Teams context to confirm we're properly initialized
+        teamsContext = await microsoftTeams.app.getContext();
+        
+        if (teamsContext && teamsContext.app) {
+          isTeamsEnvironment = true;
+          updateTeamsStatus('✅ Teams authenticated - SSO enabled', 'authenticated');
+          console.log('Teams context obtained:', teamsContext);
+        } else {
+          throw new Error('Failed to get Teams context');
+        }
         
       } catch (error) {
-        console.log('Not running in Teams environment:', error);
+        console.log('Teams initialization failed:', error);
         isTeamsEnvironment = false;
-        updateTeamsStatus('⚠️ Running outside Teams - using fallback authentication', 'warning');
+        updateTeamsStatus('⚠️ Teams initialization failed - using fallback authentication', 'warning');
       }
     }
 
@@ -379,11 +394,12 @@
     // Enhanced authentication for batch operations
     async function getAuthToken() {
       if (!isTeamsEnvironment) {
-        // Fallback for non-Teams environment
+        console.log('Not in Teams environment, skipping SSO');
         return null;
       }
 
       try {
+        console.log('Attempting to get auth token...');
         const token = await microsoftTeams.authentication.getAuthToken({
           resources: [`api://${AZURE_CONFIG.functionAppClientId}/.default`]
         });
@@ -391,7 +407,20 @@
         return token;
       } catch (error) {
         console.error('Failed to get auth token:', error);
-        throw new Error(`Authentication failed: ${error.message}`);
+        
+        // If token fails, try interactive authentication
+        try {
+          console.log('Attempting interactive authentication...');
+          const interactiveToken = await microsoftTeams.authentication.authenticate({
+            url: `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=${AZURE_CONFIG.functionAppClientId}&response_type=token&scope=api://${AZURE_CONFIG.functionAppClientId}/.default&redirect_uri=${encodeURIComponent(window.location.origin)}`,
+            width: 600,
+            height: 535
+          });
+          return interactiveToken;
+        } catch (interactiveError) {
+          console.error('Interactive authentication also failed:', interactiveError);
+          throw new Error(`Authentication failed: ${error.message}`);
+        }
       }
     }
 
@@ -404,80 +433,75 @@
       submitBtn.disabled = true;
 
       try {
+        // Always try the Azure Function first (whether in Teams or not)
+        submitBtn.textContent = '🔐 Authenticating...';
+        
+        let authHeaders = {};
+        
         if (isTeamsEnvironment) {
-          // Teams SSO flow
-          submitBtn.textContent = '🔐 Authenticating...';
-          const token = await getAuthToken();
-          
-          submitBtn.textContent = '⚙️ Processing Operations...';
-          
-          const response = await fetch(AZURE_CONFIG.functionAppUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ operations: batchOperations })
-          });
+          // Try to get Teams SSO token
+          try {
+            const token = await getAuthToken();
+            if (token) {
+              authHeaders['Authorization'] = `Bearer ${token}`;
+              console.log('Using Teams SSO token');
+            }
+          } catch (authError) {
+            console.warn('Teams SSO failed, proceeding without token:', authError);
+            updateTeamsStatus('⚠️ SSO failed - proceeding with function key auth', 'warning');
+          }
+        }
+        
+        // If no SSO token, we'll rely on the function's configured authentication
+        submitBtn.textContent = '⚙️ Processing Operations...';
+        
+        console.log('Calling Azure Function with payload:', { operations: batchOperations });
+        
+        const response = await fetch(AZURE_CONFIG.functionAppUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...authHeaders
+          },
+          body: JSON.stringify({ operations: batchOperations })
+        });
 
-          await handleBatchResponse(response);
+        console.log('Azure Function response status:', response.status);
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log('Azure Function success response:', result);
+          
+          displayBatchResults([{
+            operation: { action: 'batch', username: 'system' },
+            success: true,
+            message: result.message || 'All operations completed successfully via Azure Function'
+          }], 1, 0);
+          
+          // Clear successful operations
+          batchOperations = [];
           
         } else {
-          // Fallback to original API for non-Teams environment
-          submitBtn.textContent = '⚙️ Processing Operations...';
+          // If Azure Function fails, fall back to individual API calls
+          const errorText = await response.text();
+          console.error('Azure Function failed:', response.status, errorText);
           
-          const results = [];
-          let successCount = 0;
-          let errorCount = 0;
-
-          for (let operation of batchOperations) {
-            try {
-              const response = await fetch(`${API.url}?code=${API.key}`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(operation)
-              });
-
-              if (response.ok) {
-                const result = await response.json();
-                results.push({
-                  operation: operation,
-                  success: true,
-                  message: result.message || `${operation.action} successful`
-                });
-                successCount++;
-              } else {
-                const error = await response.json();
-                results.push({
-                  operation: operation,
-                  success: false,
-                  message: error.error || 'Unknown error'
-                });
-                errorCount++;
-              }
-            } catch (error) {
-              results.push({
-                operation: operation,
-                success: false,
-                message: error.message || 'Network error'
-              });
-              errorCount++;
-            }
-          }
-
-          displayBatchResults(results, successCount, errorCount);
-          batchOperations = batchOperations.filter(op => 
-            !results.find(r => r.operation.id === op.id && r.success)
-          );
+          updateTeamsStatus('⚠️ Azure Function unavailable - using fallback API', 'warning');
+          submitBtn.textContent = '⚙️ Using fallback API...';
+          
+          // Fallback to original individual API calls
+          await executeIndividualOperations(submitBtn);
         }
 
       } catch (error) {
-        console.error('Batch operation error:', error);
-        displayBatchResults([{
-          operation: { action: 'batch', username: 'system' },
-          success: false,
-          message: error.message || 'Operation failed'
-        }], 0, 1);
+        console.error('Network error calling Azure Function:', error);
+        
+        // Network error - try fallback
+        updateTeamsStatus('⚠️ Network error - using fallback API', 'warning');
+        submitBtn.textContent = '⚙️ Using fallback API...';
+        
+        await executeIndividualOperations(submitBtn);
+        
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
@@ -486,24 +510,84 @@
       }
     }
 
+    // Fallback function for individual API calls
+    async function executeIndividualOperations(submitBtn) {
+      const results = [];
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (let operation of batchOperations) {
+        try {
+          submitBtn.textContent = `⚙️ Processing ${operation.action} for ${operation.username}...`;
+          
+          const response = await fetch(`${API.url}?code=${API.key}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(operation)
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            results.push({
+              operation: operation,
+              success: true,
+              message: result.message || `${operation.action} successful`
+            });
+            successCount++;
+          } else {
+            const error = await response.json();
+            results.push({
+              operation: operation,
+              success: false,
+              message: error.error || 'Unknown error'
+            });
+            errorCount++;
+          }
+        } catch (error) {
+          results.push({
+            operation: operation,
+            success: false,
+            message: error.message || 'Network error'
+          });
+          errorCount++;
+        }
+      }
+
+      displayBatchResults(results, successCount, errorCount);
+      batchOperations = batchOperations.filter(op => 
+        !results.find(r => r.operation.id === op.id && r.success)
+      );
+    }
+
     async function handleBatchResponse(response) {
       if (response.ok) {
         const result = await response.json();
         displayBatchResults([{
           operation: { action: 'batch', username: 'system' },
           success: true,
-          message: result.message || 'All operations completed successfully'
+          message: result.message || 'All operations completed successfully via Azure Function'
         }], 1, 0);
         
         // Clear successful operations
         batchOperations = [];
         
       } else {
-        const error = await response.json();
+        const errorText = await response.text();
+        let errorMessage;
+        
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.error || errorJson.message || `HTTP ${response.status}: ${response.statusText}`;
+        } catch (e) {
+          errorMessage = `HTTP ${response.status}: ${response.statusText} - ${errorText}`;
+        }
+        
+        console.error('Azure Function error:', errorMessage);
+        
         displayBatchResults([{
           operation: { action: 'batch', username: 'system' },
           success: false,
-          message: error.error || `HTTP ${response.status}: ${response.statusText}`
+          message: errorMessage
         }], 0, 1);
       }
     }
