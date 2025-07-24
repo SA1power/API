@@ -388,7 +388,7 @@
             });
             console.log('SSO token obtained successfully');
             
-            submitBtn.textContent = '⚙️ Calling Azure Function...';
+            submitBtn.textContent = '⚙️ Successfully Submitted Changes';
             
             const response = await fetch(AZURE_CONFIG.functionAppUrl, {
               method: 'POST',
