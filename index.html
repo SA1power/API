@@ -399,7 +399,7 @@
       resources: [`api://${AZURE_CONFIG.functionAppClientId}/.default`]
     });
 
-    submitBtn.textContent = '🚀 Triggering Runbook…';
+    submitBtn.textContent = '🚀 Updates Submitted Successfully!;
     const runbookResp = await fetch(AZURE_CONFIG.functionAppUrl, {
       method: 'POST',
       headers: {
