@@ -369,7 +369,7 @@
       }
     }
 
-    // Enhanced submit function with SSO
+    // Enhanced submit function with detailed error handling
     async function submitAllOperations() {
       if (batchOperations.length === 0) return;
 
@@ -379,43 +379,103 @@
 
       try {
         if (isTeamsEnvironment) {
-          // Teams SSO flow
+          // Teams SSO flow with detailed error handling
           submitBtn.textContent = '🔐 Authenticating...';
-          const token = await microsoftTeams.authentication.getAuthToken({
-            resources: [`api://${AZURE_CONFIG.functionAppClientId}/.default`]
-          });
           
-          submitBtn.textContent = '⚙️ Processing Operations...';
-          
-          const response = await fetch(AZURE_CONFIG.functionAppUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ operations: batchOperations })
-          });
+          try {
+            const token = await microsoftTeams.authentication.getAuthToken({
+              resources: [`api://${AZURE_CONFIG.functionAppClientId}/.default`]
+            });
+            console.log('SSO token obtained successfully');
+            
+            submitBtn.textContent = '⚙️ Calling Azure Function...';
+            
+            const response = await fetch(AZURE_CONFIG.functionAppUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({ operations: batchOperations })
+            });
 
-          if (response.ok) {
-            const result = await response.json();
-            displayBatchResults([{
-              operation: { action: 'batch', username: 'system' },
-              success: true,
-              message: result.message || 'All operations completed successfully'
-            }], 1, 0);
-            batchOperations = [];
-          } else {
-            const error = await response.json();
+            console.log('Azure Function response status:', response.status);
+            console.log('Azure Function response headers:', [...response.headers.entries()]);
+
+            if (response.ok) {
+              // Check if response has content
+              const contentType = response.headers.get('content-type');
+              console.log('Response content-type:', contentType);
+              
+              const responseText = await response.text();
+              console.log('Raw response text:', responseText);
+              
+              if (!responseText || responseText.trim() === '') {
+                console.log('Empty response received');
+                displayBatchResults([{
+                  operation: { action: 'batch', username: 'system' },
+                  success: true,
+                  message: 'Operation completed successfully (empty response from Azure Function)'
+                }], 1, 0);
+                batchOperations = [];
+                return;
+              }
+              
+              try {
+                const result = JSON.parse(responseText);
+                console.log('Azure Function success:', result);
+                displayBatchResults([{
+                  operation: { action: 'batch', username: 'system' },
+                  success: true,
+                  message: result.message || 'All operations completed successfully via Azure Function'
+                }], 1, 0);
+                batchOperations = [];
+              } catch (jsonError) {
+                console.error('JSON parse error:', jsonError);
+                console.log('Treating as success with non-JSON response');
+                displayBatchResults([{
+                  operation: { action: 'batch', username: 'system' },
+                  success: true,
+                  message: `Operation completed. Response: ${responseText.substring(0, 100)}...`
+                }], 1, 0);
+                batchOperations = [];
+              }
+            } else {
+              const errorText = await response.text();
+              console.error('Azure Function error response:', errorText);
+              
+              let errorMessage = `Azure Function failed (${response.status}): `;
+              
+              if (response.status === 401) {
+                errorMessage += 'Authentication failed - check Azure AD configuration';
+              } else if (response.status === 403) {
+                errorMessage += 'Authorization failed - check app permissions';
+              } else if (response.status === 404) {
+                errorMessage += 'Function not found - check URL';
+              } else if (response.status === 500) {
+                errorMessage += 'Internal server error - check function logs';
+              } else {
+                errorMessage += errorText || 'Unknown error';
+              }
+              
+              displayBatchResults([{
+                operation: { action: 'batch', username: 'system' },
+                success: false,
+                message: errorMessage
+              }], 0, 1);
+            }
+          } catch (authError) {
+            console.error('SSO Authentication failed:', authError);
             displayBatchResults([{
               operation: { action: 'batch', username: 'system' },
               success: false,
-              message: error.error || `HTTP ${response.status}: ${response.statusText}`
+              message: `SSO Authentication failed: ${authError.message}. Check Teams app configuration.`
             }], 0, 1);
           }
           
         } else {
           // Fallback to original API for non-Teams environment
-          submitBtn.textContent = '⚙️ Processing Operations...';
+          submitBtn.textContent = '⚙️ Processing Operations (Fallback)...';
           
           const results = [];
           let successCount = 0;
@@ -463,11 +523,11 @@
         }
 
       } catch (error) {
-        console.error('Batch operation error:', error);
+        console.error('Unexpected error:', error);
         displayBatchResults([{
           operation: { action: 'batch', username: 'system' },
           success: false,
-          message: error.message || 'Operation failed'
+          message: `Unexpected error: ${error.message}`
         }], 0, 1);
       } finally {
         submitBtn.disabled = false;
