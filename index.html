@@ -371,75 +371,171 @@
 
     // Enhanced submit function with detailed error handling
     async function submitAllOperations() {
-  if (batchOperations.length === 0) return;
+      if (batchOperations.length === 0) return;
 
-  const submitBtn = document.getElementById('submitAllBatch');
-  const originalText = submitBtn.textContent;
-  submitBtn.disabled = true;
+      const submitBtn = document.getElementById('submitAllBatch');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
 
-  try {
-    // 1️⃣ First write every operation into dbo.tempuserstest via your INSERT-enabled API
-    submitBtn.textContent = '💾 Writing to SQL…';
-    await Promise.all(batchOperations.map(op =>
-      fetch(`${API.url}?code=${API.key}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(op)
-      }).then(resp => {
-        if (!resp.ok) {
-          return resp.json()
-            .then(err => Promise.reject(err.error || `Status ${resp.status}`));
+      try {
+        if (isTeamsEnvironment) {
+          // Teams SSO flow with detailed error handling
+          submitBtn.textContent = '🔐 Authenticating...';
+          
+          try {
+            const token = await microsoftTeams.authentication.getAuthToken({
+              resources: [`api://${AZURE_CONFIG.functionAppClientId}/.default`]
+            });
+            console.log('SSO token obtained successfully');
+            
+            submitBtn.textContent = '⚙️ Calling Azure Function...';
+            
+            const response = await fetch(AZURE_CONFIG.functionAppUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({ operations: batchOperations })
+            });
+
+            console.log('Azure Function response status:', response.status);
+            console.log('Azure Function response headers:', [...response.headers.entries()]);
+
+            if (response.ok) {
+              // Check if response has content
+              const contentType = response.headers.get('content-type');
+              console.log('Response content-type:', contentType);
+              
+              const responseText = await response.text();
+              console.log('Raw response text:', responseText);
+              
+              if (!responseText || responseText.trim() === '') {
+                console.log('Empty response received');
+                displayBatchResults([{
+                  operation: { action: 'batch', username: 'system' },
+                  success: true,
+                  message: 'Operation completed successfully (empty response from Azure Function)'
+                }], 1, 0);
+                batchOperations = [];
+                return;
+              }
+              
+              try {
+                const result = JSON.parse(responseText);
+                console.log('Azure Function success:', result);
+                displayBatchResults([{
+                  operation: { action: 'batch', username: 'system' },
+                  success: true,
+                  message: result.message || 'All operations completed successfully via Azure Function'
+                }], 1, 0);
+                batchOperations = [];
+              } catch (jsonError) {
+                console.error('JSON parse error:', jsonError);
+                console.log('Treating as success with non-JSON response');
+                displayBatchResults([{
+                  operation: { action: 'batch', username: 'system' },
+                  success: true,
+                  message: `Operation completed. Response: ${responseText.substring(0, 100)}...`
+                }], 1, 0);
+                batchOperations = [];
+              }
+            } else {
+              const errorText = await response.text();
+              console.error('Azure Function error response:', errorText);
+              
+              let errorMessage = `Azure Function failed (${response.status}): `;
+              
+              if (response.status === 401) {
+                errorMessage += 'Authentication failed - check Azure AD configuration';
+              } else if (response.status === 403) {
+                errorMessage += 'Authorization failed - check app permissions';
+              } else if (response.status === 404) {
+                errorMessage += 'Function not found - check URL';
+              } else if (response.status === 500) {
+                errorMessage += 'Internal server error - check function logs';
+              } else {
+                errorMessage += errorText || 'Unknown error';
+              }
+              
+              displayBatchResults([{
+                operation: { action: 'batch', username: 'system' },
+                success: false,
+                message: errorMessage
+              }], 0, 1);
+            }
+          } catch (authError) {
+            console.error('SSO Authentication failed:', authError);
+            displayBatchResults([{
+              operation: { action: 'batch', username: 'system' },
+              success: false,
+              message: `SSO Authentication failed: ${authError.message}. Check Teams app configuration.`
+            }], 0, 1);
+          }
+          
+        } else {
+          // Fallback to original API for non-Teams environment
+          submitBtn.textContent = '⚙️ Processing Operations (Fallback)...';
+          
+          const results = [];
+          let successCount = 0;
+          let errorCount = 0;
+
+          for (let operation of batchOperations) {
+            try {
+              const response = await fetch(`${API.url}?code=${API.key}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(operation)
+              });
+
+              if (response.ok) {
+                const result = await response.json();
+                results.push({
+                  operation: operation,
+                  success: true,
+                  message: result.message || `${operation.action} successful`
+                });
+                successCount++;
+              } else {
+                const error = await response.json();
+                results.push({
+                  operation: operation,
+                  success: false,
+                  message: error.error || 'Unknown error'
+                });
+                errorCount++;
+              }
+            } catch (error) {
+              results.push({
+                operation: operation,
+                success: false,
+                message: error.message || 'Network error'
+              });
+              errorCount++;
+            }
+          }
+
+          displayBatchResults(results, successCount, errorCount);
+          batchOperations = batchOperations.filter(op => 
+            !results.find(r => r.operation.id === op.id && r.success)
+          );
         }
-      })
-    ));
 
-    // 2️⃣ Once all rows are in SQL, trigger the Automation Runbook
-    submitBtn.textContent = '🔐 Authenticating…';
-    const token = await microsoftTeams.authentication.getAuthToken({
-      resources: [`api://${AZURE_CONFIG.functionAppClientId}/.default`]
-    });
-
-    submitBtn.textContent = '🚀 Changed Submitted Successfully!;
-    const runbookResp = await fetch(AZURE_CONFIG.functionAppUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ operations: batchOperations })
-    });
-
-    if (!runbookResp.ok) {
-      const text = await runbookResp.text();
-      throw new Error(`Runbook API ${runbookResp.status}: ${text}`);
+      } catch (error) {
+        console.error('Unexpected error:', error);
+        displayBatchResults([{
+          operation: { action: 'batch', username: 'system' },
+          success: false,
+          message: `Unexpected error: ${error.message}`
+        }], 0, 1);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+        updateBatchTable();
+        populatePhoneDropdowns();
+      }
     }
-
-    // 3️⃣ Success!
-    displayBatchResults([{
-      operation: { action: 'batch', username: 'system' },
-      success: true,
-      message: 'All requests queued and runbook started.'
-    }], 1, 0);
-
-    // Clear out the batch on success
-    batchOperations = [];
-
-  } catch (error) {
-    console.error(error);
-    displayBatchResults([{
-      operation: { action: 'batch', username: 'system' },
-      success: false,
-      message: `${error}`
-    }], 0, 1);
-  } finally {
-    // Restore button and UI regardless
-    submitBtn.disabled = false;
-    submitBtn.textContent = originalText;
-    updateBatchTable();
-    populatePhoneDropdowns();
-  }
-}
-
 
     document.addEventListener('DOMContentLoaded', ()=> {
       // Initialize Teams detection
