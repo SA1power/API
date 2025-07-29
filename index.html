@@ -60,6 +60,7 @@
     .teams-status{background:#e3f2fd;border:1px solid #2196f3;padding:10px;border-radius:4px;margin-bottom:15px;text-align:center}
     .teams-status.authenticated{background:#e8f5e8;border-color:#4caf50;color:#2e7d32}
     .teams-status.warning{background:#fff3cd;border-color:#ffc107;color:#856404}
+    .teams-status.error{background:#f8d7da;border-color:#dc3545;color:#721c24}
     
     @media(max-width:1200px){
       .main-layout{flex-direction:column}
@@ -74,6 +75,12 @@
     <!-- Teams Authentication Status -->
     <div id="teamsStatus" class="teams-status">
       🔄 Initializing Teams integration...
+    </div>
+    
+    <!-- Debug Info -->
+    <div id="debugInfo" style="background:#f0f0f0;border:1px solid #ccc;padding:10px;margin-bottom:15px;font-family:monospace;font-size:12px;display:none;">
+      <strong>Debug Info:</strong><br>
+      <div id="debugLog"></div>
     </div>
 
     <div class="main-layout">
@@ -349,113 +356,206 @@
     let batchOperations = [];
     let isTeamsEnvironment = false;
 
-    // Simple Teams detection
-    function initializeTeams() {
-      try {
-        if (typeof microsoftTeams !== 'undefined') {
-          microsoftTeams.initialize();
-          isTeamsEnvironment = true;
-          document.getElementById('teamsStatus').textContent = '✅ Teams detected - SSO enabled';
-          document.getElementById('teamsStatus').className = 'teams-status authenticated';
-        } else {
-          isTeamsEnvironment = false;
-          document.getElementById('teamsStatus').textContent = '⚠️ Running outside Teams - using fallback authentication';
-          document.getElementById('teamsStatus').className = 'teams-status warning';
-        }
-      } catch (error) {
-        isTeamsEnvironment = false;
-        document.getElementById('teamsStatus').textContent = '⚠️ Teams initialization failed - using fallback authentication';
-        document.getElementById('teamsStatus').className = 'teams-status warning';
+    // Debug logging function
+    function debugLog(message) {
+      console.log(message);
+      const debugDiv = document.getElementById('debugLog');
+      const debugInfo = document.getElementById('debugInfo');
+      if (debugDiv && debugInfo) {
+        debugDiv.innerHTML += new Date().toLocaleTimeString() + ': ' + message + '<br>';
+        debugInfo.style.display = 'block';
       }
     }
 
-    // Enhanced submit function with detailed error handling
-    async function submitAllOperations() {
-  if (!batchOperations.length) return;
-
-  const submitBtn = document.getElementById('submitAllBatch');
-  const originalText = submitBtn.textContent;
-  submitBtn.disabled = true;
-
-  // 1) First write to SQL via your existing GetAvailablePhoneNumbers API
-  const insertUrl = `${API.url}?code=${API.key}`;
-  try {
-    submitBtn.textContent = '💾 Writing to SQL…';
-
-    // fire all INSERT calls in parallel
-    await Promise.all(batchOperations.map(op =>
-      fetch(insertUrl, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(op)
-      }).then(resp => {
-        if (!resp.ok) {
-          return resp.json().then(err => Promise.reject(err.error || resp.status));
+    // Teams detection with SSO testing
+    function initializeTeams() {
+      debugLog('Starting Teams initialization...');
+      
+      try {
+        if (typeof microsoftTeams !== 'undefined') {
+          debugLog('Teams SDK found, initializing...');
+          microsoftTeams.initialize();
+          
+          const contextTimeout = setTimeout(() => {
+            debugLog('Teams context timeout - trying SSO anyway');
+            isTeamsEnvironment = true;
+            document.getElementById('teamsStatus').textContent = '⚠️ Teams detected (context timeout)';
+            document.getElementById('teamsStatus').className = 'teams-status warning';
+            testSSO();
+          }, 8000);
+          
+          microsoftTeams.getContext((context) => {
+            clearTimeout(contextTimeout);
+            debugLog('Teams context received: ' + JSON.stringify(context, null, 2));
+            
+            isTeamsEnvironment = true;
+            document.getElementById('teamsStatus').textContent = '✅ Teams context received';
+            document.getElementById('teamsStatus').className = 'teams-status authenticated';
+            testSSO();
+          });
+          
+        } else {
+          debugLog('ERROR: microsoftTeams is undefined - Teams SDK not loaded');
+          isTeamsEnvironment = false;
+          document.getElementById('teamsStatus').textContent = '⚠️ Running outside Teams - using API key';
+          document.getElementById('teamsStatus').className = 'teams-status warning';
+          loadPhoneNumbers(); // Use original method with API key
         }
-      })
-    ));
-  } catch (writeErr) {
-    // if any insert failed
-    displayBatchResults([{
-      operation: { action: 'batch', username: 'system' },
-      success: false,
-      message: `SQL write failed: ${writeErr}`
-    }], 0, 1);
-    submitBtn.disabled = false;
-    submitBtn.textContent = originalText;
-    return;
-  }
-
-  // 2) Now trigger the runbook
-  if (isTeamsEnvironment) {
-    try {
-      submitBtn.textContent = '🔐 Authenticating…';
-      const token = await microsoftTeams.authentication.getAuthToken({
-        resources: [`api://${AZURE_CONFIG.functionAppClientId}/.default`]
-      });
-
-      submitBtn.textContent = '🚀 Successfully Submitted Changes';
-      const resp = await fetch(AZURE_CONFIG.functionAppUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ operations: batchOperations })
-      });
-
-      if (!resp.ok) throw new Error(`Runbook API error ${resp.status}`);
-      displayBatchResults([{
-        operation: { action: 'batch', username: 'system' },
-        success: true,
-        message: 'Changeed Submitted Successfully'
-      }], 1, 0);
-
-      // clear after success
-      batchOperations = [];
-    } catch (err) {
-      displayBatchResults([{
-        operation: { action: 'batch', username: 'system' },
-        success: false,
-        message: `Runbook trigger failed: ${err.message}`
-      }], 0, 1);
+      } catch (error) {
+        debugLog('Teams initialization error: ' + error.message);
+        isTeamsEnvironment = false;
+        document.getElementById('teamsStatus').textContent = '⚠️ Teams initialization failed - using API key';
+        document.getElementById('teamsStatus').className = 'teams-status warning';
+        loadPhoneNumbers(); // Use original method with API key
+      }
     }
-  }
 
-  // restore UI
-  submitBtn.disabled = false;
-  submitBtn.textContent = originalText;
-  updateBatchTable();
-  populatePhoneDropdowns();
-}
+    // Test SSO to see if it works
+    async function testSSO() {
+      try {
+        debugLog('Testing SSO token acquisition...');
+        document.getElementById('teamsStatus').textContent = '🔐 Testing SSO authentication...';
+        document.getElementById('teamsStatus').className = 'teams-status authenticated';
+        
+        const tokenResponse = await microsoftTeams.authentication.getAuthToken({
+          resources: [`api://${AZURE_CONFIG.functionAppClientId}/.default`],
+          silent: false
+        });
+        
+        // Check if we actually got a token
+        if (!tokenResponse) {
+          throw new Error('getAuthToken returned undefined - Teams app not configured for SSO');
+        }
+        
+        if (typeof tokenResponse !== 'string') {
+          throw new Error('getAuthToken returned invalid token type: ' + typeof tokenResponse);
+        }
+        
+        debugLog('SSO SUCCESS! Token length: ' + tokenResponse.length);
+        debugLog('Token preview: ' + tokenResponse.substring(0, 50) + '...');
+        
+        // SSO works! 
+        document.getElementById('teamsStatus').textContent = '✅ SSO working - but still using API key for data';
+        document.getElementById('teamsStatus').className = 'teams-status authenticated';
+        
+        // Still use original API key method for now
+        loadPhoneNumbers();
+        
+      } catch (ssoError) {
+        debugLog('SSO FAILED: ' + ssoError.message);
+        debugLog('SSO Error name: ' + ssoError.name);
+        debugLog('SSO Error code: ' + (ssoError.code || 'N/A'));
+        debugLog('SSO Error type: ' + typeof ssoError);
+        
+        // SSO failed - use API key fallback
+        document.getElementById('teamsStatus').textContent = '⚠️ SSO failed - using API key fallback';
+        document.getElementById('teamsStatus').className = 'teams-status warning';
+        
+        debugLog('FALLBACK: Using API key method');
+        loadPhoneNumbers();
+      }
+    }
 
+    // Enhanced submit function with SSO debugging
+    async function submitAllOperations() {
+      if (!batchOperations.length) return;
+
+      const submitBtn = document.getElementById('submitAllBatch');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+
+      // 1) First write to SQL via your existing GetAvailablePhoneNumbers API with API key
+      const insertUrl = `${API.url}?code=${API.key}`;
+      try {
+        submitBtn.textContent = '💾 Writing to SQL…';
+        debugLog('Writing to SQL with API key...');
+
+        // fire all INSERT calls in parallel
+        await Promise.all(batchOperations.map(op =>
+          fetch(insertUrl, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(op)
+          }).then(resp => {
+            if (!resp.ok) {
+              return resp.json().then(err => Promise.reject(err.error || resp.status));
+            }
+          })
+        ));
+        debugLog('SQL write completed successfully');
+      } catch (writeErr) {
+        debugLog('SQL write failed: ' + writeErr);
+        // if any insert failed
+        displayBatchResults([{
+          operation: { action: 'batch', username: 'system' },
+          success: false,
+          message: `SQL write failed: ${writeErr}`
+        }], 0, 1);
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+        return;
+      }
+
+      // 2) Now trigger the runbook with SSO
+      if (isTeamsEnvironment) {
+        try {
+          submitBtn.textContent = '🔐 Authenticating for runbook…';
+          debugLog('Getting SSO token for runbook...');
+          
+          const token = await microsoftTeams.authentication.getAuthToken({
+            resources: [`api://${AZURE_CONFIG.functionAppClientId}/.default`]
+          });
+          
+          debugLog('SSO token acquired for runbook, length: ' + token.length);
+
+          submitBtn.textContent = '🚀 Triggering runbook...';
+          const resp = await fetch(AZURE_CONFIG.functionAppUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ operations: batchOperations })
+          });
+
+          if (!resp.ok) throw new Error(`Runbook API error ${resp.status}`);
+          
+          debugLog('Runbook triggered successfully');
+          displayBatchResults([{
+            operation: { action: 'batch', username: 'system' },
+            success: true,
+            message: 'Changes Submitted Successfully'
+          }], 1, 0);
+
+          // clear after success
+          batchOperations = [];
+        } catch (err) {
+          debugLog('Runbook trigger failed: ' + err.message);
+          displayBatchResults([{
+            operation: { action: 'batch', username: 'system' },
+            success: false,
+            message: `Runbook trigger failed: ${err.message}`
+          }], 0, 1);
+        }
+      } else {
+        debugLog('Not in Teams environment - skipping runbook trigger');
+        displayBatchResults([{
+          operation: { action: 'batch', username: 'system' },
+          success: false,
+          message: 'Teams environment required for runbook execution'
+        }], 0, 1);
+      }
+
+      // restore UI
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+      updateBatchTable();
+      populatePhoneDropdowns();
+    }
 
     document.addEventListener('DOMContentLoaded', ()=> {
       // Initialize Teams detection
       initializeTeams();
-      
-      // Load data immediately
-      loadPhoneNumbers();
 
       // ADD
       document.getElementById('addUsername').addEventListener('change', validateAddForm);
@@ -501,13 +601,18 @@
       }
     });
 
-    // UNCHANGED: Keep exact working dropdown logic
+    // Original working dropdown logic with API key
     async function loadPhoneNumbers() {
+      debugLog('Loading phone numbers with API key...');
       // GET numbers
       let r = await fetch(`${API.url}?code=${API.key}`);
-      if (!r.ok) return console.error('Phone fetch failed');
+      if (!r.ok) {
+        debugLog('Phone fetch failed: ' + r.status);
+        return console.error('Phone fetch failed');
+      }
       phoneNumbers = await r.json();
       populatePhoneDropdowns();
+      debugLog('Phone numbers loaded successfully');
 
       // POST dropdowns
       r = await fetch(`${API.url}?code=${API.key}`, {
@@ -515,12 +620,16 @@
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({action:'getdropdowndata'})
       });
-      if (!r.ok) return console.error('Dropdown fetch failed');
+      if (!r.ok) {
+        debugLog('Dropdown fetch failed: ' + r.status);
+        return console.error('Dropdown fetch failed');
+      }
       dropdownData = await r.json();
       populateDropdowns();
+      debugLog('Dropdown data loaded successfully');
     }
 
-    // UNCHANGED: Keep exact working dropdown logic
+    // Rest of the functions remain exactly the same as original...
     function populateDropdowns() {
       // Users
       const uSel = document.getElementById('addUsername');
@@ -546,7 +655,6 @@
       });
     }
 
-    // UNCHANGED: Keep exact working dropdown logic
     function populatePhoneDropdowns() {
       const p1 = document.getElementById('addPhoneNumber');
       p1.innerHTML = '<option value="">Select a phone number…</option>';
@@ -964,12 +1072,14 @@
     }
 
     function _lookup(username,ctx){
+      debugLog('Looking up user: ' + username + ' with API key');
       fetch(`${API.url}?code=${API.key}`,{
         method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({action:'lookup',username})
       })
       .then(r=>r.ok? r.json(): r.json().then(e=>Promise.reject(e)))
       .then(user=>{
+        debugLog('User lookup successful');
         if(ctx==='modify'){
           currentUser=user;
           displayCurrentUserSettings();
@@ -979,6 +1089,7 @@
         }
       })
       .catch(err=>{
+        debugLog('User lookup failed: ' + (err.error || err.message));
         console.error(err);
         showMessage(ctx==='modify'?'modifyUserMessages':'deprovisionUserMessages',
                     err.error||err.message,'error');
