@@ -353,20 +353,44 @@
 
     // Teams authentication setup
     function initializeTeams() {
+      console.log('Starting Teams initialization...');
+      
       try {
         if (typeof microsoftTeams !== 'undefined') {
+          console.log('Teams SDK found, initializing...');
           microsoftTeams.initialize();
+          
+          // Set a timeout in case getContext never responds
+          const contextTimeout = setTimeout(() => {
+            console.warn('Teams context timeout - falling back to non-Teams mode');
+            handleNonTeamsEnvironment();
+          }, 10000); // 10 second timeout
           
           // Get Teams context
           microsoftTeams.getContext((context) => {
+            clearTimeout(contextTimeout);
+            console.log('Teams context received:', context);
+            
             isTeamsEnvironment = true;
             updateTeamsStatus('✅ Teams detected - SSO enabled', 'authenticated');
-            console.log('Teams context:', context);
             
             // Load data after Teams is ready
             loadInitialData();
           });
+          
+          // Also try to load data after a short delay as backup
+          setTimeout(() => {
+            if (!isTeamsEnvironment) {
+              console.log('Teams context not received, trying fallback initialization...');
+              // Assume we're in Teams but context failed
+              isTeamsEnvironment = true;
+              updateTeamsStatus('⚠️ Teams detected (limited) - SSO enabled', 'warning');
+              loadInitialData();
+            }
+          }, 5000);
+          
         } else {
+          console.log('Teams SDK not found');
           handleNonTeamsEnvironment();
         }
       } catch (error) {
@@ -376,17 +400,13 @@
     }
 
     function handleNonTeamsEnvironment() {
+      console.log('Handling non-Teams environment');
       isTeamsEnvironment = false;
-      updateTeamsStatus('❌ Must run in Microsoft Teams for security', 'error');
+      updateTeamsStatus('⚠️ Not in Teams - Limited functionality', 'warning');
       
-      // Disable all functionality
-      const submitButtons = document.querySelectorAll('.submit-button');
-      submitButtons.forEach(btn => {
-        btn.disabled = true;
-        btn.textContent = 'Teams Required';
-      });
-      
-      showMessage('addUserMessages', 'This application must be run within Microsoft Teams for security.', 'error');
+      // Still try to load data for testing purposes
+      // In production, you might want to completely disable functionality
+      loadInitialDataWithoutAuth();
     }
 
     function updateTeamsStatus(message, className) {
@@ -398,13 +418,16 @@
     // ✅ SECURE: Get token before making API calls
     async function getAuthToken() {
       if (!isTeamsEnvironment) {
+        console.warn('Not in Teams environment - this will fail in production');
         throw new Error('Teams environment required');
       }
 
       try {
+        console.log('Getting auth token...');
         const token = await microsoftTeams.authentication.getAuthToken({
           resources: [`api://${AZURE_CONFIG.functionAppClientId}/.default`]
         });
+        console.log('Auth token received');
         authToken = token;
         return token;
       } catch (error) {
@@ -433,6 +456,35 @@
         }
       };
 
+      console.log(`Making authenticated request to: ${url}`);
+      const response = await fetch(url, mergedOptions);
+      
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
+        throw new Error(error.error || `Request failed with status ${response.status}`);
+      }
+      
+      return response;
+    }
+
+    // Fallback for testing outside Teams (will fail on backend if auth is required)
+    async function makeUnauthenticatedRequest(url, options = {}) {
+      const defaultOptions = {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      };
+
+      const mergedOptions = {
+        ...defaultOptions,
+        ...options,
+        headers: {
+          ...defaultOptions.headers,
+          ...(options.headers || {})
+        }
+      };
+
+      console.log(`Making unauthenticated request to: ${url} (will likely fail)`);
       const response = await fetch(url, mergedOptions);
       
       if (!response.ok) {
@@ -486,12 +538,46 @@
     // Load all initial data
     async function loadInitialData() {
       try {
+        console.log('Loading initial data with authentication...');
         await Promise.all([
           loadPhoneNumbers(),
           loadDropdownData()
         ]);
       } catch (error) {
         console.error('Failed to load initial data:', error);
+        updateTeamsStatus('❌ Failed to load data - check console', 'error');
+      }
+    }
+
+    // Fallback for testing outside Teams
+    async function loadInitialDataWithoutAuth() {
+      try {
+        console.log('Loading initial data WITHOUT authentication (testing only)...');
+        updateTeamsStatus('⚠️ Loading without auth - will likely fail', 'warning');
+        
+        // Try to load with old API key method for testing
+        // This will fail if backend requires authentication
+        const phoneResponse = await fetch(AZURE_CONFIG.phoneNumbersApiUrl);
+        if (phoneResponse.ok) {
+          phoneNumbers = await phoneResponse.json();
+          populatePhoneDropdowns();
+        }
+
+        const dropdownResponse = await fetch(AZURE_CONFIG.phoneNumbersApiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'getdropdowndata' })
+        });
+        if (dropdownResponse.ok) {
+          dropdownData = await dropdownResponse.json();
+          populateDropdowns();
+        }
+
+        updateTeamsStatus('⚠️ Data loaded without auth - submit will fail', 'warning');
+      } catch (error) {
+        console.error('Failed to load data without auth:', error);
+        updateTeamsStatus('❌ Backend requires authentication', 'error');
+        showMessage('addUserMessages', 'Backend requires authentication. Please run in Teams.', 'error');
       }
     }
 
