@@ -362,41 +362,79 @@
           
           // Set a timeout in case getContext never responds
           const contextTimeout = setTimeout(() => {
-            console.warn('Teams context timeout - falling back to non-Teams mode');
+            console.warn('Teams context timeout - this means we are NOT in Teams');
             handleNonTeamsEnvironment();
-          }, 10000); // 10 second timeout
+          }, 5000); // Reduced to 5 seconds
           
           // Get Teams context
           microsoftTeams.getContext((context) => {
             clearTimeout(contextTimeout);
-            console.log('Teams context received:', context);
+            console.log('Teams context received successfully:', context);
             
-            isTeamsEnvironment = true;
-            updateTeamsStatus('✅ Teams detected - SSO enabled', 'authenticated');
-            
-            // Load data after Teams is ready
-            loadInitialData();
+            if (context && context.tid) {
+              console.log('Valid Teams context with tenant ID:', context.tid);
+              isTeamsEnvironment = true;
+              updateTeamsStatus('✅ Teams detected - Testing SSO...', 'authenticated');
+              
+              // Test SSO immediately
+              testSSO();
+            } else {
+              console.warn('Teams context missing tenant information');
+              handleLimitedTeamsEnvironment();
+            }
           });
           
-          // Also try to load data after a short delay as backup
-          setTimeout(() => {
-            if (!isTeamsEnvironment) {
-              console.log('Teams context not received, trying fallback initialization...');
-              // Assume we're in Teams but context failed
-              isTeamsEnvironment = true;
-              updateTeamsStatus('⚠️ Teams detected (limited) - SSO enabled', 'warning');
-              loadInitialData();
-            }
-          }, 5000);
-          
         } else {
-          console.log('Teams SDK not found');
+          console.error('microsoftTeams is undefined - Teams SDK not loaded');
           handleNonTeamsEnvironment();
         }
       } catch (error) {
         console.error('Teams initialization error:', error);
         handleNonTeamsEnvironment();
       }
+    }
+
+    // Test SSO immediately to see if it works
+    async function testSSO() {
+      try {
+        console.log('Testing SSO token acquisition...');
+        updateTeamsStatus('🔐 Testing authentication...', 'authenticated');
+        
+        const token = await microsoftTeams.authentication.getAuthToken({
+          resources: [`api://${AZURE_CONFIG.functionAppClientId}/.default`],
+          silent: false
+        });
+        
+        console.log('SSO token acquired successfully! Length:', token.length);
+        console.log('Token preview:', token.substring(0, 50) + '...');
+        
+        updateTeamsStatus('✅ Authentication successful - Loading data...', 'authenticated');
+        loadInitialData();
+        
+      } catch (ssoError) {
+        console.error('SSO test failed:', ssoError);
+        updateTeamsStatus('❌ SSO failed - Check app registration', 'error');
+        
+        // Show detailed error
+        showMessage('addUserMessages', 
+          `SSO Error: ${ssoError.message}. This usually means:<br>
+          • App not properly registered for SSO<br>
+          • Client ID mismatch<br>
+          • Missing API permissions<br>
+          • App needs admin consent`, 'error');
+        
+        // Fall back to loading without auth for testing
+        loadInitialDataWithoutAuth();
+      }
+    }
+
+    function handleLimitedTeamsEnvironment() {
+      console.log('Limited Teams environment detected');
+      isTeamsEnvironment = true; // We are in Teams but with limited context
+      updateTeamsStatus('⚠️ Teams detected but limited context', 'warning');
+      
+      // Try to load data anyway
+      loadInitialData();
     }
 
     function handleNonTeamsEnvironment() {
@@ -418,21 +456,41 @@
     // ✅ SECURE: Get token before making API calls
     async function getAuthToken() {
       if (!isTeamsEnvironment) {
-        console.warn('Not in Teams environment - this will fail in production');
-        throw new Error('Teams environment required');
+        console.warn('Not in Teams environment - cannot get auth token');
+        throw new Error('Teams environment required for authentication');
       }
 
       try {
-        console.log('Getting auth token...');
+        console.log('Requesting auth token from Teams...');
+        console.log('Client ID:', AZURE_CONFIG.functionAppClientId);
+        console.log('Resource:', `api://${AZURE_CONFIG.functionAppClientId}/.default`);
+        
         const token = await microsoftTeams.authentication.getAuthToken({
-          resources: [`api://${AZURE_CONFIG.functionAppClientId}/.default`]
+          resources: [`api://${AZURE_CONFIG.functionAppClientId}/.default`],
+          silent: false  // Show consent prompt if needed
         });
-        console.log('Auth token received');
+        
+        console.log('Auth token received successfully, length:', token.length);
         authToken = token;
         return token;
+        
       } catch (error) {
-        console.error('Authentication error:', error);
-        throw new Error(`Authentication failed: ${error.message}`);
+        console.error('Authentication error details:', error);
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        console.error('Error code:', error.code);
+        
+        // Provide specific error guidance
+        let errorMessage = `Authentication failed: ${error.message}`;
+        if (error.message.includes('consent_required')) {
+          errorMessage += '\n\nThis means admin consent is required. Contact your IT administrator.';
+        } else if (error.message.includes('invalid_client')) {
+          errorMessage += '\n\nThe app registration may be incorrect. Check the Client ID.';
+        } else if (error.message.includes('invalid_resource')) {
+          errorMessage += '\n\nThe API resource is not properly configured.';
+        }
+        
+        throw new Error(errorMessage);
       }
     }
 
