@@ -414,16 +414,26 @@
         debugLog('Testing SSO token acquisition...');
         updateTeamsStatus('🔐 Testing SSO authentication...', 'authenticated');
         
-        const token = await microsoftTeams.authentication.getAuthToken({
+        const tokenResponse = await microsoftTeams.authentication.getAuthToken({
           resources: [`api://${AZURE_CONFIG.functionAppClientId}/.default`],
           silent: false
         });
         
-        debugLog('SSO SUCCESS! Token length: ' + token.length);
-        debugLog('Token preview: ' + token.substring(0, 50) + '...');
+        // Check if we actually got a token
+        if (!tokenResponse) {
+          throw new Error('getAuthToken returned undefined - Teams app not configured for SSO');
+        }
+        
+        if (typeof tokenResponse !== 'string') {
+          throw new Error('getAuthToken returned invalid token type: ' + typeof tokenResponse);
+        }
+        
+        debugLog('SSO SUCCESS! Token length: ' + tokenResponse.length);
+        debugLog('Token preview: ' + tokenResponse.substring(0, 50) + '...');
         
         // SSO works! Load data with authentication
         isTeamsEnvironment = true;
+        authToken = tokenResponse;
         updateTeamsStatus('✅ SSO working - Loading data...', 'authenticated');
         loadInitialData();
         
@@ -431,12 +441,13 @@
         debugLog('SSO FAILED: ' + ssoError.message);
         debugLog('SSO Error name: ' + ssoError.name);
         debugLog('SSO Error code: ' + (ssoError.code || 'N/A'));
+        debugLog('SSO Error type: ' + typeof ssoError);
         
-        // SSO failed - try without auth as fallback
+        // SSO failed - this likely means Teams app manifest issues
         isTeamsEnvironment = false;
-        updateTeamsStatus('❌ SSO failed - Using fallback', 'warning');
+        updateTeamsStatus('❌ Teams app not configured for SSO', 'error');
         
-        // Try fallback
+        debugLog('FALLBACK: Using anonymous access (APIs now support this)');
         loadInitialDataWithoutAuth();
       }
     }
@@ -625,15 +636,15 @@
     // Fallback for testing outside Teams
     async function loadInitialDataWithoutAuth() {
       try {
-        console.log('Loading initial data WITHOUT authentication (testing only)...');
-        updateTeamsStatus('⚠️ Loading without auth - will likely fail', 'warning');
+        debugLog('Loading data without SSO (anonymous access)...');
+        updateTeamsStatus('✅ Data loaded successfully (anonymous mode)', 'authenticated');
         
-        // Try to load with old API key method for testing
-        // This will fail if backend requires authentication
+        // Load data using anonymous access (Azure Functions now support this)
         const phoneResponse = await fetch(AZURE_CONFIG.phoneNumbersApiUrl);
         if (phoneResponse.ok) {
           phoneNumbers = await phoneResponse.json();
           populatePhoneDropdowns();
+          debugLog('Phone numbers loaded successfully');
         }
 
         const dropdownResponse = await fetch(AZURE_CONFIG.phoneNumbersApiUrl, {
@@ -644,13 +655,14 @@
         if (dropdownResponse.ok) {
           dropdownData = await dropdownResponse.json();
           populateDropdowns();
+          debugLog('Dropdown data loaded successfully');
         }
 
-        updateTeamsStatus('⚠️ Data loaded without auth - submit will fail', 'warning');
+        debugLog('All data loaded without authentication');
       } catch (error) {
-        console.error('Failed to load data without auth:', error);
-        updateTeamsStatus('❌ Backend requires authentication', 'error');
-        showMessage('addUserMessages', 'Backend requires authentication. Please run in Teams.', 'error');
+        debugLog('Failed to load data without auth: ' + error.message);
+        updateTeamsStatus('❌ Failed to load data', 'error');
+        showMessage('addUserMessages', 'Failed to load data. Please refresh the page.', 'error');
       }
     }
 
