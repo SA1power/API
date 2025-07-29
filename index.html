@@ -60,7 +60,6 @@
     .teams-status{background:#e3f2fd;border:1px solid #2196f3;padding:10px;border-radius:4px;margin-bottom:15px;text-align:center}
     .teams-status.authenticated{background:#e8f5e8;border-color:#4caf50;color:#2e7d32}
     .teams-status.warning{background:#fff3cd;border-color:#ffc107;color:#856404}
-    .teams-status.error{background:#f8d7da;border-color:#dc3545;color:#721c24}
     
     @media(max-width:1200px){
       .main-layout{flex-direction:column}
@@ -336,12 +335,12 @@
   <script src="https://statics.teams.microsoft.com/sdk/v1.11.0/js/MicrosoftTeams.min.js"></script>
 
   <script>
-    // ✅ SECURE: No API keys exposed in client code
+    const API = {
+      url: 'https://availablephonenumberapi.azurewebsites.net/api/GetAvailablePhoneNumbers',
+      key: 'EsQlM7c0jssk1pzk83F5IYFV6SkZm6AXto3KSbXSA4JlAzFuN7cgbw=='
+    };
+
     const AZURE_CONFIG = {
-      // Available Phone Numbers API - now requires Teams SSO token
-      phoneNumbersApiUrl: 'https://availablephonenumberapi.azurewebsites.net/api/GetAvailablePhoneNumbers',
-      
-      // Provisioning API
       functionAppClientId: 'f2068d39-85c7-4507-9fd3-0758b193b0a9',
       functionAppUrl: 'https://provisionteamsphonesystemusers-a5b3b9fjcxcva8g4.northcentralus-01.azurewebsites.net/api/TriggerRunbook'
     };
@@ -349,385 +348,115 @@
     let phoneNumbers = [], dropdownData = null, currentUser = null;
     let batchOperations = [];
     let isTeamsEnvironment = false;
-    let authToken = null;
 
-    // Teams authentication setup
+    // Simple Teams detection
     function initializeTeams() {
-      console.log('Starting Teams initialization...');
-      
       try {
         if (typeof microsoftTeams !== 'undefined') {
-          console.log('Teams SDK found, initializing...');
           microsoftTeams.initialize();
-          
-          // Set a timeout in case getContext never responds
-          const contextTimeout = setTimeout(() => {
-            console.warn('Teams context timeout - this means we are NOT in Teams');
-            handleNonTeamsEnvironment();
-          }, 5000); // Reduced to 5 seconds
-          
-          // Get Teams context
-          microsoftTeams.getContext((context) => {
-            clearTimeout(contextTimeout);
-            console.log('Teams context received successfully:', context);
-            
-            if (context && context.tid) {
-              console.log('Valid Teams context with tenant ID:', context.tid);
-              isTeamsEnvironment = true;
-              updateTeamsStatus('✅ Teams detected - Testing SSO...', 'authenticated');
-              
-              // Test SSO immediately
-              testSSO();
-            } else {
-              console.warn('Teams context missing tenant information');
-              handleLimitedTeamsEnvironment();
-            }
-          });
-          
+          isTeamsEnvironment = true;
+          document.getElementById('teamsStatus').textContent = '✅ Teams detected - SSO enabled';
+          document.getElementById('teamsStatus').className = 'teams-status authenticated';
         } else {
-          console.error('microsoftTeams is undefined - Teams SDK not loaded');
-          handleNonTeamsEnvironment();
+          isTeamsEnvironment = false;
+          document.getElementById('teamsStatus').textContent = '⚠️ Running outside Teams - using fallback authentication';
+          document.getElementById('teamsStatus').className = 'teams-status warning';
         }
       } catch (error) {
-        console.error('Teams initialization error:', error);
-        handleNonTeamsEnvironment();
+        isTeamsEnvironment = false;
+        document.getElementById('teamsStatus').textContent = '⚠️ Teams initialization failed - using fallback authentication';
+        document.getElementById('teamsStatus').className = 'teams-status warning';
       }
     }
 
-    // Test SSO immediately to see if it works
-    async function testSSO() {
-      try {
-        console.log('Testing SSO token acquisition...');
-        updateTeamsStatus('🔐 Testing authentication...', 'authenticated');
-        
-        const token = await microsoftTeams.authentication.getAuthToken({
-          resources: [`api://${AZURE_CONFIG.functionAppClientId}/.default`],
-          silent: false
-        });
-        
-        console.log('SSO token acquired successfully! Length:', token.length);
-        console.log('Token preview:', token.substring(0, 50) + '...');
-        
-        updateTeamsStatus('✅ Authentication successful - Loading data...', 'authenticated');
-        loadInitialData();
-        
-      } catch (ssoError) {
-        console.error('SSO test failed:', ssoError);
-        updateTeamsStatus('❌ SSO failed - Check app registration', 'error');
-        
-        // Show detailed error
-        showMessage('addUserMessages', 
-          `SSO Error: ${ssoError.message}. This usually means:<br>
-          • App not properly registered for SSO<br>
-          • Client ID mismatch<br>
-          • Missing API permissions<br>
-          • App needs admin consent`, 'error');
-        
-        // Fall back to loading without auth for testing
-        loadInitialDataWithoutAuth();
-      }
-    }
+    // Enhanced submit function with detailed error handling
+    async function submitAllOperations() {
+  if (!batchOperations.length) return;
 
-    function handleLimitedTeamsEnvironment() {
-      console.log('Limited Teams environment detected');
-      isTeamsEnvironment = true; // We are in Teams but with limited context
-      updateTeamsStatus('⚠️ Teams detected but limited context', 'warning');
-      
-      // Try to load data anyway
-      loadInitialData();
-    }
+  const submitBtn = document.getElementById('submitAllBatch');
+  const originalText = submitBtn.textContent;
+  submitBtn.disabled = true;
 
-    function handleNonTeamsEnvironment() {
-      console.log('Handling non-Teams environment');
-      isTeamsEnvironment = false;
-      updateTeamsStatus('⚠️ Not in Teams - Limited functionality', 'warning');
-      
-      // Still try to load data for testing purposes
-      // In production, you might want to completely disable functionality
-      loadInitialDataWithoutAuth();
-    }
+  // 1) First write to SQL via your existing GetAvailablePhoneNumbers API
+  const insertUrl = `${API.url}?code=${API.key}`;
+  try {
+    submitBtn.textContent = '💾 Writing to SQL…';
 
-    function updateTeamsStatus(message, className) {
-      const statusEl = document.getElementById('teamsStatus');
-      statusEl.textContent = message;
-      statusEl.className = `teams-status ${className}`;
-    }
-
-    // ✅ SECURE: Get token before making API calls
-    async function getAuthToken() {
-      if (!isTeamsEnvironment) {
-        console.warn('Not in Teams environment - cannot get auth token');
-        throw new Error('Teams environment required for authentication');
-      }
-
-      try {
-        console.log('Requesting auth token from Teams...');
-        console.log('Client ID:', AZURE_CONFIG.functionAppClientId);
-        console.log('Resource:', `api://${AZURE_CONFIG.functionAppClientId}/.default`);
-        
-        const token = await microsoftTeams.authentication.getAuthToken({
-          resources: [`api://${AZURE_CONFIG.functionAppClientId}/.default`],
-          silent: false  // Show consent prompt if needed
-        });
-        
-        console.log('Auth token received successfully, length:', token.length);
-        authToken = token;
-        return token;
-        
-      } catch (error) {
-        console.error('Authentication error details:', error);
-        console.error('Error name:', error.name);
-        console.error('Error message:', error.message);
-        console.error('Error code:', error.code);
-        
-        // Provide specific error guidance
-        let errorMessage = `Authentication failed: ${error.message}`;
-        if (error.message.includes('consent_required')) {
-          errorMessage += '\n\nThis means admin consent is required. Contact your IT administrator.';
-        } else if (error.message.includes('invalid_client')) {
-          errorMessage += '\n\nThe app registration may be incorrect. Check the Client ID.';
-        } else if (error.message.includes('invalid_resource')) {
-          errorMessage += '\n\nThe API resource is not properly configured.';
+    // fire all INSERT calls in parallel
+    await Promise.all(batchOperations.map(op =>
+      fetch(insertUrl, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(op)
+      }).then(resp => {
+        if (!resp.ok) {
+          return resp.json().then(err => Promise.reject(err.error || resp.status));
         }
-        
-        throw new Error(errorMessage);
-      }
-    }
+      })
+    ));
+  } catch (writeErr) {
+    // if any insert failed
+    displayBatchResults([{
+      operation: { action: 'batch', username: 'system' },
+      success: false,
+      message: `SQL write failed: ${writeErr}`
+    }], 0, 1);
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
+    return;
+  }
 
-    // ✅ SECURE: Make API calls with authentication
-    async function makeAuthenticatedRequest(url, options = {}) {
-      const token = await getAuthToken();
-      
-      const defaultOptions = {
+  // 2) Now trigger the runbook
+  if (isTeamsEnvironment) {
+    try {
+      submitBtn.textContent = '🔐 Authenticating…';
+      const token = await microsoftTeams.authentication.getAuthToken({
+        resources: [`api://${AZURE_CONFIG.functionAppClientId}/.default`]
+      });
+
+      submitBtn.textContent = '🚀 Successfully Submitted Changes';
+      const resp = await fetch(AZURE_CONFIG.functionAppUrl, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        }
-      };
+        },
+        body: JSON.stringify({ operations: batchOperations })
+      });
 
-      const mergedOptions = {
-        ...defaultOptions,
-        ...options,
-        headers: {
-          ...defaultOptions.headers,
-          ...(options.headers || {})
-        }
-      };
+      if (!resp.ok) throw new Error(`Runbook API error ${resp.status}`);
+      displayBatchResults([{
+        operation: { action: 'batch', username: 'system' },
+        success: true,
+        message: 'Changeed Submitted Successfully'
+      }], 1, 0);
 
-      console.log(`Making authenticated request to: ${url}`);
-      const response = await fetch(url, mergedOptions);
-      
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
-        throw new Error(error.error || `Request failed with status ${response.status}`);
-      }
-      
-      return response;
+      // clear after success
+      batchOperations = [];
+    } catch (err) {
+      displayBatchResults([{
+        operation: { action: 'batch', username: 'system' },
+        success: false,
+        message: `Runbook trigger failed: ${err.message}`
+      }], 0, 1);
     }
+  }
 
-    // Fallback for testing outside Teams (will fail on backend if auth is required)
-    async function makeUnauthenticatedRequest(url, options = {}) {
-      const defaultOptions = {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      };
+  // restore UI
+  submitBtn.disabled = false;
+  submitBtn.textContent = originalText;
+  updateBatchTable();
+  populatePhoneDropdowns();
+}
 
-      const mergedOptions = {
-        ...defaultOptions,
-        ...options,
-        headers: {
-          ...defaultOptions.headers,
-          ...(options.headers || {})
-        }
-      };
 
-      console.log(`Making unauthenticated request to: ${url} (will likely fail)`);
-      const response = await fetch(url, mergedOptions);
-      
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
-        throw new Error(error.error || `Request failed with status ${response.status}`);
-      }
-      
-      return response;
-    }
-
-    // ✅ SECURE: Load phone numbers with authentication
-    async function loadPhoneNumbers() {
-      try {
-        updateTeamsStatus('🔄 Loading phone numbers...', 'authenticated');
-        
-        // GET numbers - now requires authentication
-        const response = await makeAuthenticatedRequest(AZURE_CONFIG.phoneNumbersApiUrl);
-        phoneNumbers = await response.json();
-        populatePhoneDropdowns();
-
-        updateTeamsStatus('✅ Phone numbers loaded', 'authenticated');
-      } catch (error) {
-        console.error('Phone numbers fetch failed:', error);
-        updateTeamsStatus('❌ Failed to load phone numbers', 'error');
-        showMessage('addUserMessages', `Failed to load phone numbers: ${error.message}`, 'error');
-      }
-    }
-
-    // ✅ SECURE: Load dropdown data with authentication
-    async function loadDropdownData() {
-      try {
-        updateTeamsStatus('🔄 Loading dropdown data...', 'authenticated');
-        
-        // POST for dropdown data - now requires authentication
-        const response = await makeAuthenticatedRequest(AZURE_CONFIG.phoneNumbersApiUrl, {
-          method: 'POST',
-          body: JSON.stringify({ action: 'getdropdowndata' })
-        });
-        
-        dropdownData = await response.json();
-        populateDropdowns();
-        
-        updateTeamsStatus('✅ All data loaded successfully', 'authenticated');
-      } catch (error) {
-        console.error('Dropdown data fetch failed:', error);
-        updateTeamsStatus('❌ Failed to load dropdown data', 'error');
-        showMessage('addUserMessages', `Failed to load dropdown data: ${error.message}`, 'error');
-      }
-    }
-
-    // Load all initial data
-    async function loadInitialData() {
-      try {
-        console.log('Loading initial data with authentication...');
-        await Promise.all([
-          loadPhoneNumbers(),
-          loadDropdownData()
-        ]);
-      } catch (error) {
-        console.error('Failed to load initial data:', error);
-        updateTeamsStatus('❌ Failed to load data - check console', 'error');
-      }
-    }
-
-    // Fallback for testing outside Teams
-    async function loadInitialDataWithoutAuth() {
-      try {
-        console.log('Loading initial data WITHOUT authentication (testing only)...');
-        updateTeamsStatus('⚠️ Loading without auth - will likely fail', 'warning');
-        
-        // Try to load with old API key method for testing
-        // This will fail if backend requires authentication
-        const phoneResponse = await fetch(AZURE_CONFIG.phoneNumbersApiUrl);
-        if (phoneResponse.ok) {
-          phoneNumbers = await phoneResponse.json();
-          populatePhoneDropdowns();
-        }
-
-        const dropdownResponse = await fetch(AZURE_CONFIG.phoneNumbersApiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'getdropdowndata' })
-        });
-        if (dropdownResponse.ok) {
-          dropdownData = await dropdownResponse.json();
-          populateDropdowns();
-        }
-
-        updateTeamsStatus('⚠️ Data loaded without auth - submit will fail', 'warning');
-      } catch (error) {
-        console.error('Failed to load data without auth:', error);
-        updateTeamsStatus('❌ Backend requires authentication', 'error');
-        showMessage('addUserMessages', 'Backend requires authentication. Please run in Teams.', 'error');
-      }
-    }
-
-    // ✅ SECURE: Submit with authentication
-    async function submitAllOperations() {
-      if (!batchOperations.length) return;
-
-      const submitBtn = document.getElementById('submitAllBatch');
-      const originalText = submitBtn.textContent;
-      submitBtn.disabled = true;
-
-      try {
-        // 1) Write to SQL with authentication
-        submitBtn.textContent = '🔐 Authenticating...';
-        const token = await getAuthToken();
-        
-        submitBtn.textContent = '💾 Writing to SQL...';
-        
-        // Fire all INSERT calls in parallel with authentication
-        await Promise.all(batchOperations.map(op =>
-          makeAuthenticatedRequest(AZURE_CONFIG.phoneNumbersApiUrl, {
-            method: 'POST',
-            body: JSON.stringify(op)
-          })
-        ));
-
-        // 2) Trigger the runbook
-        submitBtn.textContent = '🚀 Triggering automation...';
-        
-        await makeAuthenticatedRequest(AZURE_CONFIG.functionAppUrl, {
-          method: 'POST',
-          body: JSON.stringify({ operations: batchOperations })
-        });
-
-        displayBatchResults([{
-          operation: { action: 'batch', username: 'system' },
-          success: true,
-          message: 'Changes submitted successfully'
-        }], 1, 0);
-
-        // Clear after success
-        batchOperations = [];
-
-      } catch (error) {
-        console.error('Submission error:', error);
-        displayBatchResults([{
-          operation: { action: 'batch', username: 'system' },
-          success: false,
-          message: `Submission failed: ${error.message}`
-        }], 0, 1);
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
-        updateBatchTable();
-        loadPhoneNumbers(); // Refresh available numbers
-      }
-    }
-
-    // ✅ SECURE: User lookup with authentication
-    async function _lookup(username, ctx) {
-      try {
-        const response = await makeAuthenticatedRequest(AZURE_CONFIG.phoneNumbersApiUrl, {
-          method: 'POST',
-          body: JSON.stringify({ action: 'lookup', username })
-        });
-        
-        const user = await response.json();
-        
-        if (ctx === 'modify') {
-          currentUser = user;
-          displayCurrentUserSettings();
-          showModifyFields();
-        } else {
-          displayDeprovisionUserSettings(user);
-        }
-      } catch (error) {
-        console.error('Lookup error:', error);
-        const messageId = ctx === 'modify' ? 'modifyUserMessages' : 'deprovisionUserMessages';
-        showMessage(messageId, `Lookup failed: ${error.message}`, 'error');
-      }
-    }
-
-    // Initialize everything when DOM loads
-    document.addEventListener('DOMContentLoaded', () => {
-      // Initialize Teams first
+    document.addEventListener('DOMContentLoaded', ()=> {
+      // Initialize Teams detection
       initializeTeams();
       
-      // Set up event listeners
-      setupEventListeners();
-    });
+      // Load data immediately
+      loadPhoneNumbers();
 
-    function setupEventListeners() {
       // ADD
       document.getElementById('addUsername').addEventListener('change', validateAddForm);
       document.getElementById('addPhoneNumber').addEventListener('change', validateAddForm);
@@ -735,20 +464,28 @@
       document.getElementById('clearAddForm').onclick = clearAddFormOnly;
       
       // MODIFY
-      document.getElementById('modifyLookupBtn').addEventListener('click', lookupUser);
+      document.getElementById('modifyLookupBtn').addEventListener('click', ()=>{
+        console.log('Modify Lookup clicked');
+        lookupUser();
+      });
       document.getElementById('modifyUserSubmit').onclick = addModifyToBatch;
       document.getElementById('clearModifyForm').onclick = clearModifyFormOnly;
-      document.getElementById('modifyUsername').addEventListener('input', () => {
+      
+      document.getElementById('modifyUsername').addEventListener('input', ()=>{
         const modifyField = document.getElementById('modifyUsername');
         const deprovisionField = document.getElementById('deprovisionUsername');
         validateUsername(modifyField, deprovisionField, 'modifyUserMessages', 'Deprovision');
       });
 
       // DEPROVISION
-      document.getElementById('deprovLookupBtn').addEventListener('click', lookupDeprovisionUser);
+      document.getElementById('deprovLookupBtn').addEventListener('click', ()=>{
+        console.log('Deprov Lookup clicked');
+        lookupDeprovisionUser();
+      });
       document.getElementById('deprovisionUserSubmit').onclick = addDeprovisionToBatch;
       document.getElementById('clearDeprovisionForm').onclick = clearDeprovisionFormOnly;
-      document.getElementById('deprovisionUsername').addEventListener('input', () => {
+      
+      document.getElementById('deprovisionUsername').addEventListener('input', ()=>{
         const deprovisionField = document.getElementById('deprovisionUsername');
         const modifyField = document.getElementById('modifyUsername');
         validateUsername(deprovisionField, modifyField, 'deprovisionUserMessages', 'Modify');
@@ -762,9 +499,28 @@
       if (resetBtn) {
         resetBtn.onclick = resetPage;
       }
+    });
+
+    // UNCHANGED: Keep exact working dropdown logic
+    async function loadPhoneNumbers() {
+      // GET numbers
+      let r = await fetch(`${API.url}?code=${API.key}`);
+      if (!r.ok) return console.error('Phone fetch failed');
+      phoneNumbers = await r.json();
+      populatePhoneDropdowns();
+
+      // POST dropdowns
+      r = await fetch(`${API.url}?code=${API.key}`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'getdropdowndata'})
+      });
+      if (!r.ok) return console.error('Dropdown fetch failed');
+      dropdownData = await r.json();
+      populateDropdowns();
     }
 
-    // Rest of the functions remain exactly the same...
+    // UNCHANGED: Keep exact working dropdown logic
     function populateDropdowns() {
       // Users
       const uSel = document.getElementById('addUsername');
@@ -790,6 +546,7 @@
       });
     }
 
+    // UNCHANGED: Keep exact working dropdown logic
     function populatePhoneDropdowns() {
       const p1 = document.getElementById('addPhoneNumber');
       p1.innerHTML = '<option value="">Select a phone number…</option>';
@@ -1049,7 +806,7 @@
       currentUser = null;
       
       setTimeout(() => {
-        loadInitialData();
+        loadPhoneNumbers();
       }, 100);
       
       const btn = document.getElementById('resetPageBtn');
@@ -1204,6 +961,28 @@
       
       showMessage('modifyUserMessages','',null);
       _lookup(u,'modify');
+    }
+
+    function _lookup(username,ctx){
+      fetch(`${API.url}?code=${API.key}`,{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'lookup',username})
+      })
+      .then(r=>r.ok? r.json(): r.json().then(e=>Promise.reject(e)))
+      .then(user=>{
+        if(ctx==='modify'){
+          currentUser=user;
+          displayCurrentUserSettings();
+          showModifyFields();
+        } else {
+          displayDeprovisionUserSettings(user);
+        }
+      })
+      .catch(err=>{
+        console.error(err);
+        showMessage(ctx==='modify'?'modifyUserMessages':'deprovisionUserMessages',
+                    err.error||err.message,'error');
+      });
     }
 
     function displayCurrentUserSettings(){
