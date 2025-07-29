@@ -76,6 +76,12 @@
     <div id="teamsStatus" class="teams-status">
       🔄 Initializing Teams integration...
     </div>
+    
+    <!-- Debug Info (remove after testing) -->
+    <div id="debugInfo" style="background:#f0f0f0;border:1px solid #ccc;padding:10px;margin-bottom:15px;font-family:monospace;font-size:12px;display:none;">
+      <strong>Debug Info:</strong><br>
+      <div id="debugLog"></div>
+    </div>
 
     <div class="main-layout">
       
@@ -350,29 +356,39 @@
     let batchOperations = [];
     let isTeamsEnvironment = false;
     let authToken = null;
+    
+    // Debug logging function
+    function debugLog(message) {
+      console.log(message);
+      const debugDiv = document.getElementById('debugLog');
+      const debugInfo = document.getElementById('debugInfo');
+      if (debugDiv && debugInfo) {
+        debugDiv.innerHTML += new Date().toLocaleTimeString() + ': ' + message + '<br>';
+        debugInfo.style.display = 'block';
+      }
+    }
 
     // Teams authentication setup
     function initializeTeams() {
-      console.log('Starting Teams initialization...');
+      debugLog('Starting Teams initialization...');
       
       try {
         if (typeof microsoftTeams !== 'undefined') {
-          console.log('Teams SDK found, initializing...');
+          debugLog('Teams SDK found, initializing...');
           microsoftTeams.initialize();
           
           // Try to get Teams context with longer timeout
           const contextTimeout = setTimeout(() => {
-            console.warn('Teams context timeout - trying SSO anyway');
-            // Even if context fails, we might still be in Teams
+            debugLog('Teams context timeout - trying SSO anyway');
             isTeamsEnvironment = true;
-            updateTeamsStatus('⚠️ Teams detected (limited context)', 'warning');
+            updateTeamsStatus('⚠️ Teams detected (context timeout)', 'warning');
             testSSO();
-          }, 8000); // Longer timeout
+          }, 8000);
           
           // Get Teams context
           microsoftTeams.getContext((context) => {
             clearTimeout(contextTimeout);
-            console.log('Teams context received successfully:', context);
+            debugLog('Teams context received: ' + JSON.stringify(context, null, 2));
             
             isTeamsEnvironment = true;
             updateTeamsStatus('✅ Teams context received', 'authenticated');
@@ -380,11 +396,11 @@
           });
           
         } else {
-          console.error('microsoftTeams is undefined - Teams SDK not loaded');
+          debugLog('ERROR: microsoftTeams is undefined - Teams SDK not loaded');
           handleNonTeamsEnvironment();
         }
       } catch (error) {
-        console.error('Teams initialization error:', error);
+        debugLog('Teams initialization error: ' + error.message);
         // Still try SSO even if initialization had issues
         isTeamsEnvironment = true;
         updateTeamsStatus('⚠️ Teams init issues - trying SSO', 'warning');
@@ -395,7 +411,7 @@
     // Test SSO immediately to see if it works
     async function testSSO() {
       try {
-        console.log('Testing SSO token acquisition...');
+        debugLog('Testing SSO token acquisition...');
         updateTeamsStatus('🔐 Testing SSO authentication...', 'authenticated');
         
         const token = await microsoftTeams.authentication.getAuthToken({
@@ -403,8 +419,8 @@
           silent: false
         });
         
-        console.log('SSO token acquired successfully! Length:', token.length);
-        console.log('Token preview:', token.substring(0, 50) + '...');
+        debugLog('SSO SUCCESS! Token length: ' + token.length);
+        debugLog('Token preview: ' + token.substring(0, 50) + '...');
         
         // SSO works! Load data with authentication
         isTeamsEnvironment = true;
@@ -412,19 +428,13 @@
         loadInitialData();
         
       } catch (ssoError) {
-        console.error('SSO test failed:', ssoError);
-        console.error('SSO Error details:', {
-          name: ssoError.name,
-          message: ssoError.message,
-          code: ssoError.code
-        });
+        debugLog('SSO FAILED: ' + ssoError.message);
+        debugLog('SSO Error name: ' + ssoError.name);
+        debugLog('SSO Error code: ' + (ssoError.code || 'N/A'));
         
         // SSO failed - try without auth as fallback
         isTeamsEnvironment = false;
         updateTeamsStatus('❌ SSO failed - Using fallback', 'warning');
-        
-        // Show detailed error in console but not UI (since fallback works)
-        console.warn('SSO Error Details:', ssoError.message);
         
         // Try fallback
         loadInitialDataWithoutAuth();
