@@ -556,26 +556,21 @@
     // ✅ SECURE: Load phone numbers with authentication
     async function loadPhoneNumbers() {
       try {
-        updateTeamsStatus('🔄 Loading phone numbers...', 'authenticated');
-        
         // GET numbers - now requires authentication
         const response = await makeAuthenticatedRequest(AZURE_CONFIG.phoneNumbersApiUrl);
         phoneNumbers = await response.json();
         populatePhoneDropdowns();
-
-        updateTeamsStatus('✅ Phone numbers loaded', 'authenticated');
+        
+        console.log('Phone numbers loaded successfully with SSO');
       } catch (error) {
         console.error('Phone numbers fetch failed:', error);
-        updateTeamsStatus('❌ Failed to load phone numbers', 'error');
-        showMessage('addUserMessages', `Failed to load phone numbers: ${error.message}`, 'error');
+        throw error; // Re-throw to trigger fallback
       }
     }
 
     // ✅ SECURE: Load dropdown data with authentication
     async function loadDropdownData() {
       try {
-        updateTeamsStatus('🔄 Loading dropdown data...', 'authenticated');
-        
         // POST for dropdown data - now requires authentication
         const response = await makeAuthenticatedRequest(AZURE_CONFIG.phoneNumbersApiUrl, {
           method: 'POST',
@@ -585,11 +580,10 @@
         dropdownData = await response.json();
         populateDropdowns();
         
-        updateTeamsStatus('✅ All data loaded successfully', 'authenticated');
+        console.log('Dropdown data loaded successfully with SSO');
       } catch (error) {
         console.error('Dropdown data fetch failed:', error);
-        updateTeamsStatus('❌ Failed to load dropdown data', 'error');
-        showMessage('addUserMessages', `Failed to load dropdown data: ${error.message}`, 'error');
+        throw error; // Re-throw to trigger fallback
       }
     }
 
@@ -597,13 +591,21 @@
     async function loadInitialData() {
       try {
         console.log('Loading initial data with authentication...');
+        updateTeamsStatus('🔄 Loading data with SSO...', 'authenticated');
+        
         await Promise.all([
           loadPhoneNumbers(),
           loadDropdownData()
         ]);
+        
+        // If we got here successfully, SSO is working
+        updateTeamsStatus('✅ All data loaded with SSO', 'authenticated');
       } catch (error) {
         console.error('Failed to load initial data:', error);
-        updateTeamsStatus('❌ Failed to load data - check console', 'error');
+        updateTeamsStatus('❌ SSO failed - check console', 'error');
+        
+        // Try fallback
+        loadInitialDataWithoutAuth();
       }
     }
 
