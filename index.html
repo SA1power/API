@@ -360,28 +360,23 @@
           console.log('Teams SDK found, initializing...');
           microsoftTeams.initialize();
           
-          // Set a timeout in case getContext never responds
+          // Try to get Teams context with longer timeout
           const contextTimeout = setTimeout(() => {
-            console.warn('Teams context timeout - this means we are NOT in Teams');
-            handleNonTeamsEnvironment();
-          }, 5000); // Reduced to 5 seconds
+            console.warn('Teams context timeout - trying SSO anyway');
+            // Even if context fails, we might still be in Teams
+            isTeamsEnvironment = true;
+            updateTeamsStatus('⚠️ Teams detected (limited context)', 'warning');
+            testSSO();
+          }, 8000); // Longer timeout
           
           // Get Teams context
           microsoftTeams.getContext((context) => {
             clearTimeout(contextTimeout);
             console.log('Teams context received successfully:', context);
             
-            if (context && context.tid) {
-              console.log('Valid Teams context with tenant ID:', context.tid);
-              isTeamsEnvironment = true;
-              updateTeamsStatus('✅ Teams detected - Testing SSO...', 'authenticated');
-              
-              // Test SSO immediately
-              testSSO();
-            } else {
-              console.warn('Teams context missing tenant information');
-              handleLimitedTeamsEnvironment();
-            }
+            isTeamsEnvironment = true;
+            updateTeamsStatus('✅ Teams context received', 'authenticated');
+            testSSO();
           });
           
         } else {
@@ -390,7 +385,10 @@
         }
       } catch (error) {
         console.error('Teams initialization error:', error);
-        handleNonTeamsEnvironment();
+        // Still try SSO even if initialization had issues
+        isTeamsEnvironment = true;
+        updateTeamsStatus('⚠️ Teams init issues - trying SSO', 'warning');
+        testSSO();
       }
     }
 
@@ -398,7 +396,7 @@
     async function testSSO() {
       try {
         console.log('Testing SSO token acquisition...');
-        updateTeamsStatus('🔐 Testing authentication...', 'authenticated');
+        updateTeamsStatus('🔐 Testing SSO authentication...', 'authenticated');
         
         const token = await microsoftTeams.authentication.getAuthToken({
           resources: [`api://${AZURE_CONFIG.functionAppClientId}/.default`],
@@ -408,22 +406,27 @@
         console.log('SSO token acquired successfully! Length:', token.length);
         console.log('Token preview:', token.substring(0, 50) + '...');
         
-        updateTeamsStatus('✅ Authentication successful - Loading data...', 'authenticated');
+        // SSO works! Load data with authentication
+        isTeamsEnvironment = true;
+        updateTeamsStatus('✅ SSO working - Loading data...', 'authenticated');
         loadInitialData();
         
       } catch (ssoError) {
         console.error('SSO test failed:', ssoError);
-        updateTeamsStatus('❌ SSO failed - Check app registration', 'error');
+        console.error('SSO Error details:', {
+          name: ssoError.name,
+          message: ssoError.message,
+          code: ssoError.code
+        });
         
-        // Show detailed error
-        showMessage('addUserMessages', 
-          `SSO Error: ${ssoError.message}. This usually means:<br>
-          • App not properly registered for SSO<br>
-          • Client ID mismatch<br>
-          • Missing API permissions<br>
-          • App needs admin consent`, 'error');
+        // SSO failed - try without auth as fallback
+        isTeamsEnvironment = false;
+        updateTeamsStatus('❌ SSO failed - Using fallback', 'warning');
         
-        // Fall back to loading without auth for testing
+        // Show detailed error in console but not UI (since fallback works)
+        console.warn('SSO Error Details:', ssoError.message);
+        
+        // Try fallback
         loadInitialDataWithoutAuth();
       }
     }
