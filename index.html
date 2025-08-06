@@ -3,11 +3,23 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>MSOE Teams Phone User Provisioning</title>
+  <title>MSOE Teams Provisioning Portal</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:Arial,sans-serif;background:#f5f5f5;padding:20px}
     .container{max-width:1600px;margin:0 auto}
+    
+    /* Tab Navigation */
+    .tab-navigation{display:flex;background:#fff;border:1px solid #ddd;border-radius:4px 4px 0 0;margin-bottom:0}
+    .tab-button{flex:1;padding:15px 20px;background:#f8f9fa;border:none;border-right:1px solid #ddd;cursor:pointer;font-weight:bold;transition:all 0.3s}
+    .tab-button:last-child{border-right:none}
+    .tab-button:hover{background:#e9ecef}
+    .tab-button.active{background:#c41e3a;color:white}
+    
+    /* Tab Content */
+    .tab-content{display:none;background:#f5f5f5;border:1px solid #ddd;border-top:none;border-radius:0 0 4px 4px;padding:20px}
+    .tab-content.active{display:block}
+    
     .main-layout{display:flex;gap:20px;flex-wrap:wrap}
     .left-panel{flex:2;min-width:800px}
     .right-panel{flex:1;min-width:400px}
@@ -76,259 +88,512 @@
       🔄 Initializing Teams integration...
     </div>
 
-    <div class="main-layout">
-      
-      <!-- LEFT PANEL - Forms -->
-      <div class="left-panel">
-        <div class="columns">
-
-          <!-- ADD -->
-          <div class="column">
-            <div class="column-header">Add a Teams Phone User</div>
-            <div id="addUserMessages"></div>
-
-            <div class="form-group">
-              <label for="addUsername">Select User:</label>
-              <select id="addUsername" class="form-control">
-                <option value="">Loading users…</option>
-              </select>
-              <div class="help-text">(A5 Faculty non-enterprise voice enabled)</div>
-            </div>
-
-            <div class="form-group">
-              <label for="addPhoneNumber">Pick an available phone number:</label>
-              <select id="addPhoneNumber" class="form-control">
-                <option value="">Loading numbers…</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label>International Calling:</label>
-              <div class="radio-group">
-                <label><input type="radio" name="addIntlCalling" id="addIntlYes" value="yes"> Yes</label>
-                <label><input type="radio" name="addIntlCalling" id="addIntlNo"  value="no" checked> No</label>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>Teams Call Queue Group Membership(s):</label>
-              <div id="addCallQueueGroups" class="dynamic-section">
-                <div class="dynamic-item">
-                  <select class="form-control cq-group-select">
-                    <option value="">Loading Call Queue Groups…</option>
-                  </select>
-                  <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
-                </div>
-              </div>
-              <button class="btn btn-secondary btn-small" onclick="addCallQueueGroup()">Add Another Group</button>
-            </div>
-
-            <div class="form-group">
-              <label>Teams Auto Attendant Authorized User (Manager):</label>
-              <div id="addAutoAttendants" class="dynamic-section">
-                <div class="dynamic-item">
-                  <select class="form-control aa-select">
-                    <option value="">Loading Auto Attendants…</option>
-                  </select>
-                  <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
-                </div>
-              </div>
-              <button class="btn btn-secondary btn-small" onclick="addAutoAttendant()">Add Another AA</button>
-            </div>
-
-            <div class="form-group">
-              <label>Teams Call Queue Authorized User (Manager):</label>
-              <div id="addCallQueueManagers" class="dynamic-section">
-                <div class="dynamic-item">
-                  <select class="form-control cq-select">
-                    <option value="">Loading Call Queues…</option>
-                  </select>
-                  <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
-                </div>
-              </div>
-              <button class="btn btn-secondary btn-small" onclick="addCallQueueManager()">Add Another CQ</button>
-            </div>
-
-            <div style="display:flex; gap:10px; margin-top:auto;">
-              <button id="addUserSubmit" class="btn btn-primary submit-button" disabled style="flex:1;">
-                Add to Batch Queue
-              </button>
-              <button id="clearAddForm" class="btn btn-secondary" style="flex:0 0 auto;">
-                Clear Form
-              </button>
-            </div>
-          </div>
-
-
-          <!-- MODIFY -->
-          <div class="column">
-            <div class="column-header">Modify a Teams Phone User</div>
-            <div id="modifyUserMessages"></div>
-
-            <div class="form-group">
-              <label for="modifyUsername">Username:</label>
-              <input type="text" id="modifyUsername" class="form-control"
-                     placeholder="Enter MSOE email to lookup user"/>
-              <button id="modifyLookupBtn" class="btn btn-secondary"
-                      style="margin-top:10px">Lookup User</button>
-            </div>
-
-            <div id="currentUserInfo" class="user-info" style="display:none">
-              <h4>Current User Settings:</h4>
-              <div id="currentSettings"></div>
-            </div>
-
-            <div id="modifyPhoneGroup" class="form-group" style="display:none">
-              <label>Change Phone Number:</label>
-              <select id="modifyPhoneNumber" class="form-control">
-                <option value="">Select new phone number…</option>
-              </select>
-            </div>
-
-            <div id="modifyIntlGroup" class="form-group" style="display:none">
-              <label>International Calling:</label>
-              <div class="radio-group">
-                <label><input type="radio" id="modifyIntlYes" name="modifyIntlCalling" value="yes"> Yes</label>
-                <label><input type="radio" id="modifyIntlNo"  name="modifyIntlCalling" value="no"> No</label>
-              </div>
-            </div>
-
-            <div id="modifyCallQueueGroupsGroup" class="form-group" style="display:none">
-              <label>Teams Call Queue Group Membership(s):</label>
-              <div id="currentCallQueueGroups">
-                <h5 style="color:#1976d2">Current Group Memberships:</h5>
-                <div id="currentCallQueueGroupsList"></div>
-              </div>
-              <div class="dynamic-section">
-                <div class="dynamic-item">
-                  <select id="newCallQueueGroupSelect" class="form-control cq-group-select">
-                    <option value="">Select to add…</option>
-                  </select>
-                  <button class="btn btn-secondary btn-small" onclick="addCallQueueGroupMembership()">Add</button>
-                </div>
-              </div>
-            </div>
-
-            <div id="modifyAutoAttendantsGroup" class="form-group" style="display:none">
-              <label>Add Auto Attendant Manager:</label>
-              <div id="currentAutoAttendants">
-                <h5 style="color:#1976d2">Current Auto Attendants:</h5>
-                <div id="currentAutoAttendantsList"></div>
-              </div>
-              <div class="dynamic-section">
-                <div class="dynamic-item">
-                  <select id="newAutoAttendantSelect" class="form-control aa-select">
-                    <option value="">Select to add…</option>
-                  </select>
-                  <button class="btn btn-secondary btn-small" onclick="addAutoAttendantRole()">Add</button>
-                </div>
-              </div>
-            </div>
-
-            <div id="modifyCallQueueManagersGroup" class="form-group" style="display:none">
-              <label>Add Call Queue Manager:</label>
-              <div id="currentCallQueueManagers">
-                <h5 style="color:#1976d2">Current CQ Managers:</h5>
-                <div id="currentCallQueueManagersList"></div>
-              </div>
-              <div class="dynamic-section">
-                <div class="dynamic-item">
-                  <select id="newCallQueueSelect" class="form-control cq-select">
-                    <option value="">Select to add…</option>
-                  </select>
-                  <button class="btn btn-secondary btn-small" onclick="addCallQueueRole()">Add</button>
-                </div>
-              </div>
-            </div>
-
-            <div id="modifyButtonGroup" style="display:flex; gap:10px; margin-top:auto;">
-              <button id="modifyUserSubmit" class="btn btn-primary submit-button"
-                      style="display:none; flex:1;">Add Modification to Batch</button>
-              <button id="clearModifyForm" class="btn btn-secondary" style="flex:0 0 auto;">
-                Clear Form
-              </button>
-            </div>
-          </div>
-
-
-          <!-- DEPROVISION -->
-          <div class="column">
-            <div class="column-header">Deprovision a Teams Phone User</div>
-            <div id="deprovisionUserMessages"></div>
-
-            <div class="form-group">
-              <label for="deprovisionUsername">Username:</label>
-              <input type="text" id="deprovisionUsername" class="form-control"
-                     placeholder="Enter MSOE email"/>
-              <button id="deprovLookupBtn" class="btn btn-secondary"
-                      style="margin-top:10px">Lookup User</button>
-            </div>
-
-            <div id="deprovisionUserInfo" class="user-info" style="display:none">
-              <h4>User to be Deprovisioned:</h4>
-              <div id="deprovisionSettings"></div>
-            </div>
-
-            <div id="deprovisionButtonGroup" style="display:flex; gap:10px; margin-top:auto;">
-              <button id="deprovisionUserSubmit" class="btn btn-danger submit-button"
-                      style="display:none; flex:1;">Add Deprovision to Batch</button>
-              <button id="clearDeprovisionForm" class="btn btn-secondary" style="flex:0 0 auto;">
-                Clear Form
-              </button>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- RIGHT PANEL - Batch Operations -->
-      <div class="right-panel">
-        <div class="batch-panel">
-          <div class="batch-header">Batch Operations Queue</div>
-          
-          <div class="batch-summary">
-            <strong>Summary:</strong>
-            <div>Adds: <span id="batchAddCount">0</span></div>
-            <div>Modifications: <span id="batchModifyCount">0</span></div>
-            <div>Deprovisions: <span id="batchDeprovisionCount">0</span></div>
-            <div><strong>Total: <span id="batchTotalCount">0</span></strong></div>
-          </div>
-
-          <div id="batchTableContainer">
-            <div id="batchEmptyMessage" class="batch-empty">
-              No operations queued. Use the forms on the left to add operations to the batch.
-            </div>
-            <table id="batchTable" class="batch-table" style="display:none">
-              <thead>
-                <tr>
-                  <th>Action</th>
-                  <th>Username</th>
-                  <th>Details</th>
-                  <th>Remove</th>
-                </tr>
-              </thead>
-              <tbody id="batchTableBody">
-              </tbody>
-            </table>
-          </div>
-
-          <div style="margin-top:15px;">
-            <button id="submitAllBatch" class="btn btn-success" style="width:100%; display:none">
-              Submit All Operations
-            </button>
-            <button id="clearAllBatch" class="btn btn-secondary" style="width:100%; margin-top:10px; display:none">
-              Clear All
-            </button>
-            <button id="resetPageBtn" class="btn btn-primary" style="width:100%; margin-top:10px; display:none">
-              🔄 Reset Page
-            </button>
-          </div>
-
-          <div id="batchResults" style="margin-top:15px;"></div>
-        </div>
-      </div>
-
+    <!-- Tab Navigation -->
+    <div class="tab-navigation">
+      <button class="tab-button active" onclick="showTab('phone-users')">Teams Phone Users</button>
+      <button class="tab-button" onclick="showTab('shared-devices')">Teams Shared Devices</button>
+      <button class="tab-button" onclick="showTab('call-queues')">Call Queues</button>
+      <button class="tab-button" onclick="showTab('auto-attendants')">Auto Attendants</button>
     </div>
+
+    <!-- TEAMS PHONE USERS TAB -->
+    <div id="phone-users" class="tab-content active">
+      <div class="main-layout">
+        <!-- LEFT PANEL - Forms -->
+        <div class="left-panel">
+          <div class="columns">
+
+            <!-- ADD PHONE USER -->
+            <div class="column">
+              <div class="column-header">Add a Teams Phone User</div>
+              <div id="addUserMessages"></div>
+
+              <div class="form-group">
+                <label for="addUsername">Select User:</label>
+                <select id="addUsername" class="form-control">
+                  <option value="">Loading users…</option>
+                </select>
+                <div class="help-text">(A5 Faculty non-enterprise voice enabled)</div>
+              </div>
+
+              <div class="form-group">
+                <label for="addPhoneNumber">Pick an available phone number:</label>
+                <select id="addPhoneNumber" class="form-control">
+                  <option value="">Loading numbers…</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>International Calling:</label>
+                <div class="radio-group">
+                  <label><input type="radio" name="addIntlCalling" id="addIntlYes" value="yes"> Yes</label>
+                  <label><input type="radio" name="addIntlCalling" id="addIntlNo"  value="no" checked> No</label>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Teams Call Queue Group Membership(s):</label>
+                <div id="addCallQueueGroups" class="dynamic-section">
+                  <div class="dynamic-item">
+                    <select class="form-control cq-group-select">
+                      <option value="">Loading Call Queue Groups…</option>
+                    </select>
+                    <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+                  </div>
+                </div>
+                <button class="btn btn-secondary btn-small" onclick="addCallQueueGroup()">Add Another Group</button>
+              </div>
+
+              <div class="form-group">
+                <label>Teams Auto Attendant Authorized User (Manager):</label>
+                <div id="addAutoAttendants" class="dynamic-section">
+                  <div class="dynamic-item">
+                    <select class="form-control aa-select">
+                      <option value="">Loading Auto Attendants…</option>
+                    </select>
+                    <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+                  </div>
+                </div>
+                <button class="btn btn-secondary btn-small" onclick="addAutoAttendant()">Add Another AA</button>
+              </div>
+
+              <div class="form-group">
+                <label>Teams Call Queue Authorized User (Manager):</label>
+                <div id="addCallQueueManagers" class="dynamic-section">
+                  <div class="dynamic-item">
+                    <select class="form-control cq-select">
+                      <option value="">Loading Call Queues…</option>
+                    </select>
+                    <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+                  </div>
+                </div>
+                <button class="btn btn-secondary btn-small" onclick="addCallQueueManager()">Add Another CQ</button>
+              </div>
+
+              <div style="display:flex; gap:10px; margin-top:auto;">
+                <button id="addUserSubmit" class="btn btn-primary submit-button" disabled style="flex:1;">
+                  Add to Batch Queue
+                </button>
+                <button id="clearAddForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
+              </div>
+            </div>
+
+            <!-- MODIFY PHONE USER -->
+            <div class="column">
+              <div class="column-header">Modify a Teams Phone User</div>
+              <div id="modifyUserMessages"></div>
+
+              <div class="form-group">
+                <label for="modifyUsername">Username:</label>
+                <input type="text" id="modifyUsername" class="form-control"
+                       placeholder="Enter MSOE email to lookup user"/>
+                <button id="modifyLookupBtn" class="btn btn-secondary"
+                        style="margin-top:10px">Lookup User</button>
+              </div>
+
+              <div id="currentUserInfo" class="user-info" style="display:none">
+                <h4>Current User Settings:</h4>
+                <div id="currentSettings"></div>
+              </div>
+
+              <div id="modifyPhoneGroup" class="form-group" style="display:none">
+                <label>Change Phone Number:</label>
+                <select id="modifyPhoneNumber" class="form-control">
+                  <option value="">Select new phone number…</option>
+                </select>
+              </div>
+
+              <div id="modifyIntlGroup" class="form-group" style="display:none">
+                <label>International Calling:</label>
+                <div class="radio-group">
+                  <label><input type="radio" id="modifyIntlYes" name="modifyIntlCalling" value="yes"> Yes</label>
+                  <label><input type="radio" id="modifyIntlNo"  name="modifyIntlCalling" value="no"> No</label>
+                </div>
+              </div>
+
+              <div id="modifyCallQueueGroupsGroup" class="form-group" style="display:none">
+                <label>Teams Call Queue Group Membership(s):</label>
+                <div id="currentCallQueueGroups">
+                  <h5 style="color:#1976d2">Current Group Memberships:</h5>
+                  <div id="currentCallQueueGroupsList"></div>
+                </div>
+                <div class="dynamic-section">
+                  <div class="dynamic-item">
+                    <select id="newCallQueueGroupSelect" class="form-control cq-group-select">
+                      <option value="">Select to add…</option>
+                    </select>
+                    <button class="btn btn-secondary btn-small" onclick="addCallQueueGroupMembership()">Add</button>
+                  </div>
+                </div>
+              </div>
+
+              <div id="modifyAutoAttendantsGroup" class="form-group" style="display:none">
+                <label>Add Auto Attendant Manager:</label>
+                <div id="currentAutoAttendants">
+                  <h5 style="color:#1976d2">Current Auto Attendants:</h5>
+                  <div id="currentAutoAttendantsList"></div>
+                </div>
+                <div class="dynamic-section">
+                  <div class="dynamic-item">
+                    <select id="newAutoAttendantSelect" class="form-control aa-select">
+                      <option value="">Select to add…</option>
+                    </select>
+                    <button class="btn btn-secondary btn-small" onclick="addAutoAttendantRole()">Add</button>
+                  </div>
+                </div>
+              </div>
+
+              <div id="modifyCallQueueManagersGroup" class="form-group" style="display:none">
+                <label>Add Call Queue Manager:</label>
+                <div id="currentCallQueueManagers">
+                  <h5 style="color:#1976d2">Current CQ Managers:</h5>
+                  <div id="currentCallQueueManagersList"></div>
+                </div>
+                <div class="dynamic-section">
+                  <div class="dynamic-item">
+                    <select id="newCallQueueSelect" class="form-control cq-select">
+                      <option value="">Select to add…</option>
+                    </select>
+                    <button class="btn btn-secondary btn-small" onclick="addCallQueueRole()">Add</button>
+                  </div>
+                </div>
+              </div>
+
+              <div id="modifyButtonGroup" style="display:flex; gap:10px; margin-top:auto;">
+                <button id="modifyUserSubmit" class="btn btn-primary submit-button"
+                        style="display:none; flex:1;">Add Modification to Batch</button>
+                <button id="clearModifyForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
+              </div>
+            </div>
+
+            <!-- DEPROVISION PHONE USER -->
+            <div class="column">
+              <div class="column-header">Deprovision a Teams Phone User</div>
+              <div id="deprovisionUserMessages"></div>
+
+              <div class="form-group">
+                <label for="deprovisionUsername">Username:</label>
+                <input type="text" id="deprovisionUsername" class="form-control"
+                       placeholder="Enter MSOE email"/>
+                <button id="deprovLookupBtn" class="btn btn-secondary"
+                        style="margin-top:10px">Lookup User</button>
+              </div>
+
+              <div id="deprovisionUserInfo" class="user-info" style="display:none">
+                <h4>User to be Deprovisioned:</h4>
+                <div id="deprovisionSettings"></div>
+              </div>
+
+              <div id="deprovisionButtonGroup" style="display:flex; gap:10px; margin-top:auto;">
+                <button id="deprovisionUserSubmit" class="btn btn-danger submit-button"
+                        style="display:none; flex:1;">Add Deprovision to Batch</button>
+                <button id="clearDeprovisionForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- RIGHT PANEL - Batch Operations -->
+        <div class="right-panel">
+          <div class="batch-panel">
+            <div class="batch-header">Batch Operations Queue - Phone Users</div>
+            
+            <div class="batch-summary">
+              <strong>Summary:</strong>
+              <div>Adds: <span id="batchAddCount">0</span></div>
+              <div>Modifications: <span id="batchModifyCount">0</span></div>
+              <div>Deprovisions: <span id="batchDeprovisionCount">0</span></div>
+              <div><strong>Total: <span id="batchTotalCount">0</span></strong></div>
+            </div>
+
+            <div id="batchTableContainer">
+              <div id="batchEmptyMessage" class="batch-empty">
+                No operations queued. Use the forms on the left to add operations to the batch.
+              </div>
+              <table id="batchTable" class="batch-table" style="display:none">
+                <thead>
+                  <tr>
+                    <th>Action</th>
+                    <th>Username</th>
+                    <th>Details</th>
+                    <th>Remove</th>
+                  </tr>
+                </thead>
+                <tbody id="batchTableBody">
+                </tbody>
+              </table>
+            </div>
+
+            <div style="margin-top:15px;">
+              <button id="submitAllBatch" class="btn btn-success" style="width:100%; display:none">
+                Submit All Operations
+              </button>
+              <button id="clearAllBatch" class="btn btn-secondary" style="width:100%; margin-top:10px; display:none">
+                Clear All
+              </button>
+              <button id="resetPageBtn" class="btn btn-primary" style="width:100%; margin-top:10px; display:none">
+                🔄 Reset Page
+              </button>
+            </div>
+
+            <div id="batchResults" style="margin-top:15px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEAMS SHARED DEVICES TAB -->
+    <div id="shared-devices" class="tab-content">
+      <div class="main-layout">
+        <!-- LEFT PANEL - Forms -->
+        <div class="left-panel">
+          <div class="columns">
+
+            <!-- ADD SHARED DEVICE -->
+            <div class="column">
+              <div class="column-header">Add a Teams Shared Device</div>
+              <div id="addDeviceMessages"></div>
+
+              <div class="form-group">
+                <label for="addDeviceName">Select TSD Account:</label>
+                <select id="addDeviceName" class="form-control">
+                  <option value="">Loading TSD accounts…</option>
+                </select>
+                <div class="help-text">Accounts with Teams Shared Device License applied and no Enterprise Voice</div>
+              </div>
+
+              <div class="form-group">
+                <label for="addDevicePhoneNumber">Pick an available phone number:</label>
+                <select id="addDevicePhoneNumber" class="form-control">
+                  <option value="">Loading numbers…</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>International Calling:</label>
+                <div class="radio-group">
+                  <label><input type="radio" name="addDeviceIntlCalling" id="addDeviceIntlYes" value="yes"> Yes</label>
+                  <label><input type="radio" name="addDeviceIntlCalling" id="addDeviceIntlNo"  value="no" checked> No</label>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Teams Call Queue Group Membership(s):</label>
+                <div id="addDeviceCallQueueGroups" class="dynamic-section">
+                  <div class="dynamic-item">
+                    <select class="form-control cq-group-select">
+                      <option value="">Loading Call Queue Groups…</option>
+                    </select>
+                    <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+                  </div>
+                </div>
+                <button class="btn btn-secondary btn-small" onclick="addDeviceCallQueueGroup()">Add Another Group</button>
+              </div>
+
+              <div style="display:flex; gap:10px; margin-top:auto;">
+                <button id="addDeviceSubmit" class="btn btn-primary submit-button" disabled style="flex:1;">
+                  Add to Batch Queue
+                </button>
+                <button id="clearAddDeviceForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
+              </div>
+            </div>
+
+            <!-- MODIFY SHARED DEVICE -->
+            <div class="column">
+              <div class="column-header">Modify a Teams Shared Device</div>
+              <div id="modifyDeviceMessages"></div>
+
+              <div class="form-group">
+                <label for="modifyDeviceName">TSD Account:</label>
+                <input type="text" id="modifyDeviceName" class="form-control"
+                       placeholder="Enter TSD account to lookup"/>
+                <button id="modifyDeviceLookupBtn" class="btn btn-secondary"
+                        style="margin-top:10px">Lookup Device</button>
+              </div>
+
+              <div id="currentDeviceInfo" class="user-info" style="display:none">
+                <h4>Current Device Settings:</h4>
+                <div id="currentDeviceSettings"></div>
+              </div>
+
+              <div id="modifyDevicePhoneGroup" class="form-group" style="display:none">
+                <label>Change Phone Number:</label>
+                <select id="modifyDevicePhoneNumber" class="form-control">
+                  <option value="">Select new phone number…</option>
+                </select>
+              </div>
+
+              <div id="modifyDeviceIntlGroup" class="form-group" style="display:none">
+                <label>International Calling:</label>
+                <div class="radio-group">
+                  <label><input type="radio" id="modifyDeviceIntlYes" name="modifyDeviceIntlCalling" value="yes"> Yes</label>
+                  <label><input type="radio" id="modifyDeviceIntlNo"  name="modifyDeviceIntlCalling" value="no"> No</label>
+                </div>
+              </div>
+
+              <div id="modifyDeviceCallQueueGroupsGroup" class="form-group" style="display:none">
+                <label>Teams Call Queue Group Membership(s):</label>
+                <div id="currentDeviceCallQueueGroups">
+                  <h5 style="color:#1976d2">Current Group Memberships:</h5>
+                  <div id="currentDeviceCallQueueGroupsList"></div>
+                </div>
+                <div class="dynamic-section">
+                  <div class="dynamic-item">
+                    <select id="newDeviceCallQueueGroupSelect" class="form-control cq-group-select">
+                      <option value="">Select to add…</option>
+                    </select>
+                    <button class="btn btn-secondary btn-small" onclick="addDeviceCallQueueGroupMembership()">Add</button>
+                  </div>
+                </div>
+              </div>
+
+              <div id="modifyDeviceButtonGroup" style="display:flex; gap:10px; margin-top:auto;">
+                <button id="modifyDeviceSubmit" class="btn btn-primary submit-button"
+                        style="display:none; flex:1;">Add Modification to Batch</button>
+                <button id="clearModifyDeviceForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
+              </div>
+            </div>
+
+            <!-- DEPROVISION SHARED DEVICE -->
+            <div class="column">
+              <div class="column-header">Deprovision a Teams Shared Device</div>
+              <div id="deprovisionDeviceMessages"></div>
+
+              <div class="form-group">
+                <label for="deprovisionDeviceName">TSD Account:</label>
+                <input type="text" id="deprovisionDeviceName" class="form-control"
+                       placeholder="Enter TSD account"/>
+                <button id="deprovDeviceLookupBtn" class="btn btn-secondary"
+                        style="margin-top:10px">Lookup Device</button>
+              </div>
+
+              <div id="deprovisionDeviceInfo" class="user-info" style="display:none">
+                <h4>Device to be Deprovisioned:</h4>
+                <div id="deprovisionDeviceSettings"></div>
+              </div>
+
+              <div id="deprovisionDeviceButtonGroup" style="display:flex; gap:10px; margin-top:auto;">
+                <button id="deprovisionDeviceSubmit" class="btn btn-danger submit-button"
+                        style="display:none; flex:1;">Add Deprovision to Batch</button>
+                <button id="clearDeprovisionDeviceForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- RIGHT PANEL - Batch Operations -->
+        <div class="right-panel">
+          <div class="batch-panel">
+            <div class="batch-header">Batch Operations Queue - Shared Devices</div>
+            
+            <div class="batch-summary">
+              <strong>Summary:</strong>
+              <div>Adds: <span id="batchDeviceAddCount">0</span></div>
+              <div>Modifications: <span id="batchDeviceModifyCount">0</span></div>
+              <div>Deprovisions: <span id="batchDeviceDeprovisionCount">0</span></div>
+              <div><strong>Total: <span id="batchDeviceTotalCount">0</span></strong></div>
+            </div>
+
+            <div id="batchDeviceTableContainer">
+              <div id="batchDeviceEmptyMessage" class="batch-empty">
+                No operations queued. Use the forms on the left to add operations to the batch.
+              </div>
+              <table id="batchDeviceTable" class="batch-table" style="display:none">
+                <thead>
+                  <tr>
+                    <th>Action</th>
+                    <th>TSD Account</th>
+                    <th>Details</th>
+                    <th>Remove</th>
+                  </tr>
+                </thead>
+                <tbody id="batchDeviceTableBody">
+                </tbody>
+              </table>
+            </div>
+
+            <div style="margin-top:15px;">
+              <button id="submitAllDeviceBatch" class="btn btn-success" style="width:100%; display:none">
+                Submit All Operations
+              </button>
+              <button id="clearAllDeviceBatch" class="btn btn-secondary" style="width:100%; margin-top:10px; display:none">
+                Clear All
+              </button>
+              <button id="resetDevicePageBtn" class="btn btn-primary" style="width:100%; margin-top:10px; display:none">
+                🔄 Reset Page
+              </button>
+            </div>
+
+            <div id="batchDeviceResults" style="margin-top:15px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALL QUEUES TAB -->
+    <div id="call-queues" class="tab-content">
+      <div class="main-layout">
+        <div class="left-panel">
+          <div class="columns">
+            <div class="column" style="min-width:100%;">
+              <div class="column-header">Call Queue Management</div>
+              <div style="text-align:center; padding:40px; color:#666;">
+                <h3>🚧 Coming Soon</h3>
+                <p>Call Queue provisioning functionality will be available in a future release.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="right-panel">
+          <div class="batch-panel">
+            <div class="batch-header">Call Queue Operations</div>
+            <div class="batch-empty">
+              Call Queue operations will appear here when the feature is implemented.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUTO ATTENDANTS TAB -->
+    <div id="auto-attendants" class="tab-content">
+      <div class="main-layout">
+        <div class="left-panel">
+          <div class="columns">
+            <div class="column" style="min-width:100%;">
+              <div class="column-header">Auto Attendant Management</div>
+              <div style="text-align:center; padding:40px; color:#666;">
+                <h3>🚧 Coming Soon</h3>
+                <p>Auto Attendant provisioning functionality will be available in a future release.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="right-panel">
+          <div class="batch-panel">
+            <div class="batch-header">Auto Attendant Operations</div>
+            <div class="batch-empty">
+              Auto Attendant operations will appear here when the feature is implemented.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- Teams SDK -->
@@ -345,9 +610,34 @@
       functionAppUrl: 'https://provisionteamsphonesystemusers-a5b3b9fjcxcva8g4.northcentralus-01.azurewebsites.net/api/TriggerRunbook'
     };
 
-    let phoneNumbers = [], dropdownData = null, currentUser = null;
+    let phoneNumbers = [], dropdownData = null, currentUser = null, currentDevice = null;
     let batchOperations = [];
+    let batchDeviceOperations = [];
     let isTeamsEnvironment = false;
+
+    // Tab Management
+    function showTab(tabName) {
+      // Hide all tab contents
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      
+      // Remove active class from all tab buttons
+      document.querySelectorAll('.tab-button').forEach(button => {
+        button.classList.remove('active');
+      });
+      
+      // Show selected tab content
+      document.getElementById(tabName).classList.add('active');
+      
+      // Add active class to clicked tab button
+      event.target.classList.add('active');
+      
+      // Load data when switching tabs
+      if (tabName === 'shared-devices') {
+        loadPhoneNumbers();
+      }
+    }
 
     // Simple Teams detection
     function initializeTeams() {
@@ -369,7 +659,275 @@
       }
     }
 
-    // Enhanced submit function with detailed error handling
+    document.addEventListener('DOMContentLoaded', ()=> {
+      // Initialize Teams detection
+      initializeTeams();
+      
+      // Load data immediately
+      loadPhoneNumbers();
+
+      // PHONE USERS - ADD
+      document.getElementById('addUsername').addEventListener('change', validateAddForm);
+      document.getElementById('addPhoneNumber').addEventListener('change', validateAddForm);
+      document.getElementById('addUserSubmit').onclick = addToBatch;
+      document.getElementById('clearAddForm').onclick = clearAddFormOnly;
+      
+      // PHONE USERS - MODIFY
+      document.getElementById('modifyLookupBtn').addEventListener('click', lookupUser);
+      document.getElementById('modifyUserSubmit').onclick = addModifyToBatch;
+      document.getElementById('clearModifyForm').onclick = clearModifyFormOnly;
+      
+      document.getElementById('modifyUsername').addEventListener('input', ()=>{
+        const modifyField = document.getElementById('modifyUsername');
+        const deprovisionField = document.getElementById('deprovisionUsername');
+        validateUsername(modifyField, deprovisionField, 'modifyUserMessages', 'Deprovision');
+      });
+
+      // PHONE USERS - DEPROVISION
+      document.getElementById('deprovLookupBtn').addEventListener('click', lookupDeprovisionUser);
+      document.getElementById('deprovisionUserSubmit').onclick = addDeprovisionToBatch;
+      document.getElementById('clearDeprovisionForm').onclick = clearDeprovisionFormOnly;
+      
+      document.getElementById('deprovisionUsername').addEventListener('input', ()=>{
+        const deprovisionField = document.getElementById('deprovisionUsername');
+        const modifyField = document.getElementById('modifyUsername');
+        validateUsername(deprovisionField, modifyField, 'deprovisionUserMessages', 'Modify');
+      });
+
+      // PHONE USERS - BATCH OPERATIONS
+      document.getElementById('submitAllBatch').onclick = submitAllOperations;
+      document.getElementById('clearAllBatch').onclick = clearAllBatch;
+      
+      const resetBtn = document.getElementById('resetPageBtn');
+      if (resetBtn) {
+        resetBtn.onclick = resetPage;
+      }
+
+      // SHARED DEVICES - ADD
+      document.getElementById('addDeviceName').addEventListener('change', validateAddDeviceForm);
+      document.getElementById('addDevicePhoneNumber').addEventListener('change', validateAddDeviceForm);
+      document.getElementById('addDeviceSubmit').onclick = addDeviceToBatch;
+      document.getElementById('clearAddDeviceForm').onclick = clearAddDeviceFormOnly;
+      
+      // SHARED DEVICES - MODIFY
+      document.getElementById('modifyDeviceLookupBtn').addEventListener('click', lookupDevice);
+      document.getElementById('modifyDeviceSubmit').onclick = addModifyDeviceToBatch;
+      document.getElementById('clearModifyDeviceForm').onclick = clearModifyDeviceFormOnly;
+      
+      document.getElementById('modifyDeviceName').addEventListener('input', ()=>{
+        const modifyField = document.getElementById('modifyDeviceName');
+        const deprovisionField = document.getElementById('deprovisionDeviceName');
+        validateDeviceName(modifyField, deprovisionField, 'modifyDeviceMessages', 'Deprovision');
+      });
+
+      // SHARED DEVICES - DEPROVISION
+      document.getElementById('deprovDeviceLookupBtn').addEventListener('click', lookupDeprovisionDevice);
+      document.getElementById('deprovisionDeviceSubmit').onclick = addDeprovisionDeviceToBatch;
+      document.getElementById('clearDeprovisionDeviceForm').onclick = clearDeprovisionDeviceFormOnly;
+      
+      document.getElementById('deprovisionDeviceName').addEventListener('input', ()=>{
+        const deprovisionField = document.getElementById('deprovisionDeviceName');
+        const modifyField = document.getElementById('modifyDeviceName');
+        validateDeviceName(deprovisionField, modifyField, 'deprovisionDeviceMessages', 'Modify');
+      });
+
+      // SHARED DEVICES - BATCH OPERATIONS
+      document.getElementById('submitAllDeviceBatch').onclick = submitAllDeviceOperations;
+      document.getElementById('clearAllDeviceBatch').onclick = clearAllDeviceBatch;
+      
+      const resetDeviceBtn = document.getElementById('resetDevicePageBtn');
+      if (resetDeviceBtn) {
+        resetDeviceBtn.onclick = resetDevicePage;
+      }
+    });
+
+    // UNCHANGED: Keep exact working dropdown logic
+    async function loadPhoneNumbers() {
+      // GET numbers
+      let r = await fetch(`${API.url}?code=${API.key}`);
+      if (!r.ok) return console.error('Phone fetch failed');
+      phoneNumbers = await r.json();
+      populatePhoneDropdowns();
+      populateDevicePhoneDropdowns();
+
+      // POST dropdowns
+      r = await fetch(`${API.url}?code=${API.key}`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'getdropdowndata'})
+      });
+      if (!r.ok) return console.error('Dropdown fetch failed');
+      dropdownData = await r.json();
+      populateDropdowns();
+    }
+
+    // UPDATED: populateDropdowns function with batch filtering
+    function populateDropdowns() {
+      // Get users already in batch operations
+      const batchUsernames = batchOperations
+        .filter(op => op.action === 'add')
+        .map(op => op.username.toLowerCase());
+      
+      // Users - filter out batch users
+      const uSel = document.getElementById('addUsername');
+      if (uSel) {
+        uSel.innerHTML = '<option value="">Select a user…</option>';
+        (dropdownData.a5Users||[])
+          .filter(user => !batchUsernames.includes(user.toLowerCase()))
+          .forEach(u => uSel.appendChild(new Option(u,u)));
+      }
+
+      // TSD Accounts - filter out batch devices
+      const batchDeviceNames = batchDeviceOperations
+        .filter(op => op.action === 'add')
+        .map(op => op.deviceName.toLowerCase());
+      
+      const dSel = document.getElementById('addDeviceName');
+      if (dSel) {
+        dSel.innerHTML = '<option value="">Select a TSD account…</option>';
+        (dropdownData.tsdUsers||[])
+          .filter(device => !batchDeviceNames.includes(device.toLowerCase()))
+          .forEach(d => dSel.appendChild(new Option(d,d)));
+      }
+
+      // Call‑Queue Groups
+      document.querySelectorAll('.cq-group-select').forEach(sel=>{
+        sel.innerHTML = '<option value="">Select Call Queue Group…</option>';
+        (dropdownData.callQueueGroups||[]).forEach(g=>sel.appendChild(new Option(g,g)));
+      });
+
+      // Auto‑Attendants
+      document.querySelectorAll('.aa-select').forEach(sel=>{
+        sel.innerHTML = '<option value="">Select Auto Attendant…</option>';
+        (dropdownData.autoAttendants||[]).forEach(a=>sel.appendChild(new Option(a,a)));
+      });
+
+      // Call‑Queues
+      document.querySelectorAll('.cq-select').forEach(sel=>{
+        sel.innerHTML = '<option value="">Select Call Queue…</option>';
+        (dropdownData.callQueues||[]).forEach(q=>sel.appendChild(new Option(q,q)));
+      });
+    }
+
+    // UPDATED: populatePhoneDropdowns function with batch filtering
+    function populatePhoneDropdowns() {
+      // Get phone numbers already in batch operations (both users and devices)
+      const batchPhoneNumbers = [
+        ...batchOperations.filter(op => op.action === 'add').map(op => op.phoneNumber),
+        ...batchDeviceOperations.filter(op => op.action === 'add').map(op => op.phoneNumber)
+      ];
+      
+      // Add form phone dropdown - filter out batch numbers
+      const p1 = document.getElementById('addPhoneNumber');
+      if (p1) {
+        p1.innerHTML = '<option value="">Select a phone number…</option>';
+        phoneNumbers
+          .filter(i => i.AvailablePhoneNumber.startsWith('1414277'))
+          .filter(i => !batchPhoneNumbers.includes(i.AvailablePhoneNumber))
+          .forEach(i => p1.appendChild(new Option(i.AvailablePhoneNumber, i.AvailablePhoneNumber)));
+      }
+      
+      // Modify form phone dropdown - no filtering needed here as it's for changing existing numbers
+      const p2 = document.getElementById('modifyPhoneNumber');
+      if(p2){
+        p2.innerHTML = '<option value="">Select a phone number…</option>';
+        phoneNumbers.filter(i => i.AvailablePhoneNumber.startsWith('1414277'))
+          .forEach(i => p2.appendChild(new Option(i.AvailablePhoneNumber, i.AvailablePhoneNumber)));
+      }
+    }
+
+    // SHARED DEVICE phone dropdowns
+    function populateDevicePhoneDropdowns() {
+      // Get phone numbers already in batch operations (both users and devices)
+      const batchPhoneNumbers = [
+        ...batchOperations.filter(op => op.action === 'add').map(op => op.phoneNumber),
+        ...batchDeviceOperations.filter(op => op.action === 'add').map(op => op.phoneNumber)
+      ];
+      
+      // Add device form phone dropdown - filter out batch numbers
+      const p1 = document.getElementById('addDevicePhoneNumber');
+      if (p1) {
+        p1.innerHTML = '<option value="">Select a phone number…</option>';
+        phoneNumbers
+          .filter(i => i.AvailablePhoneNumber.startsWith('1414277'))
+          .filter(i => !batchPhoneNumbers.includes(i.AvailablePhoneNumber))
+          .forEach(i => p1.appendChild(new Option(i.AvailablePhoneNumber, i.AvailablePhoneNumber)));
+      }
+      
+      // Modify device form phone dropdown
+      const p2 = document.getElementById('modifyDevicePhoneNumber');
+      if(p2){
+        p2.innerHTML = '<option value="">Select a phone number…</option>';
+        phoneNumbers.filter(i => i.AvailablePhoneNumber.startsWith('1414277'))
+          .forEach(i => p2.appendChild(new Option(i.AvailablePhoneNumber, i.AvailablePhoneNumber)));
+      }
+    }
+
+    // UPDATED: validateAddForm function with duplicate checking
+    function validateAddForm(){
+      const selectedUser = document.getElementById('addUsername').value;
+      const selectedPhone = document.getElementById('addPhoneNumber').value;
+      
+      // Check if user is already in batch
+      const userInBatch = batchOperations.some(op => 
+        op.action === 'add' && op.username.toLowerCase() === selectedUser.toLowerCase()
+      );
+      
+      // Check if phone is already in batch (users or devices)
+      const phoneInBatch = [...batchOperations, ...batchDeviceOperations].some(op => 
+        op.action === 'add' && op.phoneNumber === selectedPhone
+      );
+      
+      if (userInBatch && selectedUser) {
+        showMessage('addUserMessages', 
+          '<div class="error">This user is already in the batch queue</div>');
+        document.getElementById('addUsername').value = '';
+      }
+      
+      if (phoneInBatch && selectedPhone) {
+        showMessage('addUserMessages', 
+          '<div class="error">This phone number is already in the batch queue</div>');
+        document.getElementById('addPhoneNumber').value = '';
+      }
+      
+      const u = !!document.getElementById('addUsername').value;
+      const p = !!document.getElementById('addPhoneNumber').value;
+      document.getElementById('addUserSubmit').disabled = !(u && p);
+    }
+
+    // Shared Device validation
+    function validateAddDeviceForm(){
+      const selectedDevice = document.getElementById('addDeviceName').value.trim();
+      const selectedPhone = document.getElementById('addDevicePhoneNumber').value;
+      
+      // Check if device is already in batch
+      const deviceInBatch = batchDeviceOperations.some(op => 
+        op.action === 'add' && op.deviceName.toLowerCase() === selectedDevice.toLowerCase()
+      );
+      
+      // Check if phone is already in batch (users or devices)
+      const phoneInBatch = [...batchOperations, ...batchDeviceOperations].some(op => 
+        op.action === 'add' && op.phoneNumber === selectedPhone
+      );
+      
+      if (deviceInBatch && selectedDevice) {
+        showMessage('addDeviceMessages', 
+          '<div class="error">This TSD account is already in the batch queue</div>');
+        document.getElementById('addDeviceName').value = '';
+      }
+      
+      if (phoneInBatch && selectedPhone) {
+        showMessage('addDeviceMessages', 
+          '<div class="error">This phone number is already in the batch queue</div>');
+        document.getElementById('addDevicePhoneNumber').value = '';
+      }
+      
+      const d = !!selectedDevice;
+      const p = !!selectedPhone;
+      document.getElementById('addDeviceSubmit').disabled = !(d && p);
+    }
+
+    // Enhanced submit function with detailed error handling for Phone Users
     async function submitAllOperations() {
       if (!batchOperations.length) return;
 
@@ -428,7 +986,7 @@
           displayBatchResults([{
             operation: { action: 'batch', username: 'system' },
             success: true,
-            message: 'Changeed Submitted Successfully'
+            message: 'Changes Submitted Successfully'
           }], 1, 0);
 
           // clear after success
@@ -449,163 +1007,84 @@
       populatePhoneDropdowns();
     }
 
-    document.addEventListener('DOMContentLoaded', ()=> {
-      // Initialize Teams detection
-      initializeTeams();
-      
-      // Load data immediately
-      loadPhoneNumbers();
+    // Enhanced submit function for Shared Devices
+    async function submitAllDeviceOperations() {
+      if (!batchDeviceOperations.length) return;
 
-      // ADD
-      document.getElementById('addUsername').addEventListener('change', validateAddForm);
-      document.getElementById('addPhoneNumber').addEventListener('change', validateAddForm);
-      document.getElementById('addUserSubmit').onclick = addToBatch;
-      document.getElementById('clearAddForm').onclick = clearAddFormOnly;
-      
-      // MODIFY
-      document.getElementById('modifyLookupBtn').addEventListener('click', ()=>{
-        console.log('Modify Lookup clicked');
-        lookupUser();
-      });
-      document.getElementById('modifyUserSubmit').onclick = addModifyToBatch;
-      document.getElementById('clearModifyForm').onclick = clearModifyFormOnly;
-      
-      document.getElementById('modifyUsername').addEventListener('input', ()=>{
-        const modifyField = document.getElementById('modifyUsername');
-        const deprovisionField = document.getElementById('deprovisionUsername');
-        validateUsername(modifyField, deprovisionField, 'modifyUserMessages', 'Deprovision');
-      });
+      const submitBtn = document.getElementById('submitAllDeviceBatch');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
 
-      // DEPROVISION
-      document.getElementById('deprovLookupBtn').addEventListener('click', ()=>{
-        console.log('Deprov Lookup clicked');
-        lookupDeprovisionUser();
-      });
-      document.getElementById('deprovisionUserSubmit').onclick = addDeprovisionToBatch;
-      document.getElementById('clearDeprovisionForm').onclick = clearDeprovisionFormOnly;
-      
-      document.getElementById('deprovisionUsername').addEventListener('input', ()=>{
-        const deprovisionField = document.getElementById('deprovisionUsername');
-        const modifyField = document.getElementById('modifyUsername');
-        validateUsername(deprovisionField, modifyField, 'deprovisionUserMessages', 'Modify');
-      });
+      // 1) First write to SQL via your existing GetAvailablePhoneNumbers API
+      const insertUrl = `${API.url}?code=${API.key}`;
+      try {
+        submitBtn.textContent = '💾 Writing to SQL…';
 
-      // BATCH OPERATIONS
-      document.getElementById('submitAllBatch').onclick = submitAllOperations;
-      document.getElementById('clearAllBatch').onclick = clearAllBatch;
-      
-      const resetBtn = document.getElementById('resetPageBtn');
-      if (resetBtn) {
-        resetBtn.onclick = resetPage;
+        // fire all INSERT calls in parallel
+        await Promise.all(batchDeviceOperations.map(op =>
+          fetch(insertUrl, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({...op, deviceName: op.deviceName})
+          }).then(resp => {
+            if (!resp.ok) {
+              return resp.json().then(err => Promise.reject(err.error || resp.status));
+            }
+          })
+        ));
+      } catch (writeErr) {
+        // if any insert failed
+        displayDeviceBatchResults([{
+          operation: { action: 'batch', deviceName: 'system' },
+          success: false,
+          message: `SQL write failed: ${writeErr}`
+        }], 0, 1);
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+        return;
       }
-    });
 
-    // UNCHANGED: Keep exact working dropdown logic
-    async function loadPhoneNumbers() {
-      // GET numbers
-      let r = await fetch(`${API.url}?code=${API.key}`);
-      if (!r.ok) return console.error('Phone fetch failed');
-      phoneNumbers = await r.json();
-      populatePhoneDropdowns();
+      // 2) Now trigger the runbook
+      if (isTeamsEnvironment) {
+        try {
+          submitBtn.textContent = '🔐 Authenticating…';
+          const token = await microsoftTeams.authentication.getAuthToken({
+            resources: [`api://${AZURE_CONFIG.functionAppClientId}/.default`]
+          });
 
-      // POST dropdowns
-      r = await fetch(`${API.url}?code=${API.key}`, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({action:'getdropdowndata'})
-      });
-      if (!r.ok) return console.error('Dropdown fetch failed');
-      dropdownData = await r.json();
-      populateDropdowns();
-    }
+          submitBtn.textContent = '🚀 Successfully Submitted Changes';
+          const resp = await fetch(AZURE_CONFIG.functionAppUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ operations: batchDeviceOperations })
+          });
 
-    // UPDATED: populateDropdowns function with batch filtering
-    function populateDropdowns() {
-      // Get users already in batch operations
-      const batchUsernames = batchOperations
-        .filter(op => op.action === 'add')
-        .map(op => op.username.toLowerCase());
-      
-      // Users - filter out batch users
-      const uSel = document.getElementById('addUsername');
-      uSel.innerHTML = '<option value="">Select a user…</option>';
-      (dropdownData.a5Users||[])
-        .filter(user => !batchUsernames.includes(user.toLowerCase()))
-        .forEach(u => uSel.appendChild(new Option(u,u)));
+          if (!resp.ok) throw new Error(`Runbook API error ${resp.status}`);
+          displayDeviceBatchResults([{
+            operation: { action: 'batch', deviceName: 'system' },
+            success: true,
+            message: 'Changes Submitted Successfully'
+          }], 1, 0);
 
-      // Call‑Queue Groups
-      document.querySelectorAll('.cq-group-select').forEach(sel=>{
-        sel.innerHTML = '<option value="">Select Call Queue Group…</option>';
-        (dropdownData.callQueueGroups||[]).forEach(g=>sel.appendChild(new Option(g,g)));
-      });
-
-      // Auto‑Attendants
-      document.querySelectorAll('.aa-select').forEach(sel=>{
-        sel.innerHTML = '<option value="">Select Auto Attendant…</option>';
-        (dropdownData.autoAttendants||[]).forEach(a=>sel.appendChild(new Option(a,a)));
-      });
-
-      // Call‑Queues
-      document.querySelectorAll('.cq-select').forEach(sel=>{
-        sel.innerHTML = '<option value="">Select Call Queue…</option>';
-        (dropdownData.callQueues||[]).forEach(q=>sel.appendChild(new Option(q,q)));
-      });
-    }
-
-    // UPDATED: populatePhoneDropdowns function with batch filtering
-    function populatePhoneDropdowns() {
-      // Get phone numbers already in batch operations
-      const batchPhoneNumbers = batchOperations
-        .filter(op => op.action === 'add')
-        .map(op => op.phoneNumber);
-      
-      // Add form phone dropdown - filter out batch numbers
-      const p1 = document.getElementById('addPhoneNumber');
-      p1.innerHTML = '<option value="">Select a phone number…</option>';
-      phoneNumbers
-        .filter(i => i.AvailablePhoneNumber.startsWith('1414277'))
-        .filter(i => !batchPhoneNumbers.includes(i.AvailablePhoneNumber))
-        .forEach(i => p1.appendChild(new Option(i.AvailablePhoneNumber, i.AvailablePhoneNumber)));
-      
-      // Modify form phone dropdown - no filtering needed here as it's for changing existing numbers
-      const p2 = document.getElementById('modifyPhoneNumber');
-      if(p2){
-        p2.innerHTML = '<option value="">Select a phone number…</option>';
-        phoneNumbers.filter(i => i.AvailablePhoneNumber.startsWith('1414277'))
-          .forEach(i => p2.appendChild(new Option(i.AvailablePhoneNumber, i.AvailablePhoneNumber)));
+          // clear after success
+          batchDeviceOperations = [];
+        } catch (err) {
+          displayDeviceBatchResults([{
+            operation: { action: 'batch', deviceName: 'system' },
+            success: false,
+            message: `Runbook trigger failed: ${err.message}`
+          }], 0, 1);
+        }
       }
-    }
 
-    // UPDATED: validateAddForm function with duplicate checking
-    function validateAddForm(){
-      const selectedUser = document.getElementById('addUsername').value;
-      const selectedPhone = document.getElementById('addPhoneNumber').value;
-      
-      // Check if user is already in batch
-      const userInBatch = batchOperations.some(op => 
-        op.action === 'add' && op.username.toLowerCase() === selectedUser.toLowerCase()
-      );
-      
-      // Check if phone is already in batch
-      const phoneInBatch = batchOperations.some(op => 
-        op.action === 'add' && op.phoneNumber === selectedPhone
-      );
-      
-      if (userInBatch && selectedUser) {
-        showMessage('addUserMessages', 
-          '<div class="error">This user is already in the batch queue</div>');
-        document.getElementById('addUsername').value = '';
-      }
-      
-      if (phoneInBatch && selectedPhone) {
-        showMessage('addUserMessages', 
-          '<div class="error">This phone number is already in the batch queue</div>');
-        document.getElementById('addPhoneNumber').value = '';
-      }
-      
-      const u = !!document.getElementById('addUsername').value;
-      const p = !!document.getElementById('addPhoneNumber').value;
-      document.getElementById('addUserSubmit').disabled = !(u && p);
+      // restore UI
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+      updateDeviceBatchTable();
+      populateDevicePhoneDropdowns();
     }
 
     // UPDATED: addToBatch function to refresh dropdowns after adding
@@ -634,9 +1113,37 @@
       // Refresh dropdowns to remove newly batched user/number
       populateDropdowns();
       populatePhoneDropdowns();
+      populateDevicePhoneDropdowns();
       
       showMessage('addUserMessages', 
         `<div class="success">User ${operation.username} added to batch queue</div>`);
+    }
+
+    // Shared Device batch functions
+    function addDeviceToBatch(){
+      const callQueueGroups = Array.from(document.querySelectorAll('#addDeviceCallQueueGroups .cq-group-select'))
+                              .map(s=>s.value).filter(v=>v);
+      
+      const operation = {
+        id: Date.now(),
+        action: 'add',
+        deviceName: document.getElementById('addDeviceName').value.trim(),
+        phoneNumber: document.getElementById('addDevicePhoneNumber').value,
+        internationalCalling: document.getElementById('addDeviceIntlYes').checked,
+        callQueueGroups: callQueueGroups
+      };
+
+      batchDeviceOperations.push(operation);
+      updateDeviceBatchTable();
+      clearAddDeviceForm();
+      
+      // Refresh dropdowns to remove newly batched device/number
+      populateDropdowns();
+      populatePhoneDropdowns();
+      populateDevicePhoneDropdowns();
+      
+      showMessage('addDeviceMessages', 
+        `<div class="success">TSD Account ${operation.deviceName} added to batch queue</div>`);
     }
 
     // Mapping function to convert user membership names to CQ_Members table names
@@ -707,6 +1214,32 @@
         `<div class="success">Modification for ${username} added to batch queue</div>`);
     }
 
+    function addModifyDeviceToBatch(){
+      const deviceName = document.getElementById('modifyDeviceName').value.trim();
+      
+      // Ensure we preserve existing call queue groups
+      let preservedCallQueueGroups = currentDevice.callQueueGroups || [];
+      
+      // Map the call queue group names to match the CQ_Members table naming convention
+      let mappedCallQueueGroups = mapCallQueueGroupNames(preservedCallQueueGroups);
+      
+      const operation = {
+        id: Date.now(),
+        action: 'modify',
+        deviceName: deviceName,
+        phoneNumber: document.getElementById('modifyDevicePhoneNumber').value || currentDevice.phoneNumber,
+        internationalCalling: document.getElementById('modifyDeviceIntlYes').checked,
+        callQueueGroups: mappedCallQueueGroups,
+        originalDevice: {...currentDevice}
+      };
+
+      batchDeviceOperations.push(operation);
+      updateDeviceBatchTable();
+      clearModifyDeviceForm();
+      showMessage('modifyDeviceMessages', 
+        `<div class="success">Modification for ${deviceName} added to batch queue</div>`);
+    }
+
     function addDeprovisionToBatch(){
       const username = document.getElementById('deprovisionUsername').value.trim();
       const operation = {
@@ -722,7 +1255,22 @@
         `<div class="success">Deprovision for ${username} added to batch queue</div>`);
     }
 
-    // Batch table management
+    function addDeprovisionDeviceToBatch(){
+      const deviceName = document.getElementById('deprovisionDeviceName').value.trim();
+      const operation = {
+        id: Date.now(),
+        action: 'deprovision',
+        deviceName: deviceName
+      };
+
+      batchDeviceOperations.push(operation);
+      updateDeviceBatchTable();
+      clearDeprovisionDeviceForm();
+      showMessage('deprovisionDeviceMessages', 
+        `<div class="success">Deprovision for ${deviceName} added to batch queue</div>`);
+    }
+
+    // Batch table management for Phone Users
     function updateBatchTable(){
       const addCount = batchOperations.filter(op => op.action === 'add').length;
       const modifyCount = batchOperations.filter(op => op.action === 'modify').length;
@@ -750,6 +1298,37 @@
         submitBtn.style.display = 'block';
         clearBtn.style.display = 'block';
         populateBatchTableRows();
+      }
+    }
+
+    // Batch table management for Shared Devices
+    function updateDeviceBatchTable(){
+      const addCount = batchDeviceOperations.filter(op => op.action === 'add').length;
+      const modifyCount = batchDeviceOperations.filter(op => op.action === 'modify').length;
+      const deprovisionCount = batchDeviceOperations.filter(op => op.action === 'deprovision').length;
+      const totalCount = batchDeviceOperations.length;
+
+      document.getElementById('batchDeviceAddCount').textContent = addCount;
+      document.getElementById('batchDeviceModifyCount').textContent = modifyCount;
+      document.getElementById('batchDeviceDeprovisionCount').textContent = deprovisionCount;
+      document.getElementById('batchDeviceTotalCount').textContent = totalCount;
+
+      const emptyMsg = document.getElementById('batchDeviceEmptyMessage');
+      const table = document.getElementById('batchDeviceTable');
+      const submitBtn = document.getElementById('submitAllDeviceBatch');
+      const clearBtn = document.getElementById('clearAllDeviceBatch');
+
+      if (totalCount === 0) {
+        emptyMsg.style.display = 'block';
+        table.style.display = 'none';
+        submitBtn.style.display = 'none';
+        clearBtn.style.display = 'none';
+      } else {
+        emptyMsg.style.display = 'none';
+        table.style.display = 'table';
+        submitBtn.style.display = 'block';
+        clearBtn.style.display = 'block';
+        populateDeviceBatchTableRows();
       }
     }
 
@@ -784,6 +1363,37 @@
       });
     }
 
+    function populateDeviceBatchTableRows(){
+      const tbody = document.getElementById('batchDeviceTableBody');
+      tbody.innerHTML = '';
+
+      batchDeviceOperations.forEach(op => {
+        const row = document.createElement('tr');
+        row.className = `action-${op.action}`;
+        
+        let details = '';
+        switch(op.action) {
+          case 'add':
+            details = `Phone: ${formatPhoneNumber(op.phoneNumber)}<br>Intl: ${op.internationalCalling ? 'Yes' : 'No'}`;
+            break;
+          case 'modify':
+            details = `Phone: ${formatPhoneNumber(op.phoneNumber)}<br>Intl: ${op.internationalCalling ? 'Yes' : 'No'}`;
+            break;
+          case 'deprovision':
+            details = 'Remove all phone settings';
+            break;
+        }
+
+        row.innerHTML = `
+          <td style="text-transform:capitalize; font-weight:bold">${op.action}</td>
+          <td>${op.deviceName}</td>
+          <td>${details}</td>
+          <td><button class="remove-batch-item" onclick="removeDeviceBatchOperation(${op.id})">Remove</button></td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
     // UPDATED: removeBatchOperation function to refresh dropdowns
     function removeBatchOperation(id){
       batchOperations = batchOperations.filter(op => op.id !== id);
@@ -792,6 +1402,17 @@
       // Refresh dropdowns to make removed user/number available again
       populateDropdowns();
       populatePhoneDropdowns();
+      populateDevicePhoneDropdowns();
+    }
+
+    function removeDeviceBatchOperation(id){
+      batchDeviceOperations = batchDeviceOperations.filter(op => op.id !== id);
+      updateDeviceBatchTable();
+      
+      // Refresh dropdowns to make removed device/number available again
+      populateDropdowns();
+      populatePhoneDropdowns();
+      populateDevicePhoneDropdowns();
     }
 
     // UPDATED: clearAllBatch function to refresh dropdowns
@@ -804,8 +1425,31 @@
       // Refresh dropdowns to make all users/numbers available again
       populateDropdowns();
       populatePhoneDropdowns();
+      populateDevicePhoneDropdowns();
       
       const btn = document.getElementById('clearAllBatch');
+      const originalText = btn.textContent;
+      btn.textContent = '✅ Cleared!';
+      btn.style.background = '#28a745';
+      
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.style.background = '#6c757d';
+      }, 2000);
+    }
+
+    function clearAllDeviceBatch(){
+      batchDeviceOperations = [];
+      updateDeviceBatchTable();
+      document.getElementById('batchDeviceResults').innerHTML = '';
+      document.getElementById('resetDevicePageBtn').style.display = 'none';
+      
+      // Refresh dropdowns to make all devices/numbers available again
+      populateDropdowns();
+      populatePhoneDropdowns();
+      populateDevicePhoneDropdowns();
+      
+      const btn = document.getElementById('clearAllDeviceBatch');
       const originalText = btn.textContent;
       btn.textContent = '✅ Cleared!';
       btn.style.background = '#28a745';
@@ -877,6 +1521,51 @@
       }, 2000);
     }
 
+    function resetDevicePage(){
+      batchDeviceOperations = [];
+      updateDeviceBatchTable();
+      document.getElementById('batchDeviceResults').innerHTML = '';
+      document.getElementById('resetDevicePageBtn').style.display = 'none';
+      
+      clearAddDeviceForm();
+      clearModifyDeviceForm();
+      clearDeprovisionDeviceForm();
+      
+      document.getElementById('addDeviceMessages').innerHTML = '';
+      document.getElementById('modifyDeviceMessages').innerHTML = '';
+      document.getElementById('deprovisionDeviceMessages').innerHTML = '';
+      
+      document.getElementById('addDeviceName').innerHTML = '<option value="">Loading TSD accounts…</option>';
+      document.getElementById('addDevicePhoneNumber').innerHTML = '<option value="">Loading numbers…</option>';
+      
+      document.getElementById('addDeviceCallQueueGroups').innerHTML = `
+        <div class="dynamic-item">
+          <select class="form-control cq-group-select">
+            <option value="">Loading Call Queue Groups…</option>
+          </select>
+          <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+        </div>`;
+      
+      document.getElementById('addDeviceIntlNo').checked = true;
+      document.getElementById('addDeviceIntlYes').checked = false;
+      
+      currentDevice = null;
+      
+      setTimeout(() => {
+        loadPhoneNumbers();
+      }, 100);
+      
+      const btn = document.getElementById('resetDevicePageBtn');
+      const originalText = btn.textContent;
+      btn.textContent = '✅ Page Reset!';
+      btn.style.background = '#28a745';
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.style.background = '#007bff';
+        btn.style.display = 'none';
+      }, 2000);
+    }
+
     function displayBatchResults(results, successCount, errorCount){
       const resultsDiv = document.getElementById('batchResults');
       
@@ -912,6 +1601,44 @@
 
       if (errorCount > 0 && successCount === 0) {
         document.getElementById('resetPageBtn').style.display = 'block';
+      }
+    }
+
+    function displayDeviceBatchResults(results, successCount, errorCount){
+      const resultsDiv = document.getElementById('batchDeviceResults');
+      
+      let html = `<div class="batch-summary">
+        <strong>Batch Results:</strong><br>
+        Successful: ${successCount}<br>
+        Failed: ${errorCount}<br>
+        Total: ${results.length}
+      </div>`;
+
+      results.forEach(result => {
+        const className = result.success ? 'success' : 'error';
+        html += `<div class="${className}" style="margin-bottom:5px; padding:5px; font-size:12px;">
+          <strong>${result.operation.action.toUpperCase()}</strong> ${result.operation.deviceName}: ${result.message}
+        </div>`;
+      });
+
+      if (successCount > 0) {
+        html += `<div class="success" style="margin-top:10px; text-align:center;">
+          ✅ Page will reload in 3 seconds to refresh data...
+        </div>`;
+        
+        setTimeout(() => {
+          try {
+            window.location.reload(true);
+          } catch(e) {
+            window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
+          }
+        }, 3000);
+      }
+
+      resultsDiv.innerHTML = html;
+
+      if (errorCount > 0 && successCount === 0) {
+        document.getElementById('resetDevicePageBtn').style.display = 'block';
       }
     }
 
@@ -952,6 +1679,26 @@
       validateAddForm();
     }
 
+    function clearAddDeviceFormOnly(){
+      document.getElementById('addDeviceName').value = '';
+      document.getElementById('addDevicePhoneNumber').value = '';
+      document.getElementById('addDeviceIntlNo').checked = true;
+      document.getElementById('addDeviceIntlYes').checked = false;
+      
+      document.getElementById('addDeviceCallQueueGroups').innerHTML = `
+        <div class="dynamic-item">
+          <select class="form-control cq-group-select">
+            <option value="">Select Call Queue Group…</option>
+          </select>
+          <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+        </div>`;
+      
+      document.getElementById('addDeviceMessages').innerHTML = '';
+      
+      populateDropdowns();
+      validateAddDeviceForm();
+    }
+
     function clearModifyFormOnly(){
       document.getElementById('modifyUsername').value = '';
       ['modifyPhoneGroup','modifyIntlGroup',
@@ -969,6 +1716,22 @@
       }
     }
 
+    function clearModifyDeviceFormOnly(){
+      document.getElementById('modifyDeviceName').value = '';
+      ['modifyDevicePhoneGroup','modifyDeviceIntlGroup',
+       'modifyDeviceCallQueueGroupsGroup','currentDeviceInfo'].forEach(id=>
+         document.getElementById(id).style.display='none');
+      document.getElementById('modifyDeviceSubmit').style.display='none';
+      currentDevice = null;
+      
+      document.getElementById('modifyDeviceMessages').innerHTML = '';
+      
+      const deprovisionMessages = document.getElementById('deprovisionDeviceMessages');
+      if(deprovisionMessages.innerHTML.includes('already entered in the Modify section')) {
+        showMessage('deprovisionDeviceMessages', '', null);
+      }
+    }
+
     function clearDeprovisionFormOnly(){
       document.getElementById('deprovisionUsername').value = '';
       document.getElementById('deprovisionUserInfo').style.display='none';
@@ -982,8 +1745,25 @@
       }
     }
 
+    function clearDeprovisionDeviceFormOnly(){
+      document.getElementById('deprovisionDeviceName').value = '';
+      document.getElementById('deprovisionDeviceInfo').style.display='none';
+      document.getElementById('deprovisionDeviceSubmit').style.display='none';
+      
+      document.getElementById('deprovisionDeviceMessages').innerHTML = '';
+      
+      const modifyMessages = document.getElementById('modifyDeviceMessages');
+      if(modifyMessages.innerHTML.includes('already entered in the Deprovision section')) {
+        showMessage('modifyDeviceMessages', '', null);
+      }
+    }
+
     function clearAddForm(){
       clearAddFormOnly();
+    }
+
+    function clearAddDeviceForm(){
+      clearAddDeviceFormOnly();
     }
 
     function validateUsername(field, otherField, messageId, sectionName) {
@@ -999,12 +1779,33 @@
       }
     }
 
+    function validateDeviceName(field, otherField, messageId, sectionName) {
+      const currentValue = field.value.trim();
+      const otherValue = otherField.value.trim();
+      
+      if (currentValue && otherValue && currentValue.toLowerCase() === otherValue.toLowerCase()) {
+        showMessage(messageId, `This TSD account is already entered in the ${sectionName} section. Please clear that entry first.`, 'error');
+        return false;
+      } else {
+        showMessage(messageId, '', null);
+        return true;
+      }
+    }
+
     function clearModifyForm(){
       clearModifyFormOnly();
     }
 
+    function clearModifyDeviceForm(){
+      clearModifyDeviceFormOnly();
+    }
+
     function clearDeprovisionForm(){
       clearDeprovisionFormOnly();
+    }
+
+    function clearDeprovisionDeviceForm(){
+      clearDeprovisionDeviceFormOnly();
     }
 
     function lookupUser(){
@@ -1018,6 +1819,19 @@
       
       showMessage('modifyUserMessages','',null);
       _lookup(u,'modify');
+    }
+
+    function lookupDevice(){
+      const d=document.getElementById('modifyDeviceName').value.trim();
+      if(!d) return showMessage('modifyDeviceMessages','Enter a TSD account','error');
+      
+      const deprovisionDevice = document.getElementById('deprovisionDeviceName').value.trim();
+      if(deprovisionDevice && deprovisionDevice.toLowerCase() === d.toLowerCase()) {
+        return showMessage('modifyDeviceMessages','This TSD account is already entered in the Deprovision section. Please clear that entry first.','error');
+      }
+      
+      showMessage('modifyDeviceMessages','',null);
+      _lookupDevice(d,'modify');
     }
 
     function _lookup(username,ctx){
@@ -1042,6 +1856,28 @@
       });
     }
 
+    function _lookupDevice(deviceName,ctx){
+      fetch(`${API.url}?code=${API.key}`,{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'lookupDevice',deviceName})
+      })
+      .then(r=>r.ok? r.json(): r.json().then(e=>Promise.reject(e)))
+      .then(device=>{
+        if(ctx==='modify'){
+          currentDevice=device;
+          displayCurrentDeviceSettings();
+          showModifyDeviceFields();
+        } else {
+          displayDeprovisionDeviceSettings(device);
+        }
+      })
+      .catch(err=>{
+        console.error(err);
+        showMessage(ctx==='modify'?'modifyDeviceMessages':'deprovisionDeviceMessages',
+                    err.error||err.message,'error');
+      });
+    }
+
     function displayCurrentUserSettings(){
       const s=document.getElementById('currentSettings');
       s.innerHTML=`
@@ -1053,6 +1889,18 @@
       document.getElementById('currentUserInfo').style.display='block';
       
       populateCurrentMemberships();
+    }
+
+    function displayCurrentDeviceSettings(){
+      const s=document.getElementById('currentDeviceSettings');
+      s.innerHTML=`
+        <div class="current-setting"><strong>TSD Account:</strong> ${currentDevice.deviceName}</div>
+        <div class="current-setting"><strong>Phone Number:</strong> ${formatPhoneNumber(currentDevice.phoneNumber)}</div>
+        <div class="current-setting"><strong>Intl Calling:</strong> ${currentDevice.internationalCalling?'Yes':'No'}</div>
+        <div class="current-setting"><strong>CQ Groups:</strong> ${(currentDevice.callQueueGroups||[]).join(', ')||'None'}</div>`;
+      document.getElementById('currentDeviceInfo').style.display='block';
+      
+      populateCurrentDeviceMemberships();
     }
 
     function populateCurrentMemberships(){
@@ -1105,6 +1953,24 @@
       }
     }
 
+    function populateCurrentDeviceMemberships(){
+      const cqGroupsList = document.getElementById('currentDeviceCallQueueGroupsList');
+      cqGroupsList.innerHTML = '';
+      if (currentDevice.callQueueGroups && currentDevice.callQueueGroups.length > 0) {
+        currentDevice.callQueueGroups.forEach(group => {
+          const groupItem = document.createElement('div');
+          groupItem.className = 'dynamic-item';
+          groupItem.innerHTML = `
+            <span>${group}</span>
+            <button class="btn btn-danger btn-small" onclick="removeDeviceCallQueueGroupMembership('${group}')">Remove</button>
+          `;
+          cqGroupsList.appendChild(groupItem);
+        });
+      } else {
+        cqGroupsList.innerHTML = '<div style="padding:5px; color:#666; font-style:italic;">No current memberships</div>';
+      }
+    }
+
     function showModifyFields(){
       ['modifyPhoneGroup','modifyIntlGroup',
        'modifyCallQueueGroupsGroup','modifyAutoAttendantsGroup',
@@ -1112,6 +1978,14 @@
       document.getElementById('modifyUserSubmit').style.display='block';
       document.getElementById('modifyIntlYes').checked=currentUser.internationalCalling;
       document.getElementById('modifyIntlNo').checked=!currentUser.internationalCalling;
+    }
+
+    function showModifyDeviceFields(){
+      ['modifyDevicePhoneGroup','modifyDeviceIntlGroup',
+       'modifyDeviceCallQueueGroupsGroup'].forEach(id=>document.getElementById(id).style.display='block');
+      document.getElementById('modifyDeviceSubmit').style.display='block';
+      document.getElementById('modifyDeviceIntlYes').checked=currentDevice.internationalCalling;
+      document.getElementById('modifyDeviceIntlNo').checked=!currentDevice.internationalCalling;
     }
 
     function lookupDeprovisionUser(){
@@ -1127,6 +2001,19 @@
       _lookup(u,'deprovision');
     }
 
+    function lookupDeprovisionDevice(){
+      const d=document.getElementById('deprovisionDeviceName').value.trim();
+      if(!d) return showMessage('deprovisionDeviceMessages','Enter TSD account','error');
+      
+      const modifyDevice = document.getElementById('modifyDeviceName').value.trim();
+      if(modifyDevice && modifyDevice.toLowerCase() === d.toLowerCase()) {
+        return showMessage('deprovisionDeviceMessages','This TSD account is already entered in the Modify section. Please clear that entry first.','error');
+      }
+      
+      showMessage('deprovisionDeviceMessages','',null);
+      _lookupDevice(d,'deprovision');
+    }
+
     function displayDeprovisionUserSettings(user){
       const d=document.getElementById('deprovisionSettings');
       d.innerHTML=`
@@ -1138,6 +2025,17 @@
         <div class="current-setting"><strong>CQMgrs:</strong> ${(user.callQueueManagers||[]).join(', ')||'None'}</div>`;
       document.getElementById('deprovisionUserInfo').style.display='block';
       document.getElementById('deprovisionUserSubmit').style.display='block';
+    }
+
+    function displayDeprovisionDeviceSettings(device){
+      const d=document.getElementById('deprovisionDeviceSettings');
+      d.innerHTML=`
+        <div class="current-setting"><strong>TSD Account:</strong> ${device.deviceName}</div>
+        <div class="current-setting"><strong>Phone:</strong> ${formatPhoneNumber(device.phoneNumber)}</div>
+        <div class="current-setting"><strong>Intl Calling:</strong> ${device.internationalCalling?'Yes':'No'}</div>
+        <div class="current-setting"><strong>CQ Groups:</strong> ${(device.callQueueGroups||[]).join(', ')||'None'}</div>`;
+      document.getElementById('deprovisionDeviceInfo').style.display='block';
+      document.getElementById('deprovisionDeviceSubmit').style.display='block';
     }
 
     function formatPhoneNumber(p){
@@ -1156,6 +2054,18 @@
     
     function addCallQueueGroup(){
       let c=document.getElementById('addCallQueueGroups');
+      let div=document.createElement('div');
+      div.className='dynamic-item';
+      div.innerHTML=`
+        <select class="form-control cq-group-select">
+          <option value="">Select Call Queue Group…</option>
+        </select>
+        <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>`;
+      c.appendChild(div);populateDropdowns();
+    }
+
+    function addDeviceCallQueueGroup(){
+      let c=document.getElementById('addDeviceCallQueueGroups');
       let div=document.createElement('div');
       div.className='dynamic-item';
       div.innerHTML=`
@@ -1205,10 +2115,32 @@
       }
     }
 
+    function addDeviceCallQueueGroupMembership(){
+      const select = document.getElementById('newDeviceCallQueueGroupSelect');
+      if(select.value && currentDevice) {
+        if (!currentDevice.callQueueGroups) currentDevice.callQueueGroups = [];
+        if (!currentDevice.callQueueGroups.includes(select.value)) {
+          currentDevice.callQueueGroups.push(select.value);
+          populateCurrentDeviceMemberships();
+          select.value = '';
+        } else {
+          alert('TSD Account is already a member of this Call Queue Group');
+          select.value = '';
+        }
+      }
+    }
+
     function removeCallQueueGroupMembership(groupName){
       if (currentUser && currentUser.callQueueGroups) {
         currentUser.callQueueGroups = currentUser.callQueueGroups.filter(group => group !== groupName);
         populateCurrentMemberships();
+      }
+    }
+
+    function removeDeviceCallQueueGroupMembership(groupName){
+      if (currentDevice && currentDevice.callQueueGroups) {
+        currentDevice.callQueueGroups = currentDevice.callQueueGroups.filter(group => group !== groupName);
+        populateCurrentDeviceMemberships();
       }
     }
 
