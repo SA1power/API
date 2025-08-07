@@ -413,9 +413,10 @@
               <div id="modifyDeviceMessages"></div>
 
               <div class="form-group">
-                <label for="modifyDeviceName">TSD Account:</label>
-                <input type="text" id="modifyDeviceName" class="form-control"
-                       placeholder="Enter TSD account to lookup"/>
+                <label for="modifyDeviceName">Select TSD Account:</label>
+                <select id="modifyDeviceName" class="form-control">
+                  <option value="">Loading provisioned TSD accounts…</option>
+                </select>
                 <button id="modifyDeviceLookupBtn" class="btn btn-secondary"
                         style="margin-top:10px">Lookup Device</button>
               </div>
@@ -471,9 +472,10 @@
               <div id="deprovisionDeviceMessages"></div>
 
               <div class="form-group">
-                <label for="deprovisionDeviceName">TSD Account:</label>
-                <input type="text" id="deprovisionDeviceName" class="form-control"
-                       placeholder="Enter TSD account"/>
+                <label for="deprovisionDeviceName">Select TSD Account:</label>
+                <select id="deprovisionDeviceName" class="form-control">
+                  <option value="">Loading provisioned TSD accounts…</option>
+                </select>
                 <button id="deprovDeviceLookupBtn" class="btn btn-secondary"
                         style="margin-top:10px">Lookup Device</button>
               </div>
@@ -714,7 +716,7 @@
       document.getElementById('modifyDeviceSubmit').onclick = addModifyDeviceToBatch;
       document.getElementById('clearModifyDeviceForm').onclick = clearModifyDeviceFormOnly;
       
-      document.getElementById('modifyDeviceName').addEventListener('input', ()=>{
+      document.getElementById('modifyDeviceName').addEventListener('change', ()=>{
         const modifyField = document.getElementById('modifyDeviceName');
         const deprovisionField = document.getElementById('deprovisionDeviceName');
         validateDeviceName(modifyField, deprovisionField, 'modifyDeviceMessages', 'Deprovision');
@@ -725,7 +727,7 @@
       document.getElementById('deprovisionDeviceSubmit').onclick = addDeprovisionDeviceToBatch;
       document.getElementById('clearDeprovisionDeviceForm').onclick = clearDeprovisionDeviceFormOnly;
       
-      document.getElementById('deprovisionDeviceName').addEventListener('input', ()=>{
+      document.getElementById('deprovisionDeviceName').addEventListener('change', ()=>{
         const deprovisionField = document.getElementById('deprovisionDeviceName');
         const modifyField = document.getElementById('modifyDeviceName');
         validateDeviceName(deprovisionField, modifyField, 'deprovisionDeviceMessages', 'Modify');
@@ -758,6 +760,16 @@
       });
       if (!r.ok) return console.error('Dropdown fetch failed');
       dropdownData = await r.json();
+      
+      // DEBUG: Check if all TSD properties exist
+      console.log('Dropdown data received:', dropdownData);
+      if (!dropdownData.tsdUsers) {
+        console.warn('tsdUsers not found in dropdown data - Azure Function may not be updated');
+      }
+      if (!dropdownData.provisionedTsdAccounts) {
+        console.warn('provisionedTsdAccounts not found in dropdown data - Azure Function may not be updated');
+      }
+      
       populateDropdowns();
     }
 
@@ -788,6 +800,21 @@
         (dropdownData.tsdUsers||[])
           .filter(device => !batchDeviceNames.includes(device.toLowerCase()))
           .forEach(d => dSel.appendChild(new Option(d,d)));
+      }
+
+      // Provisioned TSD Accounts for modify/deprovision - no filtering needed
+      const modifyDeviceSel = document.getElementById('modifyDeviceName');
+      if (modifyDeviceSel) {
+        modifyDeviceSel.innerHTML = '<option value="">Select provisioned TSD account…</option>';
+        (dropdownData.provisionedTsdAccounts||[])
+          .forEach(d => modifyDeviceSel.appendChild(new Option(d,d)));
+      }
+
+      const deprovisionDeviceSel = document.getElementById('deprovisionDeviceName');
+      if (deprovisionDeviceSel) {
+        deprovisionDeviceSel.innerHTML = '<option value="">Select provisioned TSD account…</option>';
+        (dropdownData.provisionedTsdAccounts||[])
+          .forEach(d => deprovisionDeviceSel.appendChild(new Option(d,d)));
       }
 
       // Call‑Queue Groups
@@ -1538,6 +1565,10 @@
       document.getElementById('addDeviceName').innerHTML = '<option value="">Loading TSD accounts…</option>';
       document.getElementById('addDevicePhoneNumber').innerHTML = '<option value="">Loading numbers…</option>';
       
+      // Reset modify and deprovision dropdowns
+      document.getElementById('modifyDeviceName').innerHTML = '<option value="">Loading provisioned TSD accounts…</option>';
+      document.getElementById('deprovisionDeviceName').innerHTML = '<option value="">Loading provisioned TSD accounts…</option>';
+      
       document.getElementById('addDeviceCallQueueGroups').innerHTML = `
         <div class="dynamic-item">
           <select class="form-control cq-group-select">
@@ -1784,7 +1815,7 @@
       const otherValue = otherField.value.trim();
       
       if (currentValue && otherValue && currentValue.toLowerCase() === otherValue.toLowerCase()) {
-        showMessage(messageId, `This TSD account is already entered in the ${sectionName} section. Please clear that entry first.`, 'error');
+        showMessage(messageId, `This TSD account is already selected in the ${sectionName} section. Please clear that selection first.`, 'error');
         return false;
       } else {
         showMessage(messageId, '', null);
@@ -1823,11 +1854,11 @@
 
     function lookupDevice(){
       const d=document.getElementById('modifyDeviceName').value.trim();
-      if(!d) return showMessage('modifyDeviceMessages','Enter a TSD account','error');
+      if(!d) return showMessage('modifyDeviceMessages','Please select a TSD account','error');
       
       const deprovisionDevice = document.getElementById('deprovisionDeviceName').value.trim();
       if(deprovisionDevice && deprovisionDevice.toLowerCase() === d.toLowerCase()) {
-        return showMessage('modifyDeviceMessages','This TSD account is already entered in the Deprovision section. Please clear that entry first.','error');
+        return showMessage('modifyDeviceMessages','This TSD account is already selected in the Deprovision section. Please clear that selection first.','error');
       }
       
       showMessage('modifyDeviceMessages','',null);
@@ -2003,11 +2034,11 @@
 
     function lookupDeprovisionDevice(){
       const d=document.getElementById('deprovisionDeviceName').value.trim();
-      if(!d) return showMessage('deprovisionDeviceMessages','Enter TSD account','error');
+      if(!d) return showMessage('deprovisionDeviceMessages','Please select a TSD account','error');
       
       const modifyDevice = document.getElementById('modifyDeviceName').value.trim();
       if(modifyDevice && modifyDevice.toLowerCase() === d.toLowerCase()) {
-        return showMessage('deprovisionDeviceMessages','This TSD account is already entered in the Modify section. Please clear that entry first.','error');
+        return showMessage('deprovisionDeviceMessages','This TSD account is already selected in the Modify section. Please clear that selection first.','error');
       }
       
       showMessage('deprovisionDeviceMessages','',null);
