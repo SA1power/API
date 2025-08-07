@@ -138,10 +138,10 @@
 
     <!-- Tab Navigation -->
     <div class="tab-navigation">
-      <button class="tab-button active" onclick="showTab('phone-users')">Teams Phone Users</button>
-      <button class="tab-button" onclick="showTab('shared-devices')">Teams Shared Devices</button>
-      <button class="tab-button" onclick="showTab('call-queues')">Call Queues</button>
-      <button class="tab-button" onclick="showTab('auto-attendants')">Auto Attendants</button>
+<button class="tab-button active" onclick="showTab('phone-users', event)">Teams Phone Users</button>
+<button class="tab-button" onclick="showTab('shared-devices', event)">Teams Shared Devices</button>
+<button class="tab-button" onclick="showTab('call-queues', event)">Call Queues</button>
+<button class="tab-button" onclick="showTab('auto-attendants', event)">Auto Attendants</button>
     </div>
 
     <!-- TEAMS PHONE USERS TAB -->
@@ -643,10 +643,11 @@
       key: 'NULL'
     };
 
-    const AZURE_CONFIG = {
-      functionAppClientId: 'f2068d39-85c7-4507-9fd3-0758b193b0a9',
-      functionAppUrl: 'https://provisionteamsphonesystemusers-a5b3b9fjcxcva8g4.northcentralus-01.azurewebsites.net/api/TriggerRunbook'
-    };
+const AZURE_CONFIG = {
+  functionAppClientId: 'f2068d39-85c7-4507-9fd3-0758b193b0a9',
+  phoneUsersUrl: 'https://provisionteamsphonesystemusers-a5b3b9fjcxcva8g4.northcentralus-01.azurewebsites.net/api/TriggerRunbook',
+  sharedDevicesUrl: 'https://provisionteamsphonesystemusers-a5b3b9fjcxcva8g4.northcentralus-01.azurewebsites.net/api/TriggerSharedDeviceRunbook'
+};
 
     let phoneNumbers = [], dropdownData = null, currentUser = null, currentDevice = null;
     let batchOperations = [];
@@ -654,7 +655,8 @@
     let isTeamsEnvironment = false;
 
     // Tab Management
-    function showTab(tabName) {
+   // Tab Management
+function showTab(tabName, event) {
       // Hide all tab contents
       document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.remove('active');
@@ -1036,7 +1038,7 @@
           });
 
           submitBtn.textContent = '🚀 Successfully Submitted Changes';
-          const resp = await fetch(AZURE_CONFIG.functionAppUrl, {
+const resp = await fetch(AZURE_CONFIG.phoneUsersUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -1116,7 +1118,7 @@
           });
 
           submitBtn.textContent = '🚀 Successfully Submitted Changes';
-          const resp = await fetch(AZURE_CONFIG.functionAppUrl, {
+       const resp = await fetch(AZURE_CONFIG.sharedDevicesUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
