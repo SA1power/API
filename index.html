@@ -74,20 +74,51 @@
     .teams-status.warning{background:#fff3cd;border-color:#ffc107;color:#856404}
     
     /* Fix for modify section width to accommodate longer UPNs */
-    .current-setting span:first-child{
-      min-width:120px;
-      word-break:break-all;
-    }
-    
-    /* Wider form controls for device sections */
-    #shared-devices .form-control{
-      min-width:280px;
-    }
-    
-    /* Ensure current device settings display properly */
     .current-setting{
       align-items:flex-start;
       word-wrap:break-word;
+      overflow-wrap:break-word;
+      flex-wrap:wrap;
+    }
+    
+    .current-setting span{
+      word-wrap:break-word;
+      overflow-wrap:break-word;
+      max-width:100%;
+    }
+    
+    /* Ensure user info boxes handle long text properly */
+    .user-info{
+      word-wrap:break-word;
+      overflow-wrap:break-word;
+    }
+    
+    /* Make sure form controls in device sections don't overflow */
+    #shared-devices .form-control,
+    #shared-devices .current-setting{
+      word-wrap:break-word;
+      overflow-wrap:break-word;
+      max-width:100%;
+    }
+    
+    /* Fix TSD Account display in current device settings */
+    #currentDeviceSettings .current-setting{
+      display:block;
+      margin-bottom:8px;
+    }
+    
+    #currentDeviceSettings .current-setting strong{
+      display:inline-block;
+      min-width:120px;
+      vertical-align:top;
+    }
+    
+    #currentDeviceSettings .current-setting span{
+      display:inline-block;
+      word-wrap:break-word;
+      overflow-wrap:break-word;
+      max-width:calc(100% - 130px);
+      vertical-align:top;
     }
     
     @media(max-width:1200px){
