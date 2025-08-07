@@ -73,6 +73,23 @@
     .teams-status.authenticated{background:#e8f5e8;border-color:#4caf50;color:#2e7d32}
     .teams-status.warning{background:#fff3cd;border-color:#ffc107;color:#856404}
     
+    /* Fix for modify section width to accommodate longer UPNs */
+    .current-setting span:first-child{
+      min-width:120px;
+      word-break:break-all;
+    }
+    
+    /* Wider form controls for device sections */
+    #shared-devices .form-control{
+      min-width:280px;
+    }
+    
+    /* Ensure current device settings display properly */
+    .current-setting{
+      align-items:flex-start;
+      word-wrap:break-word;
+    }
+    
     @media(max-width:1200px){
       .main-layout{flex-direction:column}
       .left-panel,.right-panel{min-width:auto}
@@ -376,13 +393,7 @@
                 </select>
               </div>
 
-              <div class="form-group">
-                <label>International Calling:</label>
-                <div class="radio-group">
-                  <label><input type="radio" name="addDeviceIntlCalling" id="addDeviceIntlYes" value="yes"> Yes</label>
-                  <label><input type="radio" name="addDeviceIntlCalling" id="addDeviceIntlNo"  value="no" checked> No</label>
-                </div>
-              </div>
+              <!-- REMOVED INTERNATIONAL CALLING SECTION -->
 
               <div class="form-group">
                 <label>Teams Call Queue Group Membership(s):</label>
@@ -433,13 +444,7 @@
                 </select>
               </div>
 
-              <div id="modifyDeviceIntlGroup" class="form-group" style="display:none">
-                <label>International Calling:</label>
-                <div class="radio-group">
-                  <label><input type="radio" id="modifyDeviceIntlYes" name="modifyDeviceIntlCalling" value="yes"> Yes</label>
-                  <label><input type="radio" id="modifyDeviceIntlNo"  name="modifyDeviceIntlCalling" value="no"> No</label>
-                </div>
-              </div>
+              <!-- REMOVED INTERNATIONAL CALLING SECTION -->
 
               <div id="modifyDeviceCallQueueGroupsGroup" class="form-group" style="display:none">
                 <label>Teams Call Queue Group Membership(s):</label>
@@ -922,7 +927,7 @@
       document.getElementById('addUserSubmit').disabled = !(u && p);
     }
 
-    // Shared Device validation
+    // UPDATED: Shared Device validation - REMOVED international calling check
     function validateAddDeviceForm(){
       const selectedDevice = document.getElementById('addDeviceName').value.trim();
       const selectedPhone = document.getElementById('addDevicePhoneNumber').value;
@@ -1146,7 +1151,7 @@
         `<div class="success">User ${operation.username} added to batch queue</div>`);
     }
 
-    // Shared Device batch functions
+    // UPDATED: Shared Device batch functions - REMOVED international calling
     function addDeviceToBatch(){
       const callQueueGroups = Array.from(document.querySelectorAll('#addDeviceCallQueueGroups .cq-group-select'))
                               .map(s=>s.value).filter(v=>v);
@@ -1156,7 +1161,7 @@
         action: 'add',
         deviceName: document.getElementById('addDeviceName').value.trim(),
         phoneNumber: document.getElementById('addDevicePhoneNumber').value,
-        internationalCalling: document.getElementById('addDeviceIntlYes').checked,
+        internationalCalling: false, // Always false for shared devices
         callQueueGroups: callQueueGroups
       };
 
@@ -1241,6 +1246,7 @@
         `<div class="success">Modification for ${username} added to batch queue</div>`);
     }
 
+    // UPDATED: addModifyDeviceToBatch function - REMOVED international calling
     function addModifyDeviceToBatch(){
       const deviceName = document.getElementById('modifyDeviceName').value.trim();
       
@@ -1255,7 +1261,7 @@
         action: 'modify',
         deviceName: deviceName,
         phoneNumber: document.getElementById('modifyDevicePhoneNumber').value || currentDevice.phoneNumber,
-        internationalCalling: document.getElementById('modifyDeviceIntlYes').checked,
+        internationalCalling: false, // Always false for shared devices
         callQueueGroups: mappedCallQueueGroups,
         originalDevice: {...currentDevice}
       };
@@ -1390,6 +1396,7 @@
       });
     }
 
+    // UPDATED: populateDeviceBatchTableRows function - REMOVED international calling display
     function populateDeviceBatchTableRows(){
       const tbody = document.getElementById('batchDeviceTableBody');
       tbody.innerHTML = '';
@@ -1401,10 +1408,10 @@
         let details = '';
         switch(op.action) {
           case 'add':
-            details = `Phone: ${formatPhoneNumber(op.phoneNumber)}<br>Intl: ${op.internationalCalling ? 'Yes' : 'No'}`;
+            details = `Phone: ${formatPhoneNumber(op.phoneNumber)}`;
             break;
           case 'modify':
-            details = `Phone: ${formatPhoneNumber(op.phoneNumber)}<br>Intl: ${op.internationalCalling ? 'Yes' : 'No'}`;
+            details = `Phone: ${formatPhoneNumber(op.phoneNumber)}`;
             break;
           case 'deprovision':
             details = 'Remove all phone settings';
@@ -1577,9 +1584,6 @@
           <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
         </div>`;
       
-      document.getElementById('addDeviceIntlNo').checked = true;
-      document.getElementById('addDeviceIntlYes').checked = false;
-      
       currentDevice = null;
       
       setTimeout(() => {
@@ -1710,11 +1714,10 @@
       validateAddForm();
     }
 
+    // UPDATED: clearAddDeviceFormOnly function - removed international calling reset
     function clearAddDeviceFormOnly(){
       document.getElementById('addDeviceName').value = '';
       document.getElementById('addDevicePhoneNumber').value = '';
-      document.getElementById('addDeviceIntlNo').checked = true;
-      document.getElementById('addDeviceIntlYes').checked = false;
       
       document.getElementById('addDeviceCallQueueGroups').innerHTML = `
         <div class="dynamic-item">
@@ -1747,10 +1750,10 @@
       }
     }
 
+    // UPDATED: clearModifyDeviceFormOnly function - removed international calling elements
     function clearModifyDeviceFormOnly(){
       document.getElementById('modifyDeviceName').value = '';
-      ['modifyDevicePhoneGroup','modifyDeviceIntlGroup',
-       'modifyDeviceCallQueueGroupsGroup','currentDeviceInfo'].forEach(id=>
+      ['modifyDevicePhoneGroup','modifyDeviceCallQueueGroupsGroup','currentDeviceInfo'].forEach(id=>
          document.getElementById(id).style.display='none');
       document.getElementById('modifyDeviceSubmit').style.display='none';
       currentDevice = null;
@@ -1922,13 +1925,13 @@
       populateCurrentMemberships();
     }
 
+    // UPDATED: displayCurrentDeviceSettings function - removed international calling display
     function displayCurrentDeviceSettings(){
       const s=document.getElementById('currentDeviceSettings');
       s.innerHTML=`
-        <div class="current-setting"><strong>TSD Account:</strong> ${currentDevice.deviceName}</div>
-        <div class="current-setting"><strong>Phone Number:</strong> ${formatPhoneNumber(currentDevice.phoneNumber)}</div>
-        <div class="current-setting"><strong>Intl Calling:</strong> ${currentDevice.internationalCalling?'Yes':'No'}</div>
-        <div class="current-setting"><strong>CQ Groups:</strong> ${(currentDevice.callQueueGroups||[]).join(', ')||'None'}</div>`;
+        <div class="current-setting"><strong>TSD Account:</strong> <span>${currentDevice.deviceName}</span></div>
+        <div class="current-setting"><strong>Phone Number:</strong> <span>${formatPhoneNumber(currentDevice.phoneNumber)}</span></div>
+        <div class="current-setting"><strong>CQ Groups:</strong> <span>${(currentDevice.callQueueGroups||[]).join(', ')||'None'}</span></div>`;
       document.getElementById('currentDeviceInfo').style.display='block';
       
       populateCurrentDeviceMemberships();
@@ -2011,12 +2014,10 @@
       document.getElementById('modifyIntlNo').checked=!currentUser.internationalCalling;
     }
 
+    // UPDATED: showModifyDeviceFields function - removed international calling elements
     function showModifyDeviceFields(){
-      ['modifyDevicePhoneGroup','modifyDeviceIntlGroup',
-       'modifyDeviceCallQueueGroupsGroup'].forEach(id=>document.getElementById(id).style.display='block');
+      ['modifyDevicePhoneGroup','modifyDeviceCallQueueGroupsGroup'].forEach(id=>document.getElementById(id).style.display='block');
       document.getElementById('modifyDeviceSubmit').style.display='block';
-      document.getElementById('modifyDeviceIntlYes').checked=currentDevice.internationalCalling;
-      document.getElementById('modifyDeviceIntlNo').checked=!currentDevice.internationalCalling;
     }
 
     function lookupDeprovisionUser(){
@@ -2058,13 +2059,13 @@
       document.getElementById('deprovisionUserSubmit').style.display='block';
     }
 
+    // UPDATED: displayDeprovisionDeviceSettings function - removed international calling display
     function displayDeprovisionDeviceSettings(device){
       const d=document.getElementById('deprovisionDeviceSettings');
       d.innerHTML=`
-        <div class="current-setting"><strong>TSD Account:</strong> ${device.deviceName}</div>
-        <div class="current-setting"><strong>Phone:</strong> ${formatPhoneNumber(device.phoneNumber)}</div>
-        <div class="current-setting"><strong>Intl Calling:</strong> ${device.internationalCalling?'Yes':'No'}</div>
-        <div class="current-setting"><strong>CQ Groups:</strong> ${(device.callQueueGroups||[]).join(', ')||'None'}</div>`;
+        <div class="current-setting"><strong>TSD Account:</strong> <span>${device.deviceName}</span></div>
+        <div class="current-setting"><strong>Phone:</strong> <span>${formatPhoneNumber(device.phoneNumber)}</span></div>
+        <div class="current-setting"><strong>CQ Groups:</strong> <span>${(device.callQueueGroups||[]).join(', ')||'None'}</span></div>`;
       document.getElementById('deprovisionDeviceInfo').style.display='block';
       document.getElementById('deprovisionDeviceSubmit').style.display='block';
     }
