@@ -2910,7 +2910,49 @@ const resp = await fetch(AZURE_CONFIG.phoneUsersUrl, {
         populateCurrentMemberships();
       }
     }
+// Make reservation dropdowns searchable by typing
+function makeDropdownSearchable(selectId) {
+  const select = document.getElementById(selectId);
+  if (!select) return;
+  
+  let searchTerm = '';
+  let searchTimeout;
+  
+  select.addEventListener('keydown', function(e) {
+    // Don't interfere with normal navigation
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || 
+        e.key === 'Enter' || e.key === 'Tab') {
+      return;
+    }
+    
+    // Clear search after a pause
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => { searchTerm = ''; }, 1000);
+    
+    // Build search string
+    if (e.key === 'Backspace') {
+      searchTerm = searchTerm.slice(0, -1);
+    } else if (e.key.length === 1) {
+      searchTerm += e.key;
+    }
+    
+    // Find and select matching option
+    for (let option of this.options) {
+      if (option.value.includes(searchTerm)) {
+        this.value = option.value;
+        break;
+      }
+    }
+    
+    e.preventDefault();
+  });
+}
 
+// Apply to reservation dropdowns after they're populated
+setTimeout(() => {
+  makeDropdownSearchable('reservePhoneNumber');
+  makeDropdownSearchable('reserveDevicePhoneNumber');
+}, 2000);
   </script>
 
 </body>
