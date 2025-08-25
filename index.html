@@ -982,15 +982,15 @@ document.getElementById('clearAddDeviceForm').onclick = clearAddDeviceFormOnly;
       let html = '';
       reservedNumbers.forEach(num => {
         html += `
-          <div class="reserved-item">
-            <div class="reserved-item-content">
-              <div class="reserved-phone">${formatPhoneNumber(num.AvailablePhoneNumber)}</div>
-              <div class="reserved-notes">${num.ReservedNotes || 'No notes'}</div>
-            </div>
-            <button class="btn btn-danger btn-small" onclick="unreserveNumber('${num.AvailablePhoneNumber}')">
-              Unreserve
-            </button>
-          </div>`;
+  <div class="reserved-item">
+    <div class="reserved-item-content">
+      <div class="reserved-phone">${formatPhoneNumber(num.AvailablePhoneNumber)}</div>
+      <div class="reserved-notes">${num.ReservedNotes || 'No notes'}</div>
+    </div>
+    <button class="btn btn-danger btn-small" onclick="unreserveNumber('${num.AvailablePhoneNumber}')">
+      Unreserve
+    </button>
+  </div>`;
       });
       
       if (listDiv) listDiv.innerHTML = html;
@@ -1148,29 +1148,38 @@ document.getElementById('clearAddDeviceForm').onclick = clearAddDeviceFormOnly;
     }
 
     // Unreserve phone number
-    async function unreserveNumber(phoneNumber) {
-      if (!confirm(`Are you sure you want to unreserve ${formatPhoneNumber(phoneNumber)}?`)) return;
-      
-      try {
-        const response = await fetch(`${API.url}?code=${API.key}`, {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            action: 'unreserve',
-            phoneNumber: phoneNumber
-          })
-        });
-        
-        if (!response.ok) throw new Error('Failed to unreserve number');
-        
-        // Reload data
-        await loadPhoneNumbers();
-        await loadReservedNumbers();
-        
-      } catch (error) {
-        alert(`Failed to unreserve number: ${error.message}`);
-      }
+async function unreserveNumber(phoneNumber) {
+  if (!confirm(`Are you sure you want to unreserve ${formatPhoneNumber(phoneNumber)}?`)) return;
+  
+  try {
+    const response = await fetch(`${API.url}?code=${API.key}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        action: 'unreserve',
+        phoneNumber: phoneNumber
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to unreserve number');
     }
+    
+    // Show success message
+    showMessage('reserveMessages', 
+      `<div class="success">Phone number ${formatPhoneNumber(phoneNumber)} unreserved successfully</div>`);
+    
+    // Reload data
+    await loadPhoneNumbers();
+    await loadReservedNumbers();
+    
+  } catch (error) {
+    console.error('Unreserve error:', error);
+    alert(`Failed to unreserve number: ${error.message}`);
+  }
+}
 
     // UPDATED: validateAddForm to handle reserved numbers
     function validateAddForm(){
