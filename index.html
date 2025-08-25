@@ -28,9 +28,15 @@
       padding:20px;display:flex;flex-direction:column;min-width:300px}
     .column-header{background:#d0d0d0;margin:-20px -20px 20px -20px;
       padding:10px 20px;font-weight:bold;border-bottom:1px solid #999}
+    
+    /* Special styling for reservation column */
+    .reservation-column{background:#f0e6ff;border-color:#6b3aa0}
+    .reservation-column .column-header{background:#8b5fbf;color:white}
+    
     .form-group{margin-bottom:15px}
     .form-group label{display:block;margin-bottom:5px;font-weight:bold}
     .form-control{width:100%;padding:8px;border:1px solid #999;border-radius:4px}
+    .form-control.textarea{min-height:80px;resize:vertical;font-family:Arial,sans-serif}
     .radio-group{display:flex;gap:15px;margin-top:5px}
     .btn{padding:8px 15px;border:none;border-radius:4px;cursor:pointer;margin-top:auto}
     .btn-primary{background:#c41e3a;color:#fff}
@@ -41,10 +47,18 @@
     .btn-danger:hover{background:#c82333}
     .btn-success{background:#28a745;color:#fff}
     .btn-success:hover{background:#218838}
+    .btn-reserve{background:#6b3aa0;color:#fff}
+    .btn-reserve:hover{background:#8b5fbf}
+    .btn-reserve:disabled{background:#ccc;cursor:not-allowed}
     .btn-small{padding:4px 8px;font-size:12px}
     .dynamic-section{border:1px solid #ccc;padding:10px;border-radius:4px;background:#f9f9f9;margin-bottom:10px}
     .dynamic-item{display:flex;justify-content:space-between;align-items:center;
       background:#fff;padding:5px;border-radius:3px;margin:5px 0}
+    .reserved-item{display:flex;justify-content:space-between;align-items:flex-start;
+      background:#fff;padding:10px;border-radius:3px;margin:5px 0;border:1px solid #ddd}
+    .reserved-item-content{flex:1}
+    .reserved-phone{font-weight:bold;color:#6b3aa0;margin-bottom:5px}
+    .reserved-notes{color:#666;font-size:12px;font-style:italic}
     .user-info{background:#e3f2fd;border:1px solid #2196f3;padding:10px;border-radius:4px;margin-bottom:15px}
     .user-info h4{color:#1976d2;margin-bottom:10px}
     .current-setting{display:flex;justify-content:space-between;
@@ -52,6 +66,7 @@
     .success{background:#e6ffe6;color:#006600;padding:10px;border:1px solid #006600;border-radius:4px;margin-bottom:15px}
     .error{background:#ffe6e6;color:#cc0000;padding:10px;border:1px solid #cc0000;border-radius:4px;margin-bottom:15px}
     .help-text{font-size:12px;color:#666;margin-top:3px;font-style:italic}
+    .char-counter{font-size:11px;color:#666;text-align:right;margin-top:2px}
     
     /* Batch Operations Table Styles */
     .batch-panel{background:#f0f8ff;border:2px solid #4169e1;border-radius:4px;padding:20px}
@@ -169,6 +184,10 @@
                 <select id="addPhoneNumber" class="form-control">
                   <option value="">Loading numbers…</option>
                 </select>
+                <div class="help-text">Or use a reserved number from dropdown below</div>
+                <select id="addReservedNumber" class="form-control" style="margin-top:5px">
+                  <option value="">-- Select a reserved number (optional) --</option>
+                </select>
               </div>
 
               <div class="form-group">
@@ -250,6 +269,10 @@
                 <label>Change Phone Number:</label>
                 <select id="modifyPhoneNumber" class="form-control">
                   <option value="">Select new phone number…</option>
+                </select>
+                <div class="help-text">Or use a reserved number from dropdown below</div>
+                <select id="modifyReservedNumber" class="form-control" style="margin-top:5px">
+                  <option value="">-- Select a reserved number (optional) --</option>
                 </select>
               </div>
 
@@ -345,6 +368,40 @@
               </div>
             </div>
 
+            <!-- RESERVE PHONE NUMBER -->
+            <div class="column reservation-column">
+              <div class="column-header">Reserve a Phone Number</div>
+              <div id="reserveMessages"></div>
+
+              <div class="form-group">
+                <label for="reservePhoneNumber">Select Phone Number to Reserve:</label>
+                <select id="reservePhoneNumber" class="form-control">
+                  <option value="">Loading available numbers…</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="reserveNotes">Reservation Notes:</label>
+                <textarea id="reserveNotes" class="form-control textarea" 
+                          placeholder="Enter notes about this reservation (optional)"
+                          maxlength="500"></textarea>
+                <div class="char-counter">
+                  <span id="charCount">0</span> / 500 characters
+                </div>
+              </div>
+
+              <button id="reserveSubmit" class="btn btn-reserve submit-button" disabled style="width:100%;">
+                Reserve Phone Number
+              </button>
+
+              <div style="margin-top:20px;border-top:1px solid #999;padding-top:15px;">
+                <h4 style="margin-bottom:10px;color:#6b3aa0;">Currently Reserved Numbers:</h4>
+                <div id="reservedNumbersList" class="dynamic-section">
+                  <div class="batch-empty">Loading reserved numbers...</div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -397,7 +454,7 @@
       </div>
     </div>
 
-    <!-- TEAMS SHARED DEVICES TAB -->
+    <!-- TEAMS SHARED DEVICES TAB (unchanged) -->
     <div id="shared-devices" class="tab-content">
       <div class="main-layout">
         <!-- LEFT PANEL - Forms -->
@@ -422,9 +479,11 @@
                 <select id="addDevicePhoneNumber" class="form-control">
                   <option value="">Loading numbers…</option>
                 </select>
+                <div class="help-text">Or use a reserved number from dropdown below</div>
+                <select id="addDeviceReservedNumber" class="form-control" style="margin-top:5px">
+                  <option value="">-- Select a reserved number (optional) --</option>
+                </select>
               </div>
-
-              <!-- REMOVED INTERNATIONAL CALLING SECTION -->
 
               <div class="form-group">
                 <label>Teams Call Queue Group Membership(s):</label>
@@ -473,9 +532,11 @@
                 <select id="modifyDevicePhoneNumber" class="form-control">
                   <option value="">Select new phone number…</option>
                 </select>
+                <div class="help-text">Or use a reserved number from dropdown below</div>
+                <select id="modifyDeviceReservedNumber" class="form-control" style="margin-top:5px">
+                  <option value="">-- Select a reserved number (optional) --</option>
+                </select>
               </div>
-
-              <!-- REMOVED INTERNATIONAL CALLING SECTION -->
 
               <div id="modifyDeviceCallQueueGroupsGroup" class="form-group" style="display:none">
                 <label>Teams Call Queue Group Membership(s):</label>
@@ -527,6 +588,40 @@
                 <button id="clearDeprovisionDeviceForm" class="btn btn-secondary" style="flex:0 0 auto;">
                   Clear Form
                 </button>
+              </div>
+            </div>
+
+            <!-- RESERVE PHONE NUMBER FOR DEVICES -->
+            <div class="column reservation-column">
+              <div class="column-header">Reserve Phone Number for Device</div>
+              <div id="reserveDeviceMessages"></div>
+
+              <div class="form-group">
+                <label for="reserveDevicePhoneNumber">Select Phone Number to Reserve:</label>
+                <select id="reserveDevicePhoneNumber" class="form-control">
+                  <option value="">Loading available numbers…</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="reserveDeviceNotes">Reservation Notes:</label>
+                <textarea id="reserveDeviceNotes" class="form-control textarea" 
+                          placeholder="Enter notes about this reservation (optional)"
+                          maxlength="500"></textarea>
+                <div class="char-counter">
+                  <span id="deviceCharCount">0</span> / 500 characters
+                </div>
+              </div>
+
+              <button id="reserveDeviceSubmit" class="btn btn-reserve submit-button" disabled style="width:100%;">
+                Reserve Phone Number
+              </button>
+
+              <div style="margin-top:20px;border-top:1px solid #999;padding-top:15px;">
+                <h4 style="margin-bottom:10px;color:#6b3aa0;">Currently Reserved Numbers:</h4>
+                <div id="reservedDeviceNumbersList" class="dynamic-section">
+                  <div class="batch-empty">Loading reserved numbers...</div>
+                </div>
               </div>
             </div>
 
@@ -582,7 +677,7 @@
       </div>
     </div>
 
-    <!-- CALL QUEUES TAB -->
+    <!-- CALL QUEUES TAB (unchanged) -->
     <div id="call-queues" class="tab-content">
       <div class="main-layout">
         <div class="left-panel">
@@ -607,7 +702,7 @@
       </div>
     </div>
 
-    <!-- AUTO ATTENDANTS TAB -->
+    <!-- AUTO ATTENDANTS TAB (unchanged) -->
     <div id="auto-attendants" class="tab-content">
       <div class="main-layout">
         <div class="left-panel">
@@ -650,13 +745,13 @@ const AZURE_CONFIG = {
 };
 
     let phoneNumbers = [], dropdownData = null, currentUser = null, currentDevice = null;
+    let reservedNumbers = [];
     let batchOperations = [];
     let batchDeviceOperations = [];
     let isTeamsEnvironment = false;
 
     // Tab Management
-   // Tab Management
-function showTab(tabName, event) {
+    function showTab(tabName, event) {
       // Hide all tab contents
       document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.remove('active');
@@ -676,6 +771,7 @@ function showTab(tabName, event) {
       // Load data when switching tabs
       if (tabName === 'shared-devices') {
         loadPhoneNumbers();
+        loadReservedNumbers();
       }
     }
 
@@ -705,15 +801,18 @@ function showTab(tabName, event) {
       
       // Load data immediately
       loadPhoneNumbers();
+      loadReservedNumbers();
 
       // PHONE USERS - ADD
       document.getElementById('addUsername').addEventListener('change', validateAddForm);
       document.getElementById('addPhoneNumber').addEventListener('change', validateAddForm);
+      document.getElementById('addReservedNumber').addEventListener('change', handleReservedNumberSelection);
       document.getElementById('addUserSubmit').onclick = addToBatch;
       document.getElementById('clearAddForm').onclick = clearAddFormOnly;
       
       // PHONE USERS - MODIFY
       document.getElementById('modifyLookupBtn').addEventListener('click', lookupUser);
+      document.getElementById('modifyReservedNumber').addEventListener('change', handleModifyReservedNumberSelection);
       document.getElementById('modifyUserSubmit').onclick = addModifyToBatch;
       document.getElementById('clearModifyForm').onclick = clearModifyFormOnly;
       
@@ -743,14 +842,25 @@ function showTab(tabName, event) {
         resetBtn.onclick = resetPage;
       }
 
+      // PHONE NUMBER RESERVATION
+      document.getElementById('reservePhoneNumber').addEventListener('change', validateReserveForm);
+      document.getElementById('reserveNotes').addEventListener('input', function() {
+        document.getElementById('charCount').textContent = this.value.length;
+        validateReserveForm();
+      });
+      document.getElementById('reserveSubmit').onclick = reservePhoneNumber;
+
       // SHARED DEVICES - ADD
       document.getElementById('addDeviceName').addEventListener('change', validateAddDeviceForm);
       document.getElementById('addDevicePhoneNumber').addEventListener('change', validateAddDeviceForm);
+      document.getElementById('addDeviceReservedNumber').addEventListener('change', handleDeviceReservedNumberSelection);
       document.getElementById('addDeviceSubmit').onclick = addDeviceToBatch;
-      document.getElementById('clearAddDeviceForm').onclick = clearAddDeviceFormOnly;
+
+document.getElementById('clearAddDeviceForm').onclick = clearAddDeviceFormOnly;
       
       // SHARED DEVICES - MODIFY
       document.getElementById('modifyDeviceLookupBtn').addEventListener('click', lookupDevice);
+      document.getElementById('modifyDeviceReservedNumber').addEventListener('change', handleDeviceModifyReservedNumberSelection);
       document.getElementById('modifyDeviceSubmit').onclick = addModifyDeviceToBatch;
       document.getElementById('clearModifyDeviceForm').onclick = clearModifyDeviceFormOnly;
       
@@ -779,7 +889,497 @@ function showTab(tabName, event) {
       if (resetDeviceBtn) {
         resetDeviceBtn.onclick = resetDevicePage;
       }
+
+      // DEVICE PHONE NUMBER RESERVATION
+      document.getElementById('reserveDevicePhoneNumber').addEventListener('change', validateDeviceReserveForm);
+      document.getElementById('reserveDeviceNotes').addEventListener('input', function() {
+        document.getElementById('deviceCharCount').textContent = this.value.length;
+        validateDeviceReserveForm();
+      });
+      document.getElementById('reserveDeviceSubmit').onclick = reserveDevicePhoneNumber;
     });
+
+    // Load reserved numbers
+    async function loadReservedNumbers() {
+      try {
+        const response = await fetch(`${API.url}?code=${API.key}&includeReserved=true`);
+        if (!response.ok) throw new Error('Failed to fetch reserved numbers');
+        
+        reservedNumbers = await response.json();
+        populateReservedDropdowns();
+        displayReservedNumbers();
+      } catch (error) {
+        console.error('Error loading reserved numbers:', error);
+      }
+    }
+
+    // Populate reserved number dropdowns
+    function populateReservedDropdowns() {
+      // User add form
+      const addReserved = document.getElementById('addReservedNumber');
+      if (addReserved) {
+        addReserved.innerHTML = '<option value="">-- Select a reserved number (optional) --</option>';
+        reservedNumbers.forEach(num => {
+          const option = new Option(
+            `${formatPhoneNumber(num.AvailablePhoneNumber)} - ${num.ReservedNotes || 'No notes'}`,
+            num.AvailablePhoneNumber
+          );
+          addReserved.appendChild(option);
+        });
+      }
+
+      // User modify form
+      const modifyReserved = document.getElementById('modifyReservedNumber');
+      if (modifyReserved) {
+        modifyReserved.innerHTML = '<option value="">-- Select a reserved number (optional) --</option>';
+        reservedNumbers.forEach(num => {
+          const option = new Option(
+            `${formatPhoneNumber(num.AvailablePhoneNumber)} - ${num.ReservedNotes || 'No notes'}`,
+            num.AvailablePhoneNumber
+          );
+          modifyReserved.appendChild(option);
+        });
+      }
+
+      // Device add form
+      const addDeviceReserved = document.getElementById('addDeviceReservedNumber');
+      if (addDeviceReserved) {
+        addDeviceReserved.innerHTML = '<option value="">-- Select a reserved number (optional) --</option>';
+        reservedNumbers.forEach(num => {
+          const option = new Option(
+            `${formatPhoneNumber(num.AvailablePhoneNumber)} - ${num.ReservedNotes || 'No notes'}`,
+            num.AvailablePhoneNumber
+          );
+          addDeviceReserved.appendChild(option);
+        });
+      }
+
+      // Device modify form
+      const modifyDeviceReserved = document.getElementById('modifyDeviceReservedNumber');
+      if (modifyDeviceReserved) {
+        modifyDeviceReserved.innerHTML = '<option value="">-- Select a reserved number (optional) --</option>';
+        reservedNumbers.forEach(num => {
+          const option = new Option(
+            `${formatPhoneNumber(num.AvailablePhoneNumber)} - ${num.ReservedNotes || 'No notes'}`,
+            num.AvailablePhoneNumber
+          );
+          modifyDeviceReserved.appendChild(option);
+        });
+      }
+    }
+
+    // Display reserved numbers list
+    function displayReservedNumbers() {
+      const listDiv = document.getElementById('reservedNumbersList');
+      const deviceListDiv = document.getElementById('reservedDeviceNumbersList');
+      
+      if (!reservedNumbers || reservedNumbers.length === 0) {
+        if (listDiv) listDiv.innerHTML = '<div class="batch-empty">No reserved numbers</div>';
+        if (deviceListDiv) deviceListDiv.innerHTML = '<div class="batch-empty">No reserved numbers</div>';
+        return;
+      }
+
+      let html = '';
+      reservedNumbers.forEach(num => {
+        html += `
+          <div class="reserved-item">
+            <div class="reserved-item-content">
+              <div class="reserved-phone">${formatPhoneNumber(num.AvailablePhoneNumber)}</div>
+              <div class="reserved-notes">${num.ReservedNotes || 'No notes'}</div>
+            </div>
+            <button class="btn btn-danger btn-small" onclick="unreserveNumber('${num.AvailablePhoneNumber}')">
+              Unreserve
+            </button>
+          </div>`;
+      });
+      
+      if (listDiv) listDiv.innerHTML = html;
+      if (deviceListDiv) deviceListDiv.innerHTML = html;
+    }
+
+    // Handle reserved number selection for add form
+    function handleReservedNumberSelection() {
+      const reserved = document.getElementById('addReservedNumber').value;
+      const regular = document.getElementById('addPhoneNumber');
+      
+      if (reserved) {
+        regular.value = '';
+        regular.disabled = true;
+      } else {
+        regular.disabled = false;
+      }
+      
+      validateAddForm();
+    }
+
+    // Handle reserved number selection for modify form
+    function handleModifyReservedNumberSelection() {
+      const reserved = document.getElementById('modifyReservedNumber').value;
+      const regular = document.getElementById('modifyPhoneNumber');
+      
+      if (reserved) {
+        regular.value = '';
+        regular.disabled = true;
+      } else {
+        regular.disabled = false;
+      }
+    }
+
+    // Handle device reserved number selection for add form
+    function handleDeviceReservedNumberSelection() {
+      const reserved = document.getElementById('addDeviceReservedNumber').value;
+      const regular = document.getElementById('addDevicePhoneNumber');
+      
+      if (reserved) {
+        regular.value = '';
+        regular.disabled = true;
+      } else {
+        regular.disabled = false;
+      }
+      
+      validateAddDeviceForm();
+    }
+
+    // Handle device reserved number selection for modify form
+    function handleDeviceModifyReservedNumberSelection() {
+      const reserved = document.getElementById('modifyDeviceReservedNumber').value;
+      const regular = document.getElementById('modifyDevicePhoneNumber');
+      
+      if (reserved) {
+        regular.value = '';
+        regular.disabled = true;
+      } else {
+        regular.disabled = false;
+      }
+    }
+
+    // Validate reserve form
+    function validateReserveForm() {
+      const phoneNumber = document.getElementById('reservePhoneNumber').value;
+      document.getElementById('reserveSubmit').disabled = !phoneNumber;
+    }
+
+    // Validate device reserve form
+    function validateDeviceReserveForm() {
+      const phoneNumber = document.getElementById('reserveDevicePhoneNumber').value;
+      document.getElementById('reserveDeviceSubmit').disabled = !phoneNumber;
+    }
+
+    // Reserve phone number
+    async function reservePhoneNumber() {
+      const phoneNumber = document.getElementById('reservePhoneNumber').value;
+      const notes = document.getElementById('reserveNotes').value;
+      
+      if (!phoneNumber) return;
+      
+      try {
+        const response = await fetch(`${API.url}?code=${API.key}`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            action: 'reserve',
+            phoneNumber: phoneNumber,
+            reservationNotes: notes
+          })
+        });
+        
+        if (!response.ok) throw new Error('Failed to reserve number');
+        
+        const result = await response.json();
+        
+        showMessage('reserveMessages', 
+          `<div class="success">Phone number ${formatPhoneNumber(phoneNumber)} reserved successfully</div>`);
+        
+        // Clear form
+        document.getElementById('reservePhoneNumber').value = '';
+        document.getElementById('reserveNotes').value = '';
+        document.getElementById('charCount').textContent = '0';
+        document.getElementById('reserveSubmit').disabled = true;
+        
+        // Reload data
+        await loadPhoneNumbers();
+        await loadReservedNumbers();
+        
+      } catch (error) {
+        showMessage('reserveMessages', 
+          `<div class="error">Failed to reserve number: ${error.message}</div>`);
+      }
+    }
+
+    // Reserve device phone number
+    async function reserveDevicePhoneNumber() {
+      const phoneNumber = document.getElementById('reserveDevicePhoneNumber').value;
+      const notes = document.getElementById('reserveDeviceNotes').value;
+      
+      if (!phoneNumber) return;
+      
+      try {
+        const response = await fetch(`${API.url}?code=${API.key}`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            action: 'reserve',
+            phoneNumber: phoneNumber,
+            reservationNotes: notes
+          })
+        });
+        
+        if (!response.ok) throw new Error('Failed to reserve number');
+        
+        const result = await response.json();
+        
+        showMessage('reserveDeviceMessages', 
+          `<div class="success">Phone number ${formatPhoneNumber(phoneNumber)} reserved successfully</div>`);
+        
+        // Clear form
+        document.getElementById('reserveDevicePhoneNumber').value = '';
+        document.getElementById('reserveDeviceNotes').value = '';
+        document.getElementById('deviceCharCount').textContent = '0';
+        document.getElementById('reserveDeviceSubmit').disabled = true;
+        
+        // Reload data
+        await loadPhoneNumbers();
+        await loadReservedNumbers();
+        
+      } catch (error) {
+        showMessage('reserveDeviceMessages', 
+          `<div class="error">Failed to reserve number: ${error.message}</div>`);
+      }
+    }
+
+    // Unreserve phone number
+    async function unreserveNumber(phoneNumber) {
+      if (!confirm(`Are you sure you want to unreserve ${formatPhoneNumber(phoneNumber)}?`)) return;
+      
+      try {
+        const response = await fetch(`${API.url}?code=${API.key}`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            action: 'unreserve',
+            phoneNumber: phoneNumber
+          })
+        });
+        
+        if (!response.ok) throw new Error('Failed to unreserve number');
+        
+        // Reload data
+        await loadPhoneNumbers();
+        await loadReservedNumbers();
+        
+      } catch (error) {
+        alert(`Failed to unreserve number: ${error.message}`);
+      }
+    }
+
+    // UPDATED: validateAddForm to handle reserved numbers
+    function validateAddForm(){
+      const selectedUser = document.getElementById('addUsername').value;
+      const selectedPhone = document.getElementById('addPhoneNumber').value;
+      const selectedReserved = document.getElementById('addReservedNumber').value;
+      
+      // Check if user is already in batch
+      const userInBatch = batchOperations.some(op => 
+        op.action === 'add' && op.username.toLowerCase() === selectedUser.toLowerCase()
+      );
+      
+      // Get the actual phone number to use
+      const phoneToUse = selectedReserved || selectedPhone;
+      
+      // Check if phone is already in batch (users or devices)
+      const phoneInBatch = [...batchOperations, ...batchDeviceOperations].some(op => 
+        op.action === 'add' && op.phoneNumber === phoneToUse
+      );
+      
+      if (userInBatch && selectedUser) {
+        showMessage('addUserMessages', 
+          '<div class="error">This user is already in the batch queue</div>');
+        document.getElementById('addUsername').value = '';
+      }
+      
+      if (phoneInBatch && phoneToUse) {
+        showMessage('addUserMessages', 
+          '<div class="error">This phone number is already in the batch queue</div>');
+        document.getElementById('addPhoneNumber').value = '';
+        document.getElementById('addReservedNumber').value = '';
+      }
+      
+      const u = !!document.getElementById('addUsername').value;
+      const p = !!(selectedPhone || selectedReserved);
+      document.getElementById('addUserSubmit').disabled = !(u && p);
+    }
+
+    // UPDATED: validateAddDeviceForm to handle reserved numbers
+    function validateAddDeviceForm(){
+      const selectedDevice = document.getElementById('addDeviceName').value.trim();
+      const selectedPhone = document.getElementById('addDevicePhoneNumber').value;
+      const selectedReserved = document.getElementById('addDeviceReservedNumber').value;
+      
+      // Check if device is already in batch
+      const deviceInBatch = batchDeviceOperations.some(op => 
+        op.action === 'add' && op.deviceName.toLowerCase() === selectedDevice.toLowerCase()
+      );
+      
+      // Get the actual phone number to use
+      const phoneToUse = selectedReserved || selectedPhone;
+      
+      // Check if phone is already in batch (users or devices)
+      const phoneInBatch = [...batchOperations, ...batchDeviceOperations].some(op => 
+        op.action === 'add' && op.phoneNumber === phoneToUse
+      );
+      
+      if (deviceInBatch && selectedDevice) {
+        showMessage('addDeviceMessages', 
+          '<div class="error">This TSD account is already in the batch queue</div>');
+        document.getElementById('addDeviceName').value = '';
+      }
+      
+      if (phoneInBatch && phoneToUse) {
+        showMessage('addDeviceMessages', 
+          '<div class="error">This phone number is already in the batch queue</div>');
+        document.getElementById('addDevicePhoneNumber').value = '';
+        document.getElementById('addDeviceReservedNumber').value = '';
+      }
+      
+      const d = !!selectedDevice;
+      const p = !!(selectedPhone || selectedReserved);
+      document.getElementById('addDeviceSubmit').disabled = !(d && p);
+    }
+
+    // UPDATED: addToBatch to handle reserved numbers
+    function addToBatch(){
+      const selectedReserved = document.getElementById('addReservedNumber').value;
+      const selectedPhone = document.getElementById('addPhoneNumber').value;
+      const phoneToUse = selectedReserved || selectedPhone;
+      
+      const callQueueGroups = Array.from(document.querySelectorAll('#addCallQueueGroups .cq-group-select'))
+                              .map(s=>s.value).filter(v=>v);
+      
+      const operation = {
+        id: Date.now(),
+        action: 'add',
+        username: document.getElementById('addUsername').value,
+        phoneNumber: phoneToUse,
+        a5Licensed: true,
+        internationalCalling: document.getElementById('addIntlYes').checked,
+        callQueueGroups: callQueueGroups,
+        autoAttendants: Array.from(document.querySelectorAll('#addAutoAttendants .aa-select'))
+                              .map(s=>s.value).filter(v=>v),
+        callQueueManagers: Array.from(document.querySelectorAll('#addCallQueueManagers .cq-select'))
+                              .map(s=>s.value).filter(v=>v),
+        wasReserved: !!selectedReserved
+      };
+
+      batchOperations.push(operation);
+      updateBatchTable();
+      clearAddForm();
+      
+      // Refresh dropdowns to remove newly batched user/number
+      populateDropdowns();
+      populatePhoneDropdowns();
+      populateDevicePhoneDropdowns();
+      
+      showMessage('addUserMessages', 
+        `<div class="success">User ${operation.username} added to batch queue${operation.wasReserved ? ' (using reserved number)' : ''}</div>`);
+    }
+
+    // UPDATED: addDeviceToBatch to handle reserved numbers
+    function addDeviceToBatch(){
+      const selectedReserved = document.getElementById('addDeviceReservedNumber').value;
+      const selectedPhone = document.getElementById('addDevicePhoneNumber').value;
+      const phoneToUse = selectedReserved || selectedPhone;
+      
+      const callQueueGroups = Array.from(document.querySelectorAll('#addDeviceCallQueueGroups .cq-group-select'))
+                              .map(s=>s.value).filter(v=>v);
+      
+      const operation = {
+        id: Date.now(),
+        action: 'add',
+        deviceName: document.getElementById('addDeviceName').value.trim(),
+        phoneNumber: phoneToUse,
+        internationalCalling: false,
+        callQueueGroups: callQueueGroups,
+        wasReserved: !!selectedReserved
+      };
+
+      batchDeviceOperations.push(operation);
+      updateDeviceBatchTable();
+      clearAddDeviceForm();
+      
+      // Refresh dropdowns to remove newly batched device/number
+      populateDropdowns();
+      populatePhoneDropdowns();
+      populateDevicePhoneDropdowns();
+      
+      showMessage('addDeviceMessages', 
+        `<div class="success">TSD Account ${operation.deviceName} added to batch queue${operation.wasReserved ? ' (using reserved number)' : ''}</div>`);
+    }
+
+    // UPDATED: addModifyToBatch to handle reserved numbers
+    function addModifyToBatch(){
+      const username = document.getElementById('modifyUsername').value.trim();
+      const selectedReserved = document.getElementById('modifyReservedNumber').value;
+      const selectedPhone = document.getElementById('modifyPhoneNumber').value;
+      const phoneToUse = selectedReserved || selectedPhone || currentUser.phoneNumber;
+      
+      // Ensure we preserve existing call queue groups, auto attendants, and call queue managers
+      let preservedCallQueueGroups = currentUser.callQueueGroups || [];
+      let preservedAutoAttendants = currentUser.autoAttendants || [];
+      let preservedCallQueueManagers = currentUser.callQueueManagers || [];
+      
+      // Map the call queue group names to match the CQ_Members table naming convention
+      let mappedCallQueueGroups = mapCallQueueGroupNames(preservedCallQueueGroups);
+      
+      const operation = {
+        id: Date.now(),
+        action: 'modify',
+        username: username,
+        phoneNumber: phoneToUse,
+        internationalCalling: document.getElementById('modifyIntlYes').checked,
+        callQueueGroups: mappedCallQueueGroups,
+        autoAttendants: preservedAutoAttendants,
+        callQueueManagers: preservedCallQueueManagers,
+        originalUser: {...currentUser},
+        wasReserved: !!selectedReserved
+      };
+
+      batchOperations.push(operation);
+      updateBatchTable();
+      clearModifyForm();
+      showMessage('modifyUserMessages', 
+        `<div class="success">Modification for ${username} added to batch queue${operation.wasReserved ? ' (using reserved number)' : ''}</div>`);
+    }
+
+    // UPDATED: addModifyDeviceToBatch to handle reserved numbers
+    function addModifyDeviceToBatch(){
+      const deviceName = document.getElementById('modifyDeviceName').value.trim();
+      const selectedReserved = document.getElementById('modifyDeviceReservedNumber').value;
+      const selectedPhone = document.getElementById('modifyDevicePhoneNumber').value;
+      const phoneToUse = selectedReserved || selectedPhone || currentDevice.phoneNumber;
+      
+      // Ensure we preserve existing call queue groups
+      let preservedCallQueueGroups = currentDevice.callQueueGroups || [];
+      
+      // Map the call queue group names to match the CQ_Members table naming convention
+      let mappedCallQueueGroups = mapCallQueueGroupNames(preservedCallQueueGroups);
+      
+      const operation = {
+        id: Date.now(),
+        action: 'modify',
+        deviceName: deviceName,
+        phoneNumber: phoneToUse,
+        internationalCalling: false,
+        callQueueGroups: mappedCallQueueGroups,
+        originalDevice: {...currentDevice},
+        wasReserved: !!selectedReserved
+      };
+
+      batchDeviceOperations.push(operation);
+      updateDeviceBatchTable();
+      clearModifyDeviceForm();
+      showMessage('modifyDeviceMessages', 
+        `<div class="success">Modification for ${deviceName} added to batch queue${operation.wasReserved ? ' (using reserved number)' : ''}</div>`);
+    }
 
     // UNCHANGED: Keep exact working dropdown logic
     async function loadPhoneNumbers() {
@@ -789,6 +1389,7 @@ function showTab(tabName, event) {
       phoneNumbers = await r.json();
       populatePhoneDropdowns();
       populateDevicePhoneDropdowns();
+      populateReservationDropdowns();
 
       // POST dropdowns
       r = await fetch(`${API.url}?code=${API.key}`, {
@@ -809,6 +1410,25 @@ function showTab(tabName, event) {
       }
       
       populateDropdowns();
+    }
+
+    // Populate reservation dropdowns
+    function populateReservationDropdowns() {
+      const reserveSelect = document.getElementById('reservePhoneNumber');
+      if (reserveSelect) {
+        reserveSelect.innerHTML = '<option value="">Select a phone number to reserve…</option>';
+        phoneNumbers
+          .filter(i => i.AvailablePhoneNumber.startsWith('1414277'))
+          .forEach(i => reserveSelect.appendChild(new Option(i.AvailablePhoneNumber, i.AvailablePhoneNumber)));
+      }
+      
+      const reserveDeviceSelect = document.getElementById('reserveDevicePhoneNumber');
+      if (reserveDeviceSelect) {
+        reserveDeviceSelect.innerHTML = '<option value="">Select a phone number to reserve…</option>';
+        phoneNumbers
+          .filter(i => i.AvailablePhoneNumber.startsWith('1414277'))
+          .forEach(i => reserveDeviceSelect.appendChild(new Option(i.AvailablePhoneNumber, i.AvailablePhoneNumber)));
+      }
     }
 
     // UPDATED: populateDropdowns function with batch filtering
