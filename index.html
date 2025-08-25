@@ -1147,9 +1147,32 @@ document.getElementById('clearAddDeviceForm').onclick = clearAddDeviceFormOnly;
       }
     }
 
-    // Unreserve phone number
+    // Unreserve phone number with double-click confirmation
+let unreserveClickCount = {};
+
 async function unreserveNumber(phoneNumber) {
-  if (!confirm(`Are you sure you want to unreserve ${formatPhoneNumber(phoneNumber)}?`)) return;
+  // Track clicks for double-click confirmation
+  if (!unreserveClickCount[phoneNumber]) {
+    unreserveClickCount[phoneNumber] = 1;
+    
+    // Change button text to confirm
+    event.target.textContent = 'Click to Confirm';
+    event.target.style.background = '#ff6b6b';
+    
+    // Reset after 3 seconds
+    setTimeout(() => {
+      if (unreserveClickCount[phoneNumber] === 1) {
+        delete unreserveClickCount[phoneNumber];
+        event.target.textContent = 'Unreserve';
+        event.target.style.background = '';
+      }
+    }, 3000);
+    
+    return;
+  }
+  
+  // Second click - proceed with unreserve
+  delete unreserveClickCount[phoneNumber];
   
   try {
     const response = await fetch(`${API.url}?code=${API.key}`, {
@@ -1171,13 +1194,19 @@ async function unreserveNumber(phoneNumber) {
     showMessage('reserveMessages', 
       `<div class="success">Phone number ${formatPhoneNumber(phoneNumber)} unreserved successfully</div>`);
     
+    showMessage('reserveDeviceMessages', 
+      `<div class="success">Phone number ${formatPhoneNumber(phoneNumber)} unreserved successfully</div>`);
+    
     // Reload data
     await loadPhoneNumbers();
     await loadReservedNumbers();
     
   } catch (error) {
     console.error('Unreserve error:', error);
-    alert(`Failed to unreserve number: ${error.message}`);
+    showMessage('reserveMessages', 
+      `<div class="error">Failed to unreserve number: ${error.message}</div>`);
+    showMessage('reserveDeviceMessages', 
+      `<div class="error">Failed to unreserve number: ${error.message}</div>`);
   }
 }
 
