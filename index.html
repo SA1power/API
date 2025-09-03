@@ -1612,6 +1612,154 @@
       populateDropdowns();
     }
 
+    // Populate phone dropdowns for all tabs
+    function populatePhoneDropdowns() {
+      const addPhoneSelect = document.getElementById('addPhoneNumber');
+      const modifyPhoneSelect = document.getElementById('modifyPhoneNumber');
+      const reservePhoneSelect = document.getElementById('reservePhoneNumber');
+      
+      if (addPhoneSelect) {
+        addPhoneSelect.innerHTML = '<option value="">Select phone number...</option>';
+        phoneNumbers.forEach(num => {
+          const option = new Option(formatPhoneNumber(num), num);
+          addPhoneSelect.appendChild(option);
+        });
+      }
+      
+      if (modifyPhoneSelect) {
+        modifyPhoneSelect.innerHTML = '<option value="">Select new phone number...</option>';
+        phoneNumbers.forEach(num => {
+          const option = new Option(formatPhoneNumber(num), num);
+          modifyPhoneSelect.appendChild(option);
+        });
+      }
+      
+      if (reservePhoneSelect) {
+        reservePhoneSelect.innerHTML = '<option value="">Select phone number to reserve...</option>';
+        phoneNumbers.forEach(num => {
+          const option = new Option(formatPhoneNumber(num), num);
+          reservePhoneSelect.appendChild(option);
+        });
+      }
+    }
+
+    // Populate device phone dropdowns
+    function populateDevicePhoneDropdowns() {
+      const addDevicePhoneSelect = document.getElementById('addDevicePhoneNumber');
+      const modifyDevicePhoneSelect = document.getElementById('modifyDevicePhoneNumber');
+      const reserveDevicePhoneSelect = document.getElementById('reserveDevicePhoneNumber');
+      
+      if (addDevicePhoneSelect) {
+        addDevicePhoneSelect.innerHTML = '<option value="">Select phone number...</option>';
+        phoneNumbers.forEach(num => {
+          const option = new Option(formatPhoneNumber(num), num);
+          addDevicePhoneSelect.appendChild(option);
+        });
+      }
+      
+      if (modifyDevicePhoneSelect) {
+        modifyDevicePhoneSelect.innerHTML = '<option value="">Select new phone number...</option>';
+        phoneNumbers.forEach(num => {
+          const option = new Option(formatPhoneNumber(num), num);
+          modifyDevicePhoneSelect.appendChild(option);
+        });
+      }
+      
+      if (reserveDevicePhoneSelect) {
+        reserveDevicePhoneSelect.innerHTML = '<option value="">Select phone number to reserve...</option>';
+        phoneNumbers.forEach(num => {
+          const option = new Option(formatPhoneNumber(num), num);
+          reserveDevicePhoneSelect.appendChild(option);
+        });
+      }
+    }
+
+    // Populate reservation dropdowns
+    function populateReservationDropdowns() {
+      // Already handled by populatePhoneDropdowns and populateDevicePhoneDropdowns
+    }
+
+    // Populate dropdowns from API data
+    function populateDropdowns() {
+      if (!dropdownData) return;
+      
+      // Populate user dropdowns
+      const addUserSelect = document.getElementById('addUsername');
+      if (addUserSelect && dropdownData.availableUsers) {
+        addUserSelect.innerHTML = '<option value="">Select user...</option>';
+        dropdownData.availableUsers.forEach(user => {
+          const option = new Option(user, user);
+          addUserSelect.appendChild(option);
+        });
+      }
+      
+      // Populate TSD device dropdowns
+      const addDeviceSelect = document.getElementById('addDeviceName');
+      if (addDeviceSelect && dropdownData.tsdUsers) {
+        addDeviceSelect.innerHTML = '<option value="">Select TSD account...</option>';
+        dropdownData.tsdUsers.forEach(device => {
+          const option = new Option(device, device);
+          addDeviceSelect.appendChild(option);
+        });
+      }
+      
+      // Populate provisioned TSD accounts for modify/deprovision
+      const modifyDeviceSelect = document.getElementById('modifyDeviceName');
+      const deprovDeviceSelect = document.getElementById('deprovisionDeviceName');
+      if (dropdownData.provisionedTsdAccounts) {
+        if (modifyDeviceSelect) {
+          modifyDeviceSelect.innerHTML = '<option value="">Select provisioned TSD account...</option>';
+          dropdownData.provisionedTsdAccounts.forEach(device => {
+            const option = new Option(device, device);
+            modifyDeviceSelect.appendChild(option);
+          });
+        }
+        if (deprovDeviceSelect) {
+          deprovDeviceSelect.innerHTML = '<option value="">Select provisioned TSD account...</option>';
+          dropdownData.provisionedTsdAccounts.forEach(device => {
+            const option = new Option(device, device);
+            deprovDeviceSelect.appendChild(option);
+          });
+        }
+      }
+      
+      // Populate Call Queue Groups
+      const cqGroupSelects = document.querySelectorAll('.cq-group-select');
+      if (dropdownData.callQueueGroups) {
+        cqGroupSelects.forEach(select => {
+          select.innerHTML = '<option value="">Select Call Queue Group...</option>';
+          dropdownData.callQueueGroups.forEach(group => {
+            const option = new Option(group, group);
+            select.appendChild(option);
+          });
+        });
+      }
+      
+      // Populate Auto Attendants
+      const aaSelects = document.querySelectorAll('.aa-select');
+      if (dropdownData.autoAttendants) {
+        aaSelects.forEach(select => {
+          select.innerHTML = '<option value="">Select Auto Attendant...</option>';
+          dropdownData.autoAttendants.forEach(aa => {
+            const option = new Option(aa, aa);
+            select.appendChild(option);
+          });
+        });
+      }
+      
+      // Populate Call Queues
+      const cqSelects = document.querySelectorAll('.cq-select');
+      if (dropdownData.callQueues) {
+        cqSelects.forEach(select => {
+          select.innerHTML = '<option value="">Select Call Queue...</option>';
+          dropdownData.callQueues.forEach(cq => {
+            const option = new Option(cq, cq);
+            select.appendChild(option);
+          });
+        });
+      }
+    }
+
     // AA/CQ PAIRS FUNCTIONS
     function updateNamingPreview(name) {
       const cleanName = name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '_');
@@ -1682,28 +1830,35 @@
     // Load existing Call Queues (for individual management)
     async function loadCallQueues() {
       try {
-        // This would normally fetch from your Azure Function
-        // For now, using mock data structure based on SQL schema
-        existingCallQueues = [
-          { name: 'Q Admissions', resourceAccount: 'q_admissions@msoe.edu', phoneNumber: '+14142771234' },
-          { name: 'Q IT Help', resourceAccount: 'q_it_help@msoe.edu', phoneNumber: '+14142771235' }
-        ];
+        // Fetch from API if available, otherwise use data from dropdownData
+        if (dropdownData && dropdownData.callQueues) {
+          existingCallQueues = dropdownData.callQueues;
+        } else {
+          // Placeholder - will be replaced with actual API call
+          existingCallQueues = [];
+        }
         
         const modifySelect = document.getElementById('modifyCQName');
         const deprovisionSelect = document.getElementById('deprovisionCQName');
         
         if (modifySelect) {
           modifySelect.innerHTML = '<option value="">Select a call queue...</option>';
-          existingCallQueues.forEach(cq => {
-            modifySelect.appendChild(new Option(cq.name, cq.resourceAccount));
-          });
+          if (existingCallQueues && existingCallQueues.length > 0) {
+            existingCallQueues.forEach(cq => {
+              const option = new Option(cq, cq);
+              modifySelect.appendChild(option);
+            });
+          }
         }
         
         if (deprovisionSelect) {
           deprovisionSelect.innerHTML = '<option value="">Select a call queue...</option>';
-          existingCallQueues.forEach(cq => {
-            deprovisionSelect.appendChild(new Option(cq.name, cq.resourceAccount));
-          });
+          if (existingCallQueues && existingCallQueues.length > 0) {
+            existingCallQueues.forEach(cq => {
+              const option = new Option(cq, cq);
+              deprovisionSelect.appendChild(option);
+            });
+          }
         }
       } catch (error) {
         console.error('Error loading call queues:', error);
@@ -1713,28 +1868,35 @@
     // Load existing Auto Attendants (for individual management)
     async function loadAutoAttendants() {
       try {
-        // This would normally fetch from your Azure Function
-        // For now, using mock data structure based on SQL schema
-        existingAutoAttendants = [
-          { name: 'Call Admissions', resourceAccount: 'call_admissions@msoe.edu', phoneNumber: '+14142771234' },
-          { name: 'Call IT Help', resourceAccount: 'call_it_help@msoe.edu', phoneNumber: '+14142771235' }
-        ];
+        // Fetch from API if available, otherwise use data from dropdownData
+        if (dropdownData && dropdownData.autoAttendants) {
+          existingAutoAttendants = dropdownData.autoAttendants;
+        } else {
+          // Placeholder - will be replaced with actual API call
+          existingAutoAttendants = [];
+        }
         
         const modifySelect = document.getElementById('modifyAAName');
         const deprovisionSelect = document.getElementById('deprovisionAAName');
         
         if (modifySelect) {
           modifySelect.innerHTML = '<option value="">Select an auto attendant...</option>';
-          existingAutoAttendants.forEach(aa => {
-            modifySelect.appendChild(new Option(aa.name, aa.resourceAccount));
-          });
+          if (existingAutoAttendants && existingAutoAttendants.length > 0) {
+            existingAutoAttendants.forEach(aa => {
+              const option = new Option(aa, aa);
+              modifySelect.appendChild(option);
+            });
+          }
         }
         
         if (deprovisionSelect) {
           deprovisionSelect.innerHTML = '<option value="">Select an auto attendant...</option>';
-          existingAutoAttendants.forEach(aa => {
-            deprovisionSelect.appendChild(new Option(aa.name, aa.resourceAccount));
-          });
+          if (existingAutoAttendants && existingAutoAttendants.length > 0) {
+            existingAutoAttendants.forEach(aa => {
+              const option = new Option(aa, aa);
+              deprovisionSelect.appendChild(option);
+            });
+          }
         }
       } catch (error) {
         console.error('Error loading auto attendants:', error);
@@ -1744,38 +1906,1670 @@
     // Load existing AA/CQ Pairs
     async function loadAACQPairs() {
       try {
-        // This would normally fetch from your Azure Function
-        // For now, using mock data structure
-        existingAACQPairs = [
-          { 
-            name: 'Admissions',
-            aaResourceAccount: 'call_admissions@msoe.edu',
-            cqResourceAccount: 'q_admissions@msoe.edu',
-            phoneNumber: '+14142771234'
-          },
-          { 
-            name: 'IT Help',
-            aaResourceAccount: 'call_it_help@msoe.edu',
-            cqResourceAccount: 'q_it_help@msoe.edu',
-            phoneNumber: '+14142771235'
+        // For now, derive from existing data if available
+        if (dropdownData && dropdownData.autoAttendants && dropdownData.callQueues) {
+          // Match AA and CQ pairs based on naming convention
+          existingAACQPairs = [];
+          
+          if (dropdownData.autoAttendants) {
+            dropdownData.autoAttendants.forEach(aa => {
+              // Extract name from "Call X" format
+              const match = aa.match(/^Call\s+(.+)$/i);
+              if (match) {
+                const pairName = match[1];
+                // Look for matching Call Queue "Q X"
+                const matchingCQ = dropdownData.callQueues.find(cq => 
+                  cq.match(new RegExp(`^Q\\s+${pairName}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>MSOE Teams Provisioning Portal</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:Arial,sans-serif;background:#f5f5f5;padding:20px}
+    .container{max-width:1600px;margin:0 auto}
+    
+    /* Tab Navigation */
+    .tab-navigation{display:flex;background:#fff;border:1px solid #ddd;border-radius:4px 4px 0 0;margin-bottom:0}
+    .tab-button{flex:1;padding:15px 20px;background:#f8f9fa;border:none;border-right:1px solid #ddd;cursor:pointer;font-weight:bold;transition:all 0.3s}
+    .tab-button:last-child{border-right:none}
+    .tab-button:hover{background:#e9ecef}
+    .tab-button.active{background:#c41e3a;color:white}
+    
+    /* Tab Content */
+    .tab-content{display:none;background:#f5f5f5;border:1px solid #ddd;border-top:none;border-radius:0 0 4px 4px;padding:20px}
+    .tab-content.active{display:block}
+    
+    .main-layout{display:flex;gap:20px;flex-wrap:wrap}
+    .left-panel{flex:2;min-width:800px}
+    .right-panel{flex:1;min-width:400px}
+    .columns{display:flex;gap:20px;flex-wrap:wrap}
+    .column{flex:1;background:#e8e8e8;border:2px solid #999;border-radius:4px;
+      padding:20px;display:flex;flex-direction:column;min-width:300px}
+    .column-header{background:#d0d0d0;margin:-20px -20px 20px -20px;
+      padding:10px 20px;font-weight:bold;border-bottom:1px solid #999}
+    
+    /* Special styling for reservation column */
+    .reservation-column{background:#f0e6ff;border-color:#6b3aa0}
+    .reservation-column .column-header{background:#8b5fbf;color:white}
+    
+    /* Special styling for AA/CQ columns */
+    .aacq-column{background:#e6f3ff;border-color:#0066cc}
+    .aacq-column .column-header{background:#4d94ff;color:white}
+    
+    .form-group{margin-bottom:15px}
+    .form-group label{display:block;margin-bottom:5px;font-weight:bold}
+    .form-control{width:100%;padding:8px;border:1px solid #999;border-radius:4px}
+    .form-control.textarea{min-height:80px;resize:vertical;font-family:Arial,sans-serif}
+    .radio-group{display:flex;gap:15px;margin-top:5px}
+    .checkbox-group{margin-top:5px}
+    .checkbox-group label{font-weight:normal;display:flex;align-items:center;margin-bottom:5px}
+    .checkbox-group input[type="checkbox"]{margin-right:8px}
+    .btn{padding:8px 15px;border:none;border-radius:4px;cursor:pointer;margin-top:auto}
+    .btn-primary{background:#c41e3a;color:#fff}
+    .btn-primary:disabled{background:#ccc;cursor:not-allowed}
+    .btn-secondary{background:#0066cc;color:#fff}
+    .btn-secondary:hover{background:#0052a3}
+    .btn-danger{background:#dc3545;color:#fff}
+    .btn-danger:hover{background:#c82333}
+    .btn-success{background:#28a745;color:#fff}
+    .btn-success:hover{background:#218838}
+    .btn-reserve{background:#6b3aa0;color:#fff}
+    .btn-reserve:hover{background:#8b5fbf}
+    .btn-reserve:disabled{background:#ccc;cursor:not-allowed}
+    .btn-small{padding:4px 8px;font-size:12px}
+    .dynamic-section{border:1px solid #ccc;padding:10px;border-radius:4px;background:#f9f9f9;margin-bottom:10px}
+    .dynamic-item{display:flex;justify-content:space-between;align-items:center;
+      background:#fff;padding:5px;border-radius:3px;margin:5px 0}
+    .reserved-item{display:flex;justify-content:space-between;align-items:flex-start;
+      background:#fff;padding:10px;border-radius:3px;margin:5px 0;border:1px solid #ddd}
+    .reserved-item-content{flex:1}
+    .reserved-phone{font-weight:bold;color:#6b3aa0;margin-bottom:5px}
+    .reserved-notes{color:#666;font-size:12px;font-style:italic}
+    .user-info{background:#e3f2fd;border:1px solid #2196f3;padding:10px;border-radius:4px;margin-bottom:15px}
+    .user-info h4{color:#1976d2;margin-bottom:10px}
+    .current-setting{display:flex;justify-content:space-between;
+      background:#fff;padding:5px;border-radius:3px;margin:3px 0}
+    .success{background:#e6ffe6;color:#006600;padding:10px;border:1px solid #006600;border-radius:4px;margin-bottom:15px}
+    .error{background:#ffe6e6;color:#cc0000;padding:10px;border:1px solid #cc0000;border-radius:4px;margin-bottom:15px}
+    .warning{background:#fff3cd;color:#856404;padding:10px;border:1px solid #ffc107;border-radius:4px;margin-bottom:15px}
+    .help-text{font-size:12px;color:#666;margin-top:3px;font-style:italic}
+    .char-counter{font-size:11px;color:#666;text-align:right;margin-top:2px}
+    
+    /* Naming convention preview */
+    .naming-preview{background:#f0f8ff;border:1px solid #0066cc;padding:10px;border-radius:4px;margin-top:10px}
+    .naming-preview h5{color:#0066cc;margin-bottom:5px}
+    .naming-item{font-family:monospace;font-size:12px;margin:3px 0}
+    
+    /* Batch Operations Table Styles */
+    .batch-panel{background:#f0f8ff;border:2px solid #4169e1;border-radius:4px;padding:20px}
+    .batch-header{background:#4169e1;color:white;margin:-20px -20px 20px -20px;
+      padding:10px 20px;font-weight:bold;border-bottom:1px solid #4169e1}
+    .batch-table{width:100%;border-collapse:collapse;margin-bottom:20px}
+    .batch-table th,.batch-table td{border:1px solid #ddd;padding:8px;text-align:left}
+    .batch-table th{background:#e6f2ff;font-weight:bold}
+    .batch-table .action-add{background:#e8f5e8}
+    .batch-table .action-modify{background:#fff3cd}
+    .batch-table .action-deprovision{background:#f8d7da}
+    .batch-summary{background:#fff;border:1px solid #ddd;padding:10px;border-radius:4px;margin-bottom:15px}
+    .remove-batch-item{background:#dc3545;color:white;border:none;padding:2px 6px;border-radius:3px;cursor:pointer;font-size:11px}
+    .remove-batch-item:hover{background:#c82333}
+    .batch-empty{text-align:center;color:#666;font-style:italic;padding:20px}
+    
+    /* Teams status indicator */
+    .teams-status{background:#e3f2fd;border:1px solid #2196f3;padding:10px;border-radius:4px;margin-bottom:15px;text-align:center}
+    .teams-status.authenticated{background:#e8f5e8;border-color:#4caf50;color:#2e7d32}
+    .teams-status.warning{background:#fff3cd;border-color:#ffc107;color:#856404}
+    
+    /* AA/CQ specific styles */
+    .aacq-info{background:#fff3cd;border:1px solid #ffc107;padding:10px;border-radius:4px;margin-bottom:15px}
+    .aacq-info h4{color:#856404;margin-bottom:10px}
+    .aacq-settings{background:#f0f8ff;border:1px solid #0066cc;padding:10px;border-radius:4px;margin-top:10px}
+    .aacq-settings-item{margin:5px 0;font-size:13px}
+    .aacq-pair-column{background:#e6f7ff;border-color:#1890ff}
+    .aacq-pair-column .column-header{background:#40a9ff;color:white}
+    
+    /* Fix for modify section width to accommodate longer UPNs */
+    .current-setting{
+      align-items:flex-start;
+      word-wrap:break-word;
+      overflow-wrap:break-word;
+      flex-wrap:wrap;
+    }
+    
+    .current-setting span{
+      word-wrap:break-word;
+      overflow-wrap:break-word;
+      max-width:100%;
+    }
+    
+    /* Ensure user info boxes handle long text properly */
+    .user-info{
+      word-wrap:break-word;
+      overflow-wrap:break-word;
+    }
+    
+    /* Make sure form controls in device sections don't overflow */
+    #shared-devices .form-control,
+    #shared-devices .current-setting{
+      word-wrap:break-word;
+      overflow-wrap:break-word;
+      max-width:100%;
+    }
+    
+    /* Fix TSD Account display in current device settings */
+    #currentDeviceSettings .current-setting{
+      display:block;
+      margin-bottom:8px;
+    }
+    
+    #currentDeviceSettings .current-setting strong{
+      display:inline-block;
+      min-width:120px;
+      vertical-align:top;
+    }
+    
+    #currentDeviceSettings .current-setting span{
+      display:inline-block;
+      word-wrap:break-word;
+      overflow-wrap:break-word;
+      max-width:calc(100% - 130px);
+      vertical-align:top;
+    }
+    
+    @media(max-width:1200px){
+      .main-layout{flex-direction:column}
+      .left-panel,.right-panel{min-width:auto}
+    }
+    @media(max-width:800px){.columns{flex-direction:column}}
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Teams Authentication Status -->
+    <div id="teamsStatus" class="teams-status">
+      🔄 Initializing Teams integration...
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="tab-navigation">
+      <button class="tab-button active" onclick="showTab('phone-users', event)">Teams Phone Users</button>
+      <button class="tab-button" onclick="showTab('shared-devices', event)">Teams Shared Devices</button>
+      <button class="tab-button" onclick="showTab('call-queues', event)">Call Queues</button>
+      <button class="tab-button" onclick="showTab('auto-attendants', event)">Auto Attendants</button>
+      <button class="tab-button" onclick="showTab('aa-cq-pairs', event)">AA/CQ Pairs</button>
+    </div>
+
+    <!-- TEAMS PHONE USERS TAB (unchanged) -->
+    <div id="phone-users" class="tab-content active">
+      <div class="main-layout">
+        <!-- LEFT PANEL - Forms -->
+        <div class="left-panel">
+          <div class="columns">
+
+            <!-- ADD PHONE USER -->
+            <div class="column">
+              <div class="column-header">Add a Teams Phone User</div>
+              <div id="addUserMessages"></div>
+
+              <div class="form-group">
+                <label for="addUsername">Select User:</label>
+                <select id="addUsername" class="form-control">
+                  <option value="">Loading users…</option>
+                </select>
+                <div class="help-text">(A5 Faculty non-enterprise voice enabled)</div>
+              </div>
+
+              <div class="form-group">
+                <label for="addPhoneNumber">Pick an available phone number:</label>
+                <select id="addPhoneNumber" class="form-control">
+                  <option value="">Loading numbers…</option>
+                </select>
+                <div class="help-text">Or use a reserved number from dropdown below</div>
+                <select id="addReservedNumber" class="form-control" style="margin-top:5px">
+                  <option value="">-- Select a reserved number (optional) --</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>International Calling:</label>
+                <div class="radio-group">
+                  <label><input type="radio" name="addIntlCalling" id="addIntlYes" value="yes"> Yes</label>
+                  <label><input type="radio" name="addIntlCalling" id="addIntlNo"  value="no" checked> No</label>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Teams Call Queue Group Membership(s):</label>
+                <div id="addCallQueueGroups" class="dynamic-section">
+                  <div class="dynamic-item">
+                    <select class="form-control cq-group-select">
+                      <option value="">Loading Call Queue Groups…</option>
+                    </select>
+                    <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+                  </div>
+                </div>
+                <button class="btn btn-secondary btn-small" onclick="addCallQueueGroup()">Add Another Group</button>
+              </div>
+
+              <div class="form-group">
+                <label>Teams Auto Attendant Authorized User (Manager):</label>
+                <div id="addAutoAttendants" class="dynamic-section">
+                  <div class="dynamic-item">
+                    <select class="form-control aa-select">
+                      <option value="">Loading Auto Attendants…</option>
+                    </select>
+                    <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+                  </div>
+                </div>
+                <button class="btn btn-secondary btn-small" onclick="addAutoAttendant()">Add Another AA</button>
+              </div>
+
+              <div class="form-group">
+                <label>Teams Call Queue Authorized User (Manager):</label>
+                <div id="addCallQueueManagers" class="dynamic-section">
+                  <div class="dynamic-item">
+                    <select class="form-control cq-select">
+                      <option value="">Loading Call Queues…</option>
+                    </select>
+                    <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+                  </div>
+                </div>
+                <button class="btn btn-secondary btn-small" onclick="addCallQueueManager()">Add Another CQ</button>
+              </div>
+
+              <div style="display:flex; gap:10px; margin-top:auto;">
+                <button id="addUserSubmit" class="btn btn-primary submit-button" disabled style="flex:1;">
+                  Add to Batch Queue
+                </button>
+                <button id="clearAddForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
+              </div>
+            </div>
+
+            <!-- MODIFY PHONE USER -->
+            <div class="column">
+              <div class="column-header">Modify a Teams Phone User</div>
+              <div id="modifyUserMessages"></div>
+
+              <div class="form-group">
+                <label for="modifyUsername">Username:</label>
+                <input type="text" id="modifyUsername" class="form-control"
+                       placeholder="Enter MSOE email to lookup user"/>
+                <button id="modifyLookupBtn" class="btn btn-secondary"
+                        style="margin-top:10px">Lookup User</button>
+              </div>
+
+              <div id="currentUserInfo" class="user-info" style="display:none">
+                <h4>Current User Settings:</h4>
+                <div id="currentSettings"></div>
+              </div>
+
+              <div id="modifyPhoneGroup" class="form-group" style="display:none">
+                <label>Change Phone Number:</label>
+                <select id="modifyPhoneNumber" class="form-control">
+                  <option value="">Select new phone number…</option>
+                </select>
+                <div class="help-text">Or use a reserved number from dropdown below</div>
+                <select id="modifyReservedNumber" class="form-control" style="margin-top:5px">
+                  <option value="">-- Select a reserved number (optional) --</option>
+                </select>
+              </div>
+
+              <div id="modifyIntlGroup" class="form-group" style="display:none">
+                <label>International Calling:</label>
+                <div class="radio-group">
+                  <label><input type="radio" id="modifyIntlYes" name="modifyIntlCalling" value="yes"> Yes</label>
+                  <label><input type="radio" id="modifyIntlNo"  name="modifyIntlCalling" value="no"> No</label>
+                </div>
+              </div>
+
+              <div id="modifyCallQueueGroupsGroup" class="form-group" style="display:none">
+                <label>Teams Call Queue Group Membership(s):</label>
+                <div id="currentCallQueueGroups">
+                  <h5 style="color:#1976d2">Current Group Memberships:</h5>
+                  <div id="currentCallQueueGroupsList"></div>
+                </div>
+                <div class="dynamic-section">
+                  <div class="dynamic-item">
+                    <select id="newCallQueueGroupSelect" class="form-control cq-group-select">
+                      <option value="">Select to add…</option>
+                    </select>
+                    <button class="btn btn-secondary btn-small" onclick="addCallQueueGroupMembership()">Add</button>
+                  </div>
+                </div>
+              </div>
+
+              <div id="modifyAutoAttendantsGroup" class="form-group" style="display:none">
+                <label>Add Auto Attendant Manager:</label>
+                <div id="currentAutoAttendants">
+                  <h5 style="color:#1976d2">Current Auto Attendants:</h5>
+                  <div id="currentAutoAttendantsList"></div>
+                </div>
+                <div class="dynamic-section">
+                  <div class="dynamic-item">
+                    <select id="newAutoAttendantSelect" class="form-control aa-select">
+                      <option value="">Select to add…</option>
+                    </select>
+                    <button class="btn btn-secondary btn-small" onclick="addAutoAttendantRole()">Add</button>
+                  </div>
+                </div>
+              </div>
+
+              <div id="modifyCallQueueManagersGroup" class="form-group" style="display:none">
+                <label>Add Call Queue Manager:</label>
+                <div id="currentCallQueueManagers">
+                  <h5 style="color:#1976d2">Current CQ Managers:</h5>
+                  <div id="currentCallQueueManagersList"></div>
+                </div>
+                <div class="dynamic-section">
+                  <div class="dynamic-item">
+                    <select id="newCallQueueSelect" class="form-control cq-select">
+                      <option value="">Select to add…</option>
+                    </select>
+                    <button class="btn btn-secondary btn-small" onclick="addCallQueueRole()">Add</button>
+                  </div>
+                </div>
+              </div>
+
+              <div id="modifyButtonGroup" style="display:flex; gap:10px; margin-top:auto;">
+                <button id="modifyUserSubmit" class="btn btn-primary submit-button"
+                        style="display:none; flex:1;">Add Modification to Batch</button>
+                <button id="clearModifyForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
+              </div>
+            </div>
+
+            <!-- DEPROVISION PHONE USER -->
+            <div class="column">
+              <div class="column-header">Deprovision a Teams Phone User</div>
+              <div id="deprovisionUserMessages"></div>
+
+              <div class="form-group">
+                <label for="deprovisionUsername">Username:</label>
+                <input type="text" id="deprovisionUsername" class="form-control"
+                       placeholder="Enter MSOE email"/>
+                <button id="deprovLookupBtn" class="btn btn-secondary"
+                        style="margin-top:10px">Lookup User</button>
+              </div>
+
+              <div id="deprovisionUserInfo" class="user-info" style="display:none">
+                <h4>User to be Deprovisioned:</h4>
+                <div id="deprovisionSettings"></div>
+              </div>
+
+              <div id="deprovisionButtonGroup" style="display:flex; gap:10px; margin-top:auto;">
+                <button id="deprovisionUserSubmit" class="btn btn-danger submit-button"
+                        style="display:none; flex:1;">Add Deprovision to Batch</button>
+                <button id="clearDeprovisionForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
+              </div>
+            </div>
+
+            <!-- RESERVE PHONE NUMBER -->
+            <div class="column reservation-column">
+              <div class="column-header">Reserve a Phone Number</div>
+              <div id="reserveMessages"></div>
+
+              <div class="form-group">
+                <label for="reservePhoneNumber">Select Phone Number to Reserve:</label>
+                <select id="reservePhoneNumber" class="form-control">
+                  <option value="">Loading available numbers…</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="reserveNotes">Reservation Notes:</label>
+                <textarea id="reserveNotes" class="form-control textarea" 
+                          placeholder="Enter notes about this reservation (optional)"
+                          maxlength="500"></textarea>
+                <div class="char-counter">
+                  <span id="charCount">0</span> / 500 characters
+                </div>
+              </div>
+
+              <button id="reserveSubmit" class="btn btn-reserve submit-button" disabled style="width:100%;">
+                Reserve Phone Number
+              </button>
+
+              <div style="margin-top:20px;border-top:1px solid #999;padding-top:15px;">
+                <h4 style="margin-bottom:10px;color:#6b3aa0;">Currently Reserved Numbers:</h4>
+                <div id="reservedNumbersList" class="dynamic-section">
+                  <div class="batch-empty">Loading reserved numbers...</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- RIGHT PANEL - Batch Operations -->
+        <div class="right-panel">
+          <div class="batch-panel">
+            <div class="batch-header">Batch Operations Queue - Phone Users</div>
+            
+            <div class="batch-summary">
+              <strong>Summary:</strong>
+              <div>Adds: <span id="batchAddCount">0</span></div>
+              <div>Modifications: <span id="batchModifyCount">0</span></div>
+              <div>Deprovisions: <span id="batchDeprovisionCount">0</span></div>
+              <div><strong>Total: <span id="batchTotalCount">0</span></strong></div>
+            </div>
+
+            <div id="batchTableContainer">
+              <div id="batchEmptyMessage" class="batch-empty">
+                No operations queued. Use the forms on the left to add operations to the batch.
+              </div>
+              <table id="batchTable" class="batch-table" style="display:none">
+                <thead>
+                  <tr>
+                    <th>Action</th>
+                    <th>Username</th>
+                    <th>Details</th>
+                    <th>Remove</th>
+                  </tr>
+                </thead>
+                <tbody id="batchTableBody">
+                </tbody>
+              </table>
+            </div>
+
+            <div style="margin-top:15px;">
+              <button id="submitAllBatch" class="btn btn-success" style="width:100%; display:none">
+                Submit All Operations
+              </button>
+              <button id="clearAllBatch" class="btn btn-secondary" style="width:100%; margin-top:10px; display:none">
+                Clear All
+              </button>
+              <button id="resetPageBtn" class="btn btn-primary" style="width:100%; margin-top:10px; display:none">
+                🔄 Reset Page
+              </button>
+            </div>
+
+            <div id="batchResults" style="margin-top:15px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEAMS SHARED DEVICES TAB (unchanged) -->
+    <div id="shared-devices" class="tab-content">
+      <div class="main-layout">
+        <!-- LEFT PANEL - Forms -->
+        <div class="left-panel">
+          <div class="columns">
+
+            <!-- ADD SHARED DEVICE -->
+            <div class="column">
+              <div class="column-header">Add a Teams Shared Device</div>
+              <div id="addDeviceMessages"></div>
+
+              <div class="form-group">
+                <label for="addDeviceName">Select TSD Account:</label>
+                <select id="addDeviceName" class="form-control">
+                  <option value="">Loading TSD accounts…</option>
+                </select>
+                <div class="help-text">Accounts with Teams Shared Device License applied and no Enterprise Voice</div>
+              </div>
+
+              <div class="form-group">
+                <label for="addDevicePhoneNumber">Pick an available phone number:</label>
+                <select id="addDevicePhoneNumber" class="form-control">
+                  <option value="">Loading numbers…</option>
+                </select>
+                <div class="help-text">Or use a reserved number from dropdown below</div>
+                <select id="addDeviceReservedNumber" class="form-control" style="margin-top:5px">
+                  <option value="">-- Select a reserved number (optional) --</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Teams Call Queue Group Membership(s):</label>
+                <div id="addDeviceCallQueueGroups" class="dynamic-section">
+                  <div class="dynamic-item">
+                    <select class="form-control cq-group-select">
+                      <option value="">Loading Call Queue Groups…</option>
+                    </select>
+                    <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+                  </div>
+                </div>
+                <button class="btn btn-secondary btn-small" onclick="addDeviceCallQueueGroup()">Add Another Group</button>
+              </div>
+
+              <div style="display:flex; gap:10px; margin-top:auto;">
+                <button id="addDeviceSubmit" class="btn btn-primary submit-button" disabled style="flex:1;">
+                  Add to Batch Queue
+                </button>
+                <button id="clearAddDeviceForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
+              </div>
+            </div>
+
+            <!-- MODIFY SHARED DEVICE -->
+            <div class="column">
+              <div class="column-header">Modify a Teams Shared Device</div>
+              <div id="modifyDeviceMessages"></div>
+
+              <div class="form-group">
+                <label for="modifyDeviceName">Select TSD Account:</label>
+                <select id="modifyDeviceName" class="form-control">
+                  <option value="">Loading provisioned TSD accounts…</option>
+                </select>
+                <button id="modifyDeviceLookupBtn" class="btn btn-secondary"
+                        style="margin-top:10px">Lookup Device</button>
+              </div>
+
+              <div id="currentDeviceInfo" class="user-info" style="display:none">
+                <h4>Current Device Settings:</h4>
+                <div id="currentDeviceSettings"></div>
+              </div>
+
+              <div id="modifyDevicePhoneGroup" class="form-group" style="display:none">
+                <label>Change Phone Number:</label>
+                <select id="modifyDevicePhoneNumber" class="form-control">
+                  <option value="">Select new phone number…</option>
+                </select>
+                <div class="help-text">Or use a reserved number from dropdown below</div>
+                <select id="modifyDeviceReservedNumber" class="form-control" style="margin-top:5px">
+                  <option value="">-- Select a reserved number (optional) --</option>
+                </select>
+              </div>
+
+              <div id="modifyDeviceCallQueueGroupsGroup" class="form-group" style="display:none">
+                <label>Teams Call Queue Group Membership(s):</label>
+                <div id="currentDeviceCallQueueGroups">
+                  <h5 style="color:#1976d2">Current Group Memberships:</h5>
+                  <div id="currentDeviceCallQueueGroupsList"></div>
+                </div>
+                <div class="dynamic-section">
+                  <div class="dynamic-item">
+                    <select id="newDeviceCallQueueGroupSelect" class="form-control cq-group-select">
+                      <option value="">Select to add…</option>
+                    </select>
+                    <button class="btn btn-secondary btn-small" onclick="addDeviceCallQueueGroupMembership()">Add</button>
+                  </div>
+                </div>
+              </div>
+
+              <div id="modifyDeviceButtonGroup" style="display:flex; gap:10px; margin-top:auto;">
+                <button id="modifyDeviceSubmit" class="btn btn-primary submit-button"
+                        style="display:none; flex:1;">Add Modification to Batch</button>
+                <button id="clearModifyDeviceForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
+              </div>
+            </div>
+
+            <!-- DEPROVISION SHARED DEVICE -->
+            <div class="column">
+              <div class="column-header">Deprovision a Teams Shared Device</div>
+              <div id="deprovisionDeviceMessages"></div>
+
+              <div class="form-group">
+                <label for="deprovisionDeviceName">Select TSD Account:</label>
+                <select id="deprovisionDeviceName" class="form-control">
+                  <option value="">Loading provisioned TSD accounts…</option>
+                </select>
+                <button id="deprovDeviceLookupBtn" class="btn btn-secondary"
+                        style="margin-top:10px">Lookup Device</button>
+              </div>
+
+              <div id="deprovisionDeviceInfo" class="user-info" style="display:none">
+                <h4>Device to be Deprovisioned:</h4>
+                <div id="deprovisionDeviceSettings"></div>
+              </div>
+
+              <div id="deprovisionDeviceButtonGroup" style="display:flex; gap:10px; margin-top:auto;">
+                <button id="deprovisionDeviceSubmit" class="btn btn-danger submit-button"
+                        style="display:none; flex:1;">Add Deprovision to Batch</button>
+                <button id="clearDeprovisionDeviceForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
+              </div>
+            </div>
+
+            <!-- RESERVE PHONE NUMBER FOR DEVICES -->
+            <div class="column reservation-column">
+              <div class="column-header">Reserve Phone Number for Device</div>
+              <div id="reserveDeviceMessages"></div>
+
+              <div class="form-group">
+                <label for="reserveDevicePhoneNumber">Select Phone Number to Reserve:</label>
+                <select id="reserveDevicePhoneNumber" class="form-control">
+                  <option value="">Loading available numbers…</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="reserveDeviceNotes">Reservation Notes:</label>
+                <textarea id="reserveDeviceNotes" class="form-control textarea" 
+                          placeholder="Enter notes about this reservation (optional)"
+                          maxlength="500"></textarea>
+                <div class="char-counter">
+                  <span id="deviceCharCount">0</span> / 500 characters
+                </div>
+              </div>
+
+              <button id="reserveDeviceSubmit" class="btn btn-reserve submit-button" disabled style="width:100%;">
+                Reserve Phone Number
+              </button>
+
+              <div style="margin-top:20px;border-top:1px solid #999;padding-top:15px;">
+                <h4 style="margin-bottom:10px;color:#6b3aa0;">Currently Reserved Numbers:</h4>
+                <div id="reservedDeviceNumbersList" class="dynamic-section">
+                  <div class="batch-empty">Loading reserved numbers...</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- RIGHT PANEL - Batch Operations -->
+        <div class="right-panel">
+          <div class="batch-panel">
+            <div class="batch-header">Batch Operations Queue - Shared Devices</div>
+            
+            <div class="batch-summary">
+              <strong>Summary:</strong>
+              <div>Adds: <span id="batchDeviceAddCount">0</span></div>
+              <div>Modifications: <span id="batchDeviceModifyCount">0</span></div>
+              <div>Deprovisions: <span id="batchDeviceDeprovisionCount">0</span></div>
+              <div><strong>Total: <span id="batchDeviceTotalCount">0</span></strong></div>
+            </div>
+
+            <div id="batchDeviceTableContainer">
+              <div id="batchDeviceEmptyMessage" class="batch-empty">
+                No operations queued. Use the forms on the left to add operations to the batch.
+              </div>
+              <table id="batchDeviceTable" class="batch-table" style="display:none">
+                <thead>
+                  <tr>
+                    <th>Action</th>
+                    <th>TSD Account</th>
+                    <th>Details</th>
+                    <th>Remove</th>
+                  </tr>
+                </thead>
+                <tbody id="batchDeviceTableBody">
+                </tbody>
+              </table>
+            </div>
+
+            <div style="margin-top:15px;">
+              <button id="submitAllDeviceBatch" class="btn btn-success" style="width:100%; display:none">
+                Submit All Operations
+              </button>
+              <button id="clearAllDeviceBatch" class="btn btn-secondary" style="width:100%; margin-top:10px; display:none">
+                Clear All
+              </button>
+              <button id="resetDevicePageBtn" class="btn btn-primary" style="width:100%; margin-top:10px; display:none">
+                🔄 Reset Page
+              </button>
+            </div>
+
+            <div id="batchDeviceResults" style="margin-top:15px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALL QUEUES TAB (Individual Management) -->
+    <div id="call-queues" class="tab-content">
+      <div class="main-layout">
+        <div class="left-panel">
+          <div class="columns">
+            
+            <!-- MODIFY CALL QUEUE -->
+            <div class="column" style="flex:1.5;">
+              <div class="column-header">Modify Call Queue</div>
+              <div id="modifyCQMessages"></div>
+              
+              <div class="form-group">
+                <label for="modifyCQName">Select Call Queue:</label>
+                <select id="modifyCQName" class="form-control">
+                  <option value="">Loading call queues...</option>
+                </select>
+                <button id="modifyCQLookupBtn" class="btn btn-secondary" style="margin-top:10px">
+                  Lookup Call Queue
+                </button>
+              </div>
+              
+              <div id="currentCQInfo" class="aacq-info" style="display:none">
+                <h4>Current Call Queue Settings:</h4>
+                <div id="currentCQSettings" class="aacq-settings"></div>
+              </div>
+              
+              <!-- Modification fields will appear here after lookup -->
+              <div id="modifyCQFields" style="display:none">
+                <div class="form-group">
+                  <label>Agent Alert Time (seconds):</label>
+                  <input type="number" id="modifyCQAgentAlertTime" class="form-control" 
+                         value="15" min="15" max="180" step="15">
+                </div>
+                
+                <div class="form-group">
+                  <label>Overflow Max Calls:</label>
+                  <input type="number" id="modifyCQOverflowMax" class="form-control" 
+                         value="3" min="1" max="200">
+                </div>
+                
+                <div class="form-group">
+                  <label>Timeout (seconds):</label>
+                  <input type="number" id="modifyCQTimeout" class="form-control" 
+                         value="30" min="0" max="2700" step="15">
+                </div>
+                
+                <div class="form-group">
+                  <label>Overflow Greeting Text:</label>
+                  <textarea id="modifyCQOverflowText" class="form-control textarea" maxlength="1000">Your call is being redirected to voicemail due to high call volume.</textarea>
+                </div>
+                
+                <div class="form-group">
+                  <label>Timeout Greeting Text:</label>
+                  <textarea id="modifyCQTimeoutText" class="form-control textarea" maxlength="1000">Your call is being redirected to voicemail due to no answer.</textarea>
+                </div>
+                
+                <div class="form-group">
+                  <label>No Agents Greeting Text:</label>
+                  <textarea id="modifyCQNoAgentsText" class="form-control textarea" maxlength="1000">Your call is being redirected to voicemail because there are no agents available.</textarea>
+                </div>
+              </div>
+              
+              <div id="modifyCQButtonGroup" style="display:flex; gap:10px; margin-top:auto;">
+                <button id="modifyCQSubmit" class="btn btn-primary submit-button" 
+                        style="display:none; flex:1;">Add Modification to Batch</button>
+                <button id="clearModifyCQForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
+              </div>
+            </div>
+            
+            <!-- DEPROVISION CALL QUEUE -->
+            <div class="column">
+              <div class="column-header">Deprovision Call Queue</div>
+              <div id="deprovisionCQMessages"></div>
+              
+              <div class="form-group">
+                <label for="deprovisionCQName">Select Call Queue:</label>
+                <select id="deprovisionCQName" class="form-control">
+                  <option value="">Loading call queues...</option>
+                </select>
+                <button id="deprovCQLookupBtn" class="btn btn-secondary" style="margin-top:10px">
+                  Lookup Call Queue
+                </button>
+              </div>
+              
+              <div id="deprovisionCQInfo" class="user-info" style="display:none">
+                <h4>Call Queue to be Deprovisioned:</h4>
+                <div id="deprovisionCQSettings"></div>
+              </div>
+              
+              <div id="deprovisionCQButtonGroup" style="display:flex; gap:10px; margin-top:auto;">
+                <button id="deprovisionCQSubmit" class="btn btn-danger submit-button" 
+                        style="display:none; flex:1;">Add Deprovision to Batch</button>
+                <button id="clearDeprovisionCQForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+        
+        <!-- RIGHT PANEL - Batch Operations -->
+        <div class="right-panel">
+          <div class="batch-panel">
+            <div class="batch-header">Call Queue Operations</div>
+            
+            <div class="batch-summary">
+              <strong>Summary:</strong>
+              <div>Modifications: <span id="batchCQModifyCount">0</span></div>
+              <div>Deprovisions: <span id="batchCQDeprovisionCount">0</span></div>
+              <div><strong>Total: <span id="batchCQTotalCount">0</span></strong></div>
+            </div>
+            
+            <div id="batchCQTableContainer">
+              <div id="batchCQEmptyMessage" class="batch-empty">
+                No operations queued. Use the forms on the left to add operations.
+              </div>
+              <table id="batchCQTable" class="batch-table" style="display:none">
+                <thead>
+                  <tr>
+                    <th>Action</th>
+                    <th>Call Queue</th>
+                    <th>Details</th>
+                    <th>Remove</th>
+                  </tr>
+                </thead>
+                <tbody id="batchCQTableBody">
+                </tbody>
+              </table>
+            </div>
+            
+            <div style="margin-top:15px;">
+              <button id="submitAllCQBatch" class="btn btn-success" style="width:100%; display:none">
+                Submit All Operations
+              </button>
+              <button id="clearAllCQBatch" class="btn btn-secondary" style="width:100%; margin-top:10px; display:none">
+                Clear All
+              </button>
+            </div>
+            
+            <div id="batchCQResults" style="margin-top:15px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUTO ATTENDANTS TAB (Individual Management) -->
+    <div id="auto-attendants" class="tab-content">
+      <div class="main-layout">
+        <div class="left-panel">
+          <div class="columns">
+            
+            <!-- MODIFY AUTO ATTENDANT -->
+            <div class="column" style="flex:1.5;">
+              <div class="column-header">Modify Auto Attendant</div>
+              <div id="modifyAAMessages"></div>
+              
+              <div class="form-group">
+                <label for="modifyAAName">Select Auto Attendant:</label>
+                <select id="modifyAAName" class="form-control">
+                  <option value="">Loading auto attendants...</option>
+                </select>
+                <button id="modifyAALookupBtn" class="btn btn-secondary" style="margin-top:10px">
+                  Lookup Auto Attendant
+                </button>
+              </div>
+              
+              <div id="currentAAInfo" class="aacq-info" style="display:none">
+                <h4>Current Auto Attendant Settings:</h4>
+                <div id="currentAASettings" class="aacq-settings"></div>
+              </div>
+              
+              <!-- Modification fields will appear here after lookup -->
+              <div id="modifyAAFields" style="display:none">
+                <div class="form-group">
+                  <label>Business Hours Start Time:</label>
+                  <input type="time" id="modifyAAStartTime" class="form-control" value="00:00">
+                </div>
+                
+                <div class="form-group">
+                  <label>Business Hours End Time:</label>
+                  <input type="time" id="modifyAAEndTime" class="form-control" value="12:00">
+                </div>
+                
+                <div class="form-group">
+                  <label>Business Days:</label>
+                  <div class="checkbox-group">
+                    <label><input type="checkbox" name="businessDays" value="Monday" checked> Monday</label>
+                    <label><input type="checkbox" name="businessDays" value="Tuesday" checked> Tuesday</label>
+                    <label><input type="checkbox" name="businessDays" value="Wednesday" checked> Wednesday</label>
+                    <label><input type="checkbox" name="businessDays" value="Thursday" checked> Thursday</label>
+                    <label><input type="checkbox" name="businessDays" value="Friday" checked> Friday</label>
+                    <label><input type="checkbox" name="businessDays" value="Saturday" checked> Saturday</label>
+                    <label><input type="checkbox" name="businessDays" value="Sunday" checked> Sunday</label>
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label>Business Hours Greeting:</label>
+                  <textarea id="modifyAABusinessGreeting" class="form-control textarea" maxlength="1000">Thank you for calling, someone will be with you shortly.</textarea>
+                </div>
+                
+                <div class="form-group">
+                  <label>After Hours Greeting:</label>
+                  <textarea id="modifyAAAfterHoursGreeting" class="form-control textarea" maxlength="1000">Thank you for calling, our offices are closed, please leave a voicemail and we will call you back.</textarea>
+                </div>
+                
+                <div class="form-group">
+                  <label>Enable Voice Response:</label>
+                  <div class="radio-group">
+                    <label><input type="radio" name="modifyAAVoiceResponse" value="1"> Yes</label>
+                    <label><input type="radio" name="modifyAAVoiceResponse" value="0" checked> No</label>
+                  </div>
+                </div>
+              </div>
+              
+              <div id="modifyAAButtonGroup" style="display:flex; gap:10px; margin-top:auto;">
+                <button id="modifyAASubmit" class="btn btn-primary submit-button" 
+                        style="display:none; flex:1;">Add Modification to Batch</button>
+                <button id="clearModifyAAForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
+              </div>
+            </div>
+            
+            <!-- DEPROVISION AUTO ATTENDANT -->
+            <div class="column">
+              <div class="column-header">Deprovision Auto Attendant</div>
+              <div id="deprovisionAAMessages"></div>
+              
+              <div class="form-group">
+                <label for="deprovisionAAName">Select Auto Attendant:</label>
+                <select id="deprovisionAAName" class="form-control">
+                  <option value="">Loading auto attendants...</option>
+                </select>
+                <button id="deprovAALookupBtn" class="btn btn-secondary" style="margin-top:10px">
+                  Lookup Auto Attendant
+                </button>
+              </div>
+              
+              <div id="deprovisionAAInfo" class="user-info" style="display:none">
+                <h4>Auto Attendant to be Deprovisioned:</h4>
+                <div id="deprovisionAASettings"></div>
+              </div>
+              
+              <div id="deprovisionAAButtonGroup" style="display:flex; gap:10px; margin-top:auto;">
+                <button id="deprovisionAASubmit" class="btn btn-danger submit-button" 
+                        style="display:none; flex:1;">Add Deprovision to Batch</button>
+                <button id="clearDeprovisionAAForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+        
+        <!-- RIGHT PANEL - Batch Operations -->
+        <div class="right-panel">
+          <div class="batch-panel">
+            <div class="batch-header">Auto Attendant Operations</div>
+            
+            <div class="batch-summary">
+              <strong>Summary:</strong>
+              <div>Modifications: <span id="batchAAModifyCount">0</span></div>
+              <div>Deprovisions: <span id="batchAADeprovisionCount">0</span></div>
+              <div><strong>Total: <span id="batchAATotalCount">0</span></strong></div>
+            </div>
+            
+            <div id="batchAATableContainer">
+              <div id="batchAAEmptyMessage" class="batch-empty">
+                No operations queued. Use the forms on the left to add operations.
+              </div>
+              <table id="batchAATable" class="batch-table" style="display:none">
+                <thead>
+                  <tr>
+                    <th>Action</th>
+                    <th>Auto Attendant</th>
+                    <th>Details</th>
+                    <th>Remove</th>
+                  </tr>
+                </thead>
+                <tbody id="batchAATableBody">
+                </tbody>
+              </table>
+            </div>
+            
+            <div style="margin-top:15px;">
+              <button id="submitAllAABatch" class="btn btn-success" style="width:100%; display:none">
+                Submit All Operations
+              </button>
+              <button id="clearAllAABatch" class="btn btn-secondary" style="width:100%; margin-top:10px; display:none">
+                Clear All
+              </button>
+            </div>
+            
+            <div id="batchAAResults" style="margin-top:15px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUTO ATTENDANT / CALL QUEUE PAIRS TAB -->
+    <div id="aa-cq-pairs" class="tab-content">
+      <div class="main-layout">
+        <!-- LEFT PANEL - Forms -->
+        <div class="left-panel">
+          <div class="columns">
+            
+            <!-- ADD AA/CQ PAIR -->
+            <div class="column aacq-pair-column">
+              <div class="column-header">Add AA/CQ Pair</div>
+              <div id="addAACQMessages"></div>
+              
+              <div class="form-group">
+                <label for="addAACQName">Name (used for both AA and CQ):</label>
+                <input type="text" id="addAACQName" class="form-control" 
+                       placeholder="e.g., Admissions, Campus Store">
+                <div class="help-text">Letters, spaces, and hyphens only</div>
+              </div>
+              
+              <!-- Naming Convention Preview -->
+              <div class="naming-preview">
+                <h5>Naming Convention Preview:</h5>
+                <div class="naming-item"><strong>Auto Attendant:</strong></div>
+                <div class="naming-item">UPN: <span id="aaUPNPreview">call_@msoe.edu</span></div>
+                <div class="naming-item">Display: <span id="aaDisplayPreview">Call </span></div>
+                <div class="naming-item" style="margin-top:5px"><strong>Call Queue:</strong></div>
+                <div class="naming-item">UPN: <span id="cqUPNPreview">q_@msoe.edu</span></div>
+                <div class="naming-item">Display: <span id="cqDisplayPreview">Q </span></div>
+                <div class="naming-item" style="margin-top:5px"><strong>Voicemail Group:</strong></div>
+                <div class="naming-item">UPN: <span id="vmUPNPreview">qg@msoe.edu</span></div>
+                <div class="naming-item">Display: <span id="vmDisplayPreview">Q G </span></div>
+              </div>
+              
+              <div class="form-group">
+                <label for="addAACQPhoneNumber">Select Phone Number:</label>
+                <select id="addAACQPhoneNumber" class="form-control">
+                  <option value="">Loading numbers…</option>
+                </select>
+                <div class="help-text">Or use a reserved number from dropdown below</div>
+                <select id="addAACQReservedNumber" class="form-control" style="margin-top:5px">
+                  <option value="">-- Select a reserved number (optional) --</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label>Authorized Users (comma-separated emails):</label>
+                <textarea id="addAACQAuthorizedUsers" class="form-control textarea" 
+                          placeholder="user1@msoe.edu, user2@msoe.edu"></textarea>
+              </div>
+              
+              <!-- Advanced Settings Toggle -->
+              <div class="form-group">
+                <button type="button" class="btn btn-secondary btn-small" onclick="toggleAdvancedSettings()">
+                  ⚙️ Advanced Settings
+                </button>
+              </div>
+              
+              <div id="advancedSettings" style="display:none">
+                <h5 style="margin:10px 0">Call Queue Settings:</h5>
+                <div class="form-group">
+                  <label>Agent Alert Time (seconds):</label>
+                  <input type="number" id="addCQAgentAlertTime" class="form-control" value="15" min="15" max="180">
+                </div>
+                
+                <div class="form-group">
+                  <label>Overflow Max Calls:</label>
+                  <input type="number" id="addCQOverflowMax" class="form-control" value="3" min="1" max="200">
+                </div>
+                
+                <div class="form-group">
+                  <label>Timeout (seconds):</label>
+                  <input type="number" id="addCQTimeout" class="form-control" value="30" min="0" max="2700">
+                </div>
+                
+                <h5 style="margin:10px 0">Auto Attendant Settings:</h5>
+                <div class="form-group">
+                  <label>Business Hours:</label>
+                  <div style="display:flex; gap:10px">
+                    <input type="time" id="addAAStartTime" class="form-control" value="00:00">
+                    <span style="align-self:center">to</span>
+                    <input type="time" id="addAAEndTime" class="form-control" value="12:00">
+                  </div>
+                </div>
+              </div>
+              
+              <div style="display:flex; gap:10px; margin-top:auto;">
+                <button id="addAACQSubmit" class="btn btn-primary submit-button" disabled style="flex:1;">
+                  Add to Batch Queue
+                </button>
+                <button id="clearAddAACQForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
+              </div>
+            </div>
+
+            <!-- MODIFY AA/CQ PAIR -->
+            <div class="column aacq-pair-column">
+              <div class="column-header">Modify AA/CQ Pair</div>
+              <div id="modifyAACQMessages"></div>
+              
+              <div class="form-group">
+                <label for="modifyAACQPairSelect">Select AA/CQ Pair:</label>
+                <select id="modifyAACQPairSelect" class="form-control">
+                  <option value="">Loading AA/CQ pairs...</option>
+                </select>
+                <button id="modifyAACQPairLookupBtn" class="btn btn-secondary" style="margin-top:10px">
+                  Lookup Pair
+                </button>
+              </div>
+              
+              <div id="currentAACQPairInfo" class="aacq-info" style="display:none">
+                <h4>Current AA/CQ Pair Settings:</h4>
+                <div id="currentAACQPairSettings"></div>
+              </div>
+              
+              <div id="modifyAACQPairFields" style="display:none">
+                <!-- Fields will be populated after lookup -->
+                <div class="form-group">
+                  <label>Change Phone Number:</label>
+                  <select id="modifyAACQPhoneNumber" class="form-control">
+                    <option value="">Select new phone number…</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label>Update Authorized Users:</label>
+                  <textarea id="modifyAACQAuthorizedUsers" class="form-control textarea"></textarea>
+                </div>
+              </div>
+              
+              <div id="modifyAACQPairButtonGroup" style="display:flex; gap:10px; margin-top:auto;">
+                <button id="modifyAACQPairSubmit" class="btn btn-primary submit-button" 
+                        style="display:none; flex:1;">Add Modification to Batch</button>
+                <button id="clearModifyAACQPairForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
+              </div>
+            </div>
+
+            <!-- DEPROVISION AA/CQ PAIR -->
+            <div class="column aacq-pair-column">
+              <div class="column-header">Deprovision AA/CQ Pair</div>
+              <div id="deprovisionAACQMessages"></div>
+              
+              <div class="form-group">
+                <label for="deprovisionAACQPairSelect">Select AA/CQ Pair:</label>
+                <select id="deprovisionAACQPairSelect" class="form-control">
+                  <option value="">Loading AA/CQ pairs...</option>
+                </select>
+                <button id="deprovAACQPairLookupBtn" class="btn btn-secondary" style="margin-top:10px">
+                  Lookup Pair
+                </button>
+              </div>
+              
+              <div id="deprovisionAACQPairInfo" class="user-info" style="display:none">
+                <h4>AA/CQ Pair to be Deprovisioned:</h4>
+                <div id="deprovisionAACQPairSettings"></div>
+              </div>
+              
+              <div id="deprovisionAACQPairButtonGroup" style="display:flex; gap:10px; margin-top:auto;">
+                <button id="deprovisionAACQPairSubmit" class="btn btn-danger submit-button" 
+                        style="display:none; flex:1;">Add Deprovision to Batch</button>
+                <button id="clearDeprovisionAACQPairForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- RIGHT PANEL - Batch Operations -->
+        <div class="right-panel">
+          <div class="batch-panel">
+            <div class="batch-header">Batch Operations Queue - AA/CQ Pairs</div>
+            
+            <div class="batch-summary">
+              <strong>Summary:</strong>
+              <div>Adds: <span id="batchAACQAddCount">0</span></div>
+              <div>Modifications: <span id="batchAACQModifyCount">0</span></div>
+              <div>Deprovisions: <span id="batchAACQDeprovisionCount">0</span></div>
+              <div><strong>Total: <span id="batchAACQTotalCount">0</span></strong></div>
+            </div>
+
+            <div id="batchAACQTableContainer">
+              <div id="batchAACQEmptyMessage" class="batch-empty">
+                No operations queued. Use the forms on the left to add operations to the batch.
+              </div>
+              <table id="batchAACQTable" class="batch-table" style="display:none">
+                <thead>
+                  <tr>
+                    <th>Action</th>
+                    <th>AA/CQ Pair</th>
+                    <th>Details</th>
+                    <th>Remove</th>
+                  </tr>
+                </thead>
+                <tbody id="batchAACQTableBody">
+                </tbody>
+              </table>
+            </div>
+
+            <div style="margin-top:15px;">
+              <button id="submitAllAACQBatch" class="btn btn-success" style="width:100%; display:none">
+                Submit All Operations
+              </button>
+              <button id="clearAllAACQBatch" class="btn btn-secondary" style="width:100%; margin-top:10px; display:none">
+                Clear All
+              </button>
+              <button id="resetAACQPageBtn" class="btn btn-primary" style="width:100%; margin-top:10px; display:none">
+                🔄 Reset Page
+              </button>
+            </div>
+
+            <div id="batchAACQResults" style="margin-top:15px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Teams SDK -->
+  <script src="https://statics.teams.microsoft.com/sdk/v1.11.0/js/MicrosoftTeams.min.js"></script>
+
+  <script>
+    // KEEP ALL YOUR EXISTING WORKING JAVASCRIPT CODE FOR PHONE USERS AND SHARED DEVICES
+    
+    const API = {
+      url: 'https://availablephonenumberapi.azurewebsites.net/api/GetAvailablePhoneNumbers',
+      key: 'NULL'
+    };
+
+    const AZURE_CONFIG = {
+      functionAppClientId: 'f2068d39-85c7-4507-9fd3-0758b193b0a9',
+      phoneUsersUrl: 'https://provisionteamsphonesystemusers-a5b3b9fjcxcva8g4.northcentralus-01.azurewebsites.net/api/TriggerRunbook',
+      sharedDevicesUrl: 'https://provisionteamsphonesystemusers-a5b3b9fjcxcva8g4.northcentralus-01.azurewebsites.net/api/TriggerSharedDeviceRunbook',
+      // Placeholder URLs for AA/CQ operations - update when Azure Functions are created
+      aacqPairsUrl: 'https://YOUR-FUNCTION-APP.azurewebsites.net/api/TriggerAACQPairRunbook',
+      callQueuesUrl: 'https://YOUR-FUNCTION-APP.azurewebsites.net/api/TriggerCQRunbook',
+      autoAttendantsUrl: 'https://YOUR-FUNCTION-APP.azurewebsites.net/api/TriggerAARunbook'
+    };
+
+    let phoneNumbers = [], dropdownData = null, currentUser = null, currentDevice = null;
+    let reservedNumbers = [];
+    let batchOperations = [];
+    let batchDeviceOperations = [];
+    let batchCQOperations = [];
+    let batchAAOperations = [];
+    let batchAACQOperations = [];
+    let isTeamsEnvironment = false;
+    let existingCallQueues = [];
+    let existingAutoAttendants = [];
+    let existingAACQPairs = [];
+
+    // Tab Management
+    function showTab(tabName, event) {
+      // Hide all tab contents
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      
+      // Remove active class from all tab buttons
+      document.querySelectorAll('.tab-button').forEach(button => {
+        button.classList.remove('active');
+      });
+      
+      // Show selected tab content
+      document.getElementById(tabName).classList.add('active');
+      
+      // Add active class to clicked tab button
+      event.target.classList.add('active');
+      
+      // Load data when switching tabs
+      if (tabName === 'shared-devices') {
+        loadPhoneNumbers();
+        loadReservedNumbers();
+      } else if (tabName === 'call-queues') {
+        loadCallQueues();
+      } else if (tabName === 'auto-attendants') {
+        loadAutoAttendants();
+      } else if (tabName === 'aa-cq-pairs') {
+        loadAACQPairs();
+        loadPhoneNumbers();
+        loadReservedNumbers();
+      }
+    }
+
+    // Simple Teams detection
+    function initializeTeams() {
+      try {
+        if (typeof microsoftTeams !== 'undefined') {
+          microsoftTeams.initialize();
+          isTeamsEnvironment = true;
+          document.getElementById('teamsStatus').textContent = '✅ Teams detected - SSO enabled';
+          document.getElementById('teamsStatus').className = 'teams-status authenticated';
+        } else {
+          isTeamsEnvironment = false;
+          document.getElementById('teamsStatus').textContent = '⚠️ Running outside Teams - using fallback authentication';
+          document.getElementById('teamsStatus').className = 'teams-status warning';
+        }
+      } catch (error) {
+        isTeamsEnvironment = false;
+        document.getElementById('teamsStatus').textContent = '⚠️ Teams initialization failed - using fallback authentication';
+        document.getElementById('teamsStatus').className = 'teams-status warning';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', ()=> {
+      // Initialize Teams detection
+      initializeTeams();
+      
+      // Load data immediately
+      loadPhoneNumbers();
+      loadReservedNumbers();
+
+      // PHONE USERS - ADD (existing event listeners remain unchanged)
+      document.getElementById('addUsername').addEventListener('change', validateAddForm);
+      document.getElementById('addPhoneNumber').addEventListener('change', validateAddForm);
+      document.getElementById('addReservedNumber').addEventListener('change', handleReservedNumberSelection);
+      document.getElementById('addUserSubmit').onclick = addToBatch;
+      document.getElementById('clearAddForm').onclick = clearAddFormOnly;
+      
+      // PHONE USERS - MODIFY
+      document.getElementById('modifyLookupBtn').addEventListener('click', lookupUser);
+      document.getElementById('modifyReservedNumber').addEventListener('change', handleModifyReservedNumberSelection);
+      document.getElementById('modifyUserSubmit').onclick = addModifyToBatch;
+      document.getElementById('clearModifyForm').onclick = clearModifyFormOnly;
+      
+      document.getElementById('modifyUsername').addEventListener('input', ()=>{
+        const modifyField = document.getElementById('modifyUsername');
+        const deprovisionField = document.getElementById('deprovisionUsername');
+        validateUsername(modifyField, deprovisionField, 'modifyUserMessages', 'Deprovision');
+      });
+
+      // PHONE USERS - DEPROVISION
+      document.getElementById('deprovLookupBtn').addEventListener('click', lookupDeprovisionUser);
+      document.getElementById('deprovisionUserSubmit').onclick = addDeprovisionToBatch;
+      document.getElementById('clearDeprovisionForm').onclick = clearDeprovisionFormOnly;
+      
+      document.getElementById('deprovisionUsername').addEventListener('input', ()=>{
+        const deprovisionField = document.getElementById('deprovisionUsername');
+        const modifyField = document.getElementById('modifyUsername');
+        validateUsername(deprovisionField, modifyField, 'deprovisionUserMessages', 'Modify');
+      });
+
+      // PHONE USERS - BATCH OPERATIONS
+      document.getElementById('submitAllBatch').onclick = submitAllOperations;
+      document.getElementById('clearAllBatch').onclick = clearAllBatch;
+      
+      const resetBtn = document.getElementById('resetPageBtn');
+      if (resetBtn) {
+        resetBtn.onclick = resetPage;
+      }
+
+      // PHONE NUMBER RESERVATION
+      document.getElementById('reservePhoneNumber').addEventListener('change', validateReserveForm);
+      document.getElementById('reserveNotes').addEventListener('input', function() {
+        document.getElementById('charCount').textContent = this.value.length;
+        validateReserveForm();
+      });
+      document.getElementById('reserveSubmit').onclick = reservePhoneNumber;
+
+      // SHARED DEVICES - ADD
+      document.getElementById('addDeviceName').addEventListener('change', validateAddDeviceForm);
+      document.getElementById('addDevicePhoneNumber').addEventListener('change', validateAddDeviceForm);
+      document.getElementById('addDeviceReservedNumber').addEventListener('change', handleDeviceReservedNumberSelection);
+      document.getElementById('addDeviceSubmit').onclick = addDeviceToBatch;
+      document.getElementById('clearAddDeviceForm').onclick = clearAddDeviceFormOnly;
+      
+      // SHARED DEVICES - MODIFY
+      document.getElementById('modifyDeviceLookupBtn').addEventListener('click', lookupDevice);
+      document.getElementById('modifyDeviceReservedNumber').addEventListener('change', handleDeviceModifyReservedNumberSelection);
+      document.getElementById('modifyDeviceSubmit').onclick = addModifyDeviceToBatch;
+      document.getElementById('clearModifyDeviceForm').onclick = clearModifyDeviceFormOnly;
+      
+      document.getElementById('modifyDeviceName').addEventListener('change', ()=>{
+        const modifyField = document.getElementById('modifyDeviceName');
+        const deprovisionField = document.getElementById('deprovisionDeviceName');
+        validateDeviceName(modifyField, deprovisionField, 'modifyDeviceMessages', 'Deprovision');
+      });
+
+      // SHARED DEVICES - DEPROVISION
+      document.getElementById('deprovDeviceLookupBtn').addEventListener('click', lookupDeprovisionDevice);
+      document.getElementById('deprovisionDeviceSubmit').onclick = addDeprovisionDeviceToBatch;
+      document.getElementById('clearDeprovisionDeviceForm').onclick = clearDeprovisionDeviceFormOnly;
+      
+      document.getElementById('deprovisionDeviceName').addEventListener('change', ()=>{
+        const deprovisionField = document.getElementById('deprovisionDeviceName');
+        const modifyField = document.getElementById('modifyDeviceName');
+        validateDeviceName(deprovisionField, modifyField, 'deprovisionDeviceMessages', 'Modify');
+      });
+
+      // SHARED DEVICES - BATCH OPERATIONS
+      document.getElementById('submitAllDeviceBatch').onclick = submitAllDeviceOperations;
+      document.getElementById('clearAllDeviceBatch').onclick = clearAllDeviceBatch;
+      
+      const resetDeviceBtn = document.getElementById('resetDevicePageBtn');
+      if (resetDeviceBtn) {
+        resetDeviceBtn.onclick = resetDevicePage;
+      }
+
+      // DEVICE PHONE NUMBER RESERVATION
+      document.getElementById('reserveDevicePhoneNumber').addEventListener('change', validateDeviceReserveForm);
+      document.getElementById('reserveDeviceNotes').addEventListener('input', function() {
+        document.getElementById('deviceCharCount').textContent = this.value.length;
+        validateDeviceReserveForm();
+      });
+      document.getElementById('reserveDeviceSubmit').onclick = reserveDevicePhoneNumber;
+
+      // AA/CQ PAIRS - ADD
+      document.getElementById('addAACQName').addEventListener('input', function() {
+        updateNamingPreview(this.value);
+        validateAddAACQForm();
+      });
+      document.getElementById('addAACQPhoneNumber').addEventListener('change', validateAddAACQForm);
+      document.getElementById('addAACQReservedNumber').addEventListener('change', handleAACQReservedNumberSelection);
+      document.getElementById('addAACQSubmit').onclick = addAACQToBatch;
+      document.getElementById('clearAddAACQForm').onclick = clearAddAACQFormOnly;
+
+      // AA/CQ PAIRS - MODIFY
+      document.getElementById('modifyAACQPairLookupBtn').addEventListener('click', lookupAACQPair);
+      document.getElementById('modifyAACQPairSubmit').onclick = addModifyAACQToBatch;
+      document.getElementById('clearModifyAACQPairForm').onclick = clearModifyAACQFormOnly;
+
+      // AA/CQ PAIRS - DEPROVISION
+      document.getElementById('deprovAACQPairLookupBtn').addEventListener('click', lookupDeprovisionAACQPair);
+      document.getElementById('deprovisionAACQPairSubmit').onclick = addDeprovisionAACQToBatch;
+      document.getElementById('clearDeprovisionAACQPairForm').onclick = clearDeprovisionAACQFormOnly;
+
+      // AA/CQ PAIRS - BATCH OPERATIONS
+      document.getElementById('submitAllAACQBatch').onclick = submitAllAACQOperations;
+      document.getElementById('clearAllAACQBatch').onclick = clearAllAACQBatch;
+      document.getElementById('resetAACQPageBtn').onclick = resetAACQPage;
+
+      // CALL QUEUES - MODIFY
+      document.getElementById('modifyCQLookupBtn').addEventListener('click', lookupCallQueue);
+      document.getElementById('modifyCQSubmit').onclick = addModifyCQToBatch;
+      document.getElementById('clearModifyCQForm').onclick = clearModifyCQFormOnly;
+
+      // CALL QUEUES - DEPROVISION
+      document.getElementById('deprovCQLookupBtn').addEventListener('click', lookupDeprovisionCQ);
+      document.getElementById('deprovisionCQSubmit').onclick = addDeprovisionCQToBatch;
+      document.getElementById('clearDeprovisionCQForm').onclick = clearDeprovisionCQFormOnly;
+
+      // CALL QUEUES - BATCH OPERATIONS
+      document.getElementById('submitAllCQBatch').onclick = submitAllCQOperations;
+      document.getElementById('clearAllCQBatch').onclick = clearAllCQBatch;
+
+      // AUTO ATTENDANTS - MODIFY
+      document.getElementById('modifyAALookupBtn').addEventListener('click', lookupAutoAttendant);
+      document.getElementById('modifyAASubmit').onclick = addModifyAAToBatch;
+      document.getElementById('clearModifyAAForm').onclick = clearModifyAAFormOnly;
+
+      // AUTO ATTENDANTS - DEPROVISION
+      document.getElementById('deprovAALookupBtn').addEventListener('click', lookupDeprovisionAA);
+      document.getElementById('deprovisionAASubmit').onclick = addDeprovisionAAToBatch;
+      document.getElementById('clearDeprovisionAAForm').onclick = clearDeprovisionAAFormOnly;
+
+      // AUTO ATTENDANTS - BATCH OPERATIONS
+      document.getElementById('submitAllAABatch').onclick = submitAllAAOperations;
+      document.getElementById('clearAllAABatch').onclick = clearAllAABatch;
+    });
+
+    // INSERT ALL YOUR EXISTING JAVASCRIPT FUNCTIONS HERE FOR PHONE USERS AND SHARED DEVICES
+    // (Keep all existing functions exactly as they were)
+    
+    // Load reserved numbers
+    async function loadReservedNumbers() {
+      try {
+        const response = await fetch(`${API.url}?code=${API.key}&includeReserved=true`);
+        if (!response.ok) throw new Error('Failed to fetch reserved numbers');
+        
+        reservedNumbers = await response.json();
+        populateReservedDropdowns();
+        displayReservedNumbers();
+      } catch (error) {
+        console.error('Error loading reserved numbers:', error);
+      }
+    }
+
+    // Populate reserved number dropdowns
+    function populateReservedDropdowns() {
+      // User add form
+      const addReserved = document.getElementById('addReservedNumber');
+      if (addReserved) {
+        addReserved.innerHTML = '<option value="">-- Select a reserved number (optional) --</option>';
+        reservedNumbers.forEach(num => {
+          const option = new Option(
+            `${formatPhoneNumber(num.AvailablePhoneNumber)} - ${num.ReservedNotes || 'No notes'}`,
+            num.AvailablePhoneNumber
+          );
+          addReserved.appendChild(option);
+        });
+      }
+
+      // User modify form
+      const modifyReserved = document.getElementById('modifyReservedNumber');
+      if (modifyReserved) {
+        modifyReserved.innerHTML = '<option value="">-- Select a reserved number (optional) --</option>';
+        reservedNumbers.forEach(num => {
+          const option = new Option(
+            `${formatPhoneNumber(num.AvailablePhoneNumber)} - ${num.ReservedNotes || 'No notes'}`,
+            num.AvailablePhoneNumber
+          );
+          modifyReserved.appendChild(option);
+        });
+      }
+
+      // Device add form
+      const addDeviceReserved = document.getElementById('addDeviceReservedNumber');
+      if (addDeviceReserved) {
+        addDeviceReserved.innerHTML = '<option value="">-- Select a reserved number (optional) --</option>';
+        reservedNumbers.forEach(num => {
+          const option = new Option(
+            `${formatPhoneNumber(num.AvailablePhoneNumber)} - ${num.ReservedNotes || 'No notes'}`,
+            num.AvailablePhoneNumber
+          );
+          addDeviceReserved.appendChild(option);
+        });
+      }
+
+      // Device modify form
+      const modifyDeviceReserved = document.getElementById('modifyDeviceReservedNumber');
+      if (modifyDeviceReserved) {
+        modifyDeviceReserved.innerHTML = '<option value="">-- Select a reserved number (optional) --</option>';
+        reservedNumbers.forEach(num => {
+          const option = new Option(
+            `${formatPhoneNumber(num.AvailablePhoneNumber)} - ${num.ReservedNotes || 'No notes'}`,
+            num.AvailablePhoneNumber
+          );
+          modifyDeviceReserved.appendChild(option);
+        });
+      }
+
+      // AA/CQ add form
+      const addAACQReserved = document.getElementById('addAACQReservedNumber');
+      if (addAACQReserved) {
+        addAACQReserved.innerHTML = '<option value="">-- Select a reserved number (optional) --</option>';
+        reservedNumbers.forEach(num => {
+          const option = new Option(
+            `${formatPhoneNumber(num.AvailablePhoneNumber)} - ${num.ReservedNotes || 'No notes'}`,
+            num.AvailablePhoneNumber
+          );
+          addAACQReserved.appendChild(option);
+        });
+      }
+    }
+
+    // Display reserved numbers list
+    function displayReservedNumbers() {
+      const listDiv = document.getElementById('reservedNumbersList');
+      const deviceListDiv = document.getElementById('reservedDeviceNumbersList');
+      
+      if (!reservedNumbers || reservedNumbers.length === 0) {
+        if (listDiv) listDiv.innerHTML = '<div class="batch-empty">No reserved numbers</div>';
+        if (deviceListDiv) deviceListDiv.innerHTML = '<div class="batch-empty">No reserved numbers</div>';
+        return;
+      }
+
+      let html = '';
+      reservedNumbers.forEach(num => {
+        html += `
+  <div class="reserved-item">
+    <div class="reserved-item-content">
+      <div class="reserved-phone">${formatPhoneNumber(num.AvailablePhoneNumber)}</div>
+      <div class="reserved-notes">${num.ReservedNotes || 'No notes'}</div>
+    </div>
+    <button class="btn btn-danger btn-small" onclick="unreserveNumber('${num.AvailablePhoneNumber}')">
+      Unreserve
+    </button>
+  </div>`;
+      });
+      
+      if (listDiv) listDiv.innerHTML = html;
+      if (deviceListDiv) deviceListDiv.innerHTML = html;
+    }
+
+    // Load phone numbers
+    async function loadPhoneNumbers() {
+      // GET numbers
+      let r = await fetch(`${API.url}?code=${API.key}`);
+      if (!r.ok) return console.error('Phone fetch failed');
+      phoneNumbers = await r.json();
+      populatePhoneDropdowns();
+      populateDevicePhoneDropdowns();
+      populateReservationDropdowns();
+      populateAACQPhoneDropdowns();
+
+      // POST dropdowns
+      r = await fetch(`${API.url}?code=${API.key}`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'getdropdowndata'})
+      });
+      if (!r.ok) return console.error('Dropdown fetch failed');
+      dropdownData = await r.json();
+      
+      console.log('Dropdown data received:', dropdownData);
+      if (!dropdownData.tsdUsers) {
+        console.warn('tsdUsers not found in dropdown data - Azure Function may not be updated');
+      }
+      if (!dropdownData.provisionedTsdAccounts) {
+        console.warn('provisionedTsdAccounts not found in dropdown data - Azure Function may not be updated');
+      }
+      
+      populateDropdowns();
+    }
+
+, 'i'))
+                );
+                if (matchingCQ) {
+                  existingAACQPairs.push({
+                    name: pairName,
+                    aaDisplayName: aa,
+                    cqDisplayName: matchingCQ
+                  });
+                }
+              }
+            });
           }
-        ];
+        } else {
+          existingAACQPairs = [];
+        }
         
         const modifySelect = document.getElementById('modifyAACQPairSelect');
         const deprovisionSelect = document.getElementById('deprovisionAACQPairSelect');
         
         if (modifySelect) {
           modifySelect.innerHTML = '<option value="">Select an AA/CQ pair...</option>';
-          existingAACQPairs.forEach(pair => {
-            modifySelect.appendChild(new Option(`${pair.name} (Call ${pair.name} / Q ${pair.name})`, pair.name));
-          });
+          if (existingAACQPairs.length > 0) {
+            existingAACQPairs.forEach(pair => {
+              const option = new Option(`${pair.name} (${pair.aaDisplayName} / ${pair.cqDisplayName})`, pair.name);
+              modifySelect.appendChild(option);
+            });
+          }
         }
         
         if (deprovisionSelect) {
           deprovisionSelect.innerHTML = '<option value="">Select an AA/CQ pair...</option>';
-          existingAACQPairs.forEach(pair => {
-            deprovisionSelect.appendChild(new Option(`${pair.name} (Call ${pair.name} / Q ${pair.name})`, pair.name));
-          });
+          if (existingAACQPairs.length > 0) {
+            existingAACQPairs.forEach(pair => {
+              const option = new Option(`${pair.name} (${pair.aaDisplayName} / ${pair.cqDisplayName})`, pair.name);
+              deprovisionSelect.appendChild(option);
+            });
+          }
         }
       } catch (error) {
         console.error('Error loading AA/CQ pairs:', error);
