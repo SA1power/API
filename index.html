@@ -3612,7 +3612,289 @@ function addPairToBatch() {
   showMessage('addPairMessages', 
     `<div class="success">AA/CQ Pair "${operation.baseName}" added to batch</div>`);
 }
+// Update Call Queue Batch Table
+function updateCQBatchTable() {
+  const totalCount = batchCQOperations.length;
+  
+  document.getElementById('batchCQAddCount').textContent = totalCount;
+  document.getElementById('batchCQModifyCount').textContent = '0'; // CQ modify not implemented yet
+  document.getElementById('batchCQDeprovisionCount').textContent = '0'; // CQ deprovision not implemented yet
+  document.getElementById('batchCQTotalCount').textContent = totalCount;
+  
+  const emptyMsg = document.getElementById('batchCQEmptyMessage');
+  const table = document.getElementById('batchCQTable');
+  const submitBtn = document.getElementById('submitAllCQBatch');
+  const clearBtn = document.getElementById('clearAllCQBatch');
+  
+  if (totalCount === 0) {
+    emptyMsg.style.display = 'block';
+    table.style.display = 'none';
+    submitBtn.style.display = 'none';
+    clearBtn.style.display = 'none';
+  } else {
+    emptyMsg.style.display = 'none';
+    table.style.display = 'table';
+    submitBtn.style.display = 'block';
+    clearBtn.style.display = 'block';
+    populateCQBatchTableRows();
+  }
+}
 
+// Update Auto Attendant Batch Table
+function updateAABatchTable() {
+  const totalCount = batchAAOperations.length;
+  
+  document.getElementById('batchAAAddCount').textContent = totalCount;
+  document.getElementById('batchAAModifyCount').textContent = '0'; // AA modify not implemented yet
+  document.getElementById('batchAADeprovisionCount').textContent = '0'; // AA deprovision not implemented yet
+  document.getElementById('batchAATotalCount').textContent = totalCount;
+  
+  const emptyMsg = document.getElementById('batchAAEmptyMessage');
+  const table = document.getElementById('batchAATable');
+  const submitBtn = document.getElementById('submitAllAABatch');
+  const clearBtn = document.getElementById('clearAllAABatch');
+  
+  if (totalCount === 0) {
+    emptyMsg.style.display = 'block';
+    table.style.display = 'none';
+    submitBtn.style.display = 'none';
+    clearBtn.style.display = 'none';
+  } else {
+    emptyMsg.style.display = 'none';
+    table.style.display = 'table';
+    submitBtn.style.display = 'block';
+    clearBtn.style.display = 'block';
+    populateAABatchTableRows();
+  }
+}
+
+// Update Pair Batch Table
+function updatePairBatchTable() {
+  const totalCount = batchPairOperations.length;
+  
+  document.getElementById('batchPairCount').textContent = totalCount;
+  
+  const emptyMsg = document.getElementById('batchPairEmptyMessage');
+  const table = document.getElementById('batchPairTable');
+  const submitBtn = document.getElementById('submitAllPairBatch');
+  const clearBtn = document.getElementById('clearAllPairBatch');
+  
+  if (totalCount === 0) {
+    emptyMsg.style.display = 'block';
+    table.style.display = 'none';
+    submitBtn.style.display = 'none';
+    clearBtn.style.display = 'none';
+  } else {
+    emptyMsg.style.display = 'none';
+    table.style.display = 'table';
+    submitBtn.style.display = 'block';
+    clearBtn.style.display = 'block';
+    populatePairBatchTableRows();
+  }
+}
+// Populate Call Queue Batch Table Rows
+function populateCQBatchTableRows() {
+  const tbody = document.getElementById('batchCQTableBody');
+  tbody.innerHTML = '';
+  
+  batchCQOperations.forEach(op => {
+    const row = document.createElement('tr');
+    row.className = 'action-add';
+    
+    const phoneDisplay = op.phoneNumber ? formatPhoneNumber(op.phoneNumber) : 'No phone';
+    
+    row.innerHTML = `
+      <td style="text-transform:capitalize; font-weight:bold">Add</td>
+      <td>${op.displayName}</td>
+      <td>
+        UPN: ${op.resourceAccountUPN}<br>
+        Agent Group: ${op.agentGroup}<br>
+        Phone: ${phoneDisplay}
+      </td>
+      <td><button class="remove-batch-item" onclick="removeCQBatchOperation(${op.id})">Remove</button></td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+// Populate Auto Attendant Batch Table Rows
+function populateAABatchTableRows() {
+  const tbody = document.getElementById('batchAATableBody');
+  tbody.innerHTML = '';
+  
+  batchAAOperations.forEach(op => {
+    const row = document.createElement('tr');
+    row.className = 'action-add';
+    
+    const phoneDisplay = op.phoneNumber ? formatPhoneNumber(op.phoneNumber) : 'No phone';
+    const redirectDisplay = op.redirectTo || 'No redirect';
+    
+    row.innerHTML = `
+      <td style="text-transform:capitalize; font-weight:bold">Add</td>
+      <td>${op.displayName}</td>
+      <td>
+        UPN: ${op.resourceAccountUPN}<br>
+        Redirects to: ${redirectDisplay}<br>
+        Phone: ${phoneDisplay}
+      </td>
+      <td><button class="remove-batch-item" onclick="removeAABatchOperation(${op.id})">Remove</button></td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+// Populate Pair Batch Table Rows
+function populatePairBatchTableRows() {
+  const tbody = document.getElementById('batchPairTableBody');
+  tbody.innerHTML = '';
+  
+  batchPairOperations.forEach(op => {
+    const row = document.createElement('tr');
+    row.className = 'action-add';
+    
+    const aaPhoneDisplay = op.aaPhoneNumber ? formatPhoneNumber(op.aaPhoneNumber) : 'No phone';
+    
+    row.innerHTML = `
+      <td style="font-weight:bold">${op.baseName}</td>
+      <td>
+        ${op.aaDisplayName}<br>
+        UPN: ${op.aaResourceAccountUPN}<br>
+        Phone: ${aaPhoneDisplay}
+      </td>
+      <td>
+        ${op.cqDisplayName}<br>
+        UPN: ${op.cqResourceAccountUPN}<br>
+        Agent Group: ${op.cqAgentGroup}
+      </td>
+      <td><button class="remove-batch-item" onclick="removePairBatchOperation(${op.id})">Remove</button></td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+// Remove CQ from Batch
+function removeCQBatchOperation(id) {
+  batchCQOperations = batchCQOperations.filter(op => op.id !== id);
+  updateCQBatchTable();
+}
+
+// Remove AA from Batch
+function removeAABatchOperation(id) {
+  batchAAOperations = batchAAOperations.filter(op => op.id !== id);
+  updateAABatchTable();
+}
+
+// Remove Pair from Batch
+function removePairBatchOperation(id) {
+  batchPairOperations = batchPairOperations.filter(op => op.id !== id);
+  updatePairBatchTable();
+}
+
+// Clear All CQ Batch
+function clearAllCQBatch() {
+  batchCQOperations = [];
+  updateCQBatchTable();
+  
+  const btn = document.getElementById('clearAllCQBatch');
+  const originalText = btn.textContent;
+  btn.textContent = '✅ Cleared!';
+  btn.style.background = '#28a745';
+  
+  setTimeout(() => {
+    btn.textContent = originalText;
+    btn.style.background = '#6c757d';
+  }, 2000);
+}
+
+// Clear All AA Batch
+function clearAllAABatch() {
+  batchAAOperations = [];
+  updateAABatchTable();
+  
+  const btn = document.getElementById('clearAllAABatch');
+  const originalText = btn.textContent;
+  btn.textContent = '✅ Cleared!';
+  btn.style.background = '#28a745';
+  
+  setTimeout(() => {
+    btn.textContent = originalText;
+    btn.style.background = '#6c757d';
+  }, 2000);
+}
+
+// Clear All Pair Batch
+function clearAllPairBatch() {
+  batchPairOperations = [];
+  updatePairBatchTable();
+  
+  const btn = document.getElementById('clearAllPairBatch');
+  const originalText = btn.textContent;
+  btn.textContent = '✅ Cleared!';
+  btn.style.background = '#28a745';
+  
+  setTimeout(() => {
+    btn.textContent = originalText;
+    btn.style.background = '#6c757d';
+  }, 2000);
+}
+// Submit All CQ Operations (Placeholder - needs Azure integration)
+async function submitAllCQOperations() {
+  if (!batchCQOperations.length) return;
+  
+  const submitBtn = document.getElementById('submitAllCQBatch');
+  const originalText = submitBtn.textContent;
+  submitBtn.disabled = true;
+  submitBtn.textContent = '⚠️ CQ API Not Yet Implemented';
+  
+  // TODO: Implement actual API calls to provision Call Queues
+  console.log('CQ Operations to submit:', batchCQOperations);
+  
+  setTimeout(() => {
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
+    showMessage('batchCQResults', 
+      '<div class="error">Call Queue provisioning API not yet implemented</div>');
+  }, 2000);
+}
+
+// Submit All AA Operations (Placeholder - needs Azure integration)
+async function submitAllAAOperations() {
+  if (!batchAAOperations.length) return;
+  
+  const submitBtn = document.getElementById('submitAllAABatch');
+  const originalText = submitBtn.textContent;
+  submitBtn.disabled = true;
+  submitBtn.textContent = '⚠️ AA API Not Yet Implemented';
+  
+  // TODO: Implement actual API calls to provision Auto Attendants
+  console.log('AA Operations to submit:', batchAAOperations);
+  
+  setTimeout(() => {
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
+    showMessage('batchAAResults', 
+      '<div class="error">Auto Attendant provisioning API not yet implemented</div>');
+  }, 2000);
+}
+
+// Submit All Pair Operations (Placeholder - needs Azure integration)
+async function submitAllPairOperations() {
+  if (!batchPairOperations.length) return;
+  
+  const submitBtn = document.getElementById('submitAllPairBatch');
+  const originalText = submitBtn.textContent;
+  submitBtn.disabled = true;
+  submitBtn.textContent = '⚠️ Pair API Not Yet Implemented';
+  
+  // TODO: Implement actual API calls to provision AA/CQ Pairs
+  console.log('Pair Operations to submit:', batchPairOperations);
+  
+  setTimeout(() => {
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
+    showMessage('batchPairResults', 
+      '<div class="error">AA/CQ Pair provisioning API not yet implemented</div>');
+  }, 2000);
+}
     function showMessage(id,msg,type){
       let c=document.getElementById(id);
       c.innerHTML=type?`<div class="${type}">${msg}</div>`:msg;
