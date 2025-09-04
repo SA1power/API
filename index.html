@@ -677,30 +677,174 @@
       </div>
     </div>
 
-    <!-- CALL QUEUES TAB (unchanged) -->
-    <div id="call-queues" class="tab-content">
-      <div class="main-layout">
-        <div class="left-panel">
-          <div class="columns">
-            <div class="column" style="min-width:100%;">
-              <div class="column-header">Call Queue Management</div>
-              <div style="text-align:center; padding:40px; color:#666;">
-                <h3>🚧 Coming Soon</h3>
-                <p>Call Queue provisioning functionality will be available in a future release.</p>
-              </div>
+    <!-- CALL QUEUES TAB - Replace the existing placeholder with this -->
+<div id="call-queues" class="tab-content">
+  <div class="main-layout">
+    <!-- LEFT PANEL - Forms -->
+    <div class="left-panel">
+      <div class="columns">
+
+        <!-- ADD CALL QUEUE -->
+        <div class="column">
+          <div class="column-header">Add a Call Queue</div>
+          <div id="addCQMessages"></div>
+
+          <div class="form-group">
+            <label for="addCQName">Call Queue Name:</label>
+            <input type="text" id="addCQName" class="form-control" 
+                   placeholder="Enter call queue name (e.g., Helpdesk)"/>
+            <div class="help-text">Will create queue: [Name]_CQ</div>
+          </div>
+
+          <div class="form-group">
+            <label for="addCQPhoneNumber">Pick an available phone number:</label>
+            <select id="addCQPhoneNumber" class="form-control">
+              <option value="">Loading numbers…</option>
+            </select>
+            <div class="help-text">Or use a reserved number from dropdown below</div>
+            <select id="addCQReservedNumber" class="form-control" style="margin-top:5px">
+              <option value="">-- Select a reserved number (optional) --</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Settings Preview:</label>
+            <div class="user-info">
+              <div class="current-setting"><strong>Distribution:</strong> Attendant Routing</div>
+              <div class="current-setting"><strong>Conference Mode:</strong> Yes</div>
+              <div class="current-setting"><strong>Agent Group:</strong> <span id="cqAgentGroupPreview">qg[name]@msoe.edu</span></div>
+              <div class="current-setting"><strong>Overflow:</strong> Shared Voicemail</div>
             </div>
           </div>
-        </div>
-        <div class="right-panel">
-          <div class="batch-panel">
-            <div class="batch-header">Call Queue Operations</div>
-            <div class="batch-empty">
-              Call Queue operations will appear here when the feature is implemented.
-            </div>
+
+          <div style="display:flex; gap:10px; margin-top:auto;">
+            <button id="addCQSubmit" class="btn btn-primary submit-button" disabled style="flex:1;">
+              Add to Batch Queue
+            </button>
+            <button id="clearAddCQForm" class="btn btn-secondary" style="flex:0 0 auto;">
+              Clear Form
+            </button>
           </div>
         </div>
+
+        <!-- MODIFY CALL QUEUE -->
+        <div class="column">
+          <div class="column-header">Modify a Call Queue</div>
+          <div id="modifyCQMessages"></div>
+
+          <div class="form-group">
+            <label for="modifyCQName">Select Call Queue:</label>
+            <select id="modifyCQName" class="form-control">
+              <option value="">Loading call queues…</option>
+            </select>
+            <button id="modifyCQLookupBtn" class="btn btn-secondary"
+                    style="margin-top:10px">Lookup Call Queue</button>
+          </div>
+
+          <div id="currentCQInfo" class="user-info" style="display:none">
+            <h4>Current Call Queue Settings:</h4>
+            <div id="currentCQSettings"></div>
+          </div>
+
+          <div id="modifyCQPhoneGroup" class="form-group" style="display:none">
+            <label>Change Phone Number:</label>
+            <select id="modifyCQPhoneNumber" class="form-control">
+              <option value="">Select new phone number…</option>
+            </select>
+            <div class="help-text">Or use a reserved number from dropdown below</div>
+            <select id="modifyCQReservedNumber" class="form-control" style="margin-top:5px">
+              <option value="">-- Select a reserved number (optional) --</option>
+            </select>
+          </div>
+
+          <div id="modifyCQButtonGroup" style="display:flex; gap:10px; margin-top:auto;">
+            <button id="modifyCQSubmit" class="btn btn-primary submit-button"
+                    style="display:none; flex:1;">Add Modification to Batch</button>
+            <button id="clearModifyCQForm" class="btn btn-secondary" style="flex:0 0 auto;">
+              Clear Form
+            </button>
+          </div>
+        </div>
+
+        <!-- DEPROVISION CALL QUEUE -->
+        <div class="column">
+          <div class="column-header">Deprovision a Call Queue</div>
+          <div id="deprovisionCQMessages"></div>
+
+          <div class="form-group">
+            <label for="deprovisionCQName">Select Call Queue:</label>
+            <select id="deprovisionCQName" class="form-control">
+              <option value="">Loading call queues…</option>
+            </select>
+            <button id="deprovCQLookupBtn" class="btn btn-secondary"
+                    style="margin-top:10px">Lookup Call Queue</button>
+          </div>
+
+          <div id="deprovisionCQInfo" class="user-info" style="display:none">
+            <h4>Call Queue to be Deprovisioned:</h4>
+            <div id="deprovisionCQSettings"></div>
+          </div>
+
+          <div id="deprovisionCQButtonGroup" style="display:flex; gap:10px; margin-top:auto;">
+            <button id="deprovisionCQSubmit" class="btn btn-danger submit-button"
+                    style="display:none; flex:1;">Add Deprovision to Batch</button>
+            <button id="clearDeprovisionCQForm" class="btn btn-secondary" style="flex:0 0 auto;">
+              Clear Form
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
+
+    <!-- RIGHT PANEL - Batch Operations -->
+    <div class="right-panel">
+      <div class="batch-panel">
+        <div class="batch-header">Batch Operations Queue - Call Queues</div>
+        
+        <div class="batch-summary">
+          <strong>Summary:</strong>
+          <div>Adds: <span id="batchCQAddCount">0</span></div>
+          <div>Modifications: <span id="batchCQModifyCount">0</span></div>
+          <div>Deprovisions: <span id="batchCQDeprovisionCount">0</span></div>
+          <div><strong>Total: <span id="batchCQTotalCount">0</span></strong></div>
+        </div>
+
+        <div id="batchCQTableContainer">
+          <div id="batchCQEmptyMessage" class="batch-empty">
+            No operations queued. Use the forms on the left to add operations to the batch.
+          </div>
+          <table id="batchCQTable" class="batch-table" style="display:none">
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>Call Queue</th>
+                <th>Details</th>
+                <th>Remove</th>
+              </tr>
+            </thead>
+            <tbody id="batchCQTableBody">
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:15px;">
+          <button id="submitAllCQBatch" class="btn btn-success" style="width:100%; display:none">
+            Submit All Operations
+          </button>
+          <button id="clearAllCQBatch" class="btn btn-secondary" style="width:100%; margin-top:10px; display:none">
+            Clear All
+          </button>
+          <button id="resetCQPageBtn" class="btn btn-primary" style="width:100%; margin-top:10px; display:none">
+            🔄 Reset Page
+          </button>
+        </div>
+
+        <div id="batchCQResults" style="margin-top:15px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
     <!-- AUTO ATTENDANTS TAB (unchanged) -->
     <div id="auto-attendants" class="tab-content">
@@ -748,6 +892,8 @@ const AZURE_CONFIG = {
     let reservedNumbers = [];
     let batchOperations = [];
     let batchDeviceOperations = [];
+    let batchCQOperations = [];
+let currentCQ = null;
     let isTeamsEnvironment = false;
 
     // Tab Management
@@ -773,7 +919,11 @@ const AZURE_CONFIG = {
         loadPhoneNumbers();
         loadReservedNumbers();
       }
-    }
+      if (tabName === 'call-queues') {
+    loadCQPhoneNumbers();
+    populateCQDropdowns();
+  }
+}
 
     // Simple Teams detection
     function initializeTeams() {
@@ -898,7 +1048,31 @@ document.getElementById('clearAddDeviceForm').onclick = clearAddDeviceFormOnly;
       });
       document.getElementById('reserveDeviceSubmit').onclick = reserveDevicePhoneNumber;
     });
+// CALL QUEUES - ADD
+document.getElementById('addCQName').addEventListener('input', function() {
+  updateCQAgentGroupPreview();
+  validateAddCQForm();
+});
+document.getElementById('addCQPhoneNumber').addEventListener('change', validateAddCQForm);
+document.getElementById('addCQReservedNumber').addEventListener('change', handleCQReservedNumberSelection);
+document.getElementById('addCQSubmit').onclick = addCQToBatch;
+document.getElementById('clearAddCQForm').onclick = clearAddCQFormOnly;
 
+// CALL QUEUES - MODIFY
+document.getElementById('modifyCQLookupBtn').addEventListener('click', lookupCQ);
+document.getElementById('modifyCQReservedNumber').addEventListener('change', handleCQModifyReservedNumberSelection);
+document.getElementById('modifyCQSubmit').onclick = addModifyCQToBatch;
+document.getElementById('clearModifyCQForm').onclick = clearModifyCQFormOnly;
+
+// CALL QUEUES - DEPROVISION
+document.getElementById('deprovCQLookupBtn').addEventListener('click', lookupDeprovisionCQ);
+document.getElementById('deprovisionCQSubmit').onclick = addDeprovisionCQToBatch;
+document.getElementById('clearDeprovisionCQForm').onclick = clearDeprovisionCQFormOnly;
+
+// CALL QUEUES - BATCH OPERATIONS
+document.getElementById('submitAllCQBatch').onclick = submitAllCQOperations;
+document.getElementById('clearAllCQBatch').onclick = clearAllCQBatch;
+document.getElementById('resetCQPageBtn').onclick = resetCQPage;
     // Load reserved numbers
     async function loadReservedNumbers() {
       try {
@@ -2953,6 +3127,454 @@ setTimeout(() => {
   makeDropdownSearchable('reservePhoneNumber');
   makeDropdownSearchable('reserveDevicePhoneNumber');
 }, 2000);
+    // Call Queue specific functions
+function updateCQAgentGroupPreview() {
+  const name = document.getElementById('addCQName').value.trim();
+  const preview = document.getElementById('cqAgentGroupPreview');
+  if (name) {
+    preview.textContent = `qg${name.toLowerCase().replace(/\s+/g, '')}@msoe.edu`;
+  } else {
+    preview.textContent = 'qg[name]@msoe.edu';
+  }
+}
+
+function loadCQPhoneNumbers() {
+  // Populate phone dropdowns for Call Queues
+  const batchPhoneNumbers = [
+    ...batchOperations.filter(op => op.action === 'add').map(op => op.phoneNumber),
+    ...batchDeviceOperations.filter(op => op.action === 'add').map(op => op.phoneNumber),
+    ...batchCQOperations.filter(op => op.action === 'add').map(op => op.phoneNumber)
+  ];
+  
+  const p1 = document.getElementById('addCQPhoneNumber');
+  if (p1) {
+    p1.innerHTML = '<option value="">Select a phone number…</option>';
+    phoneNumbers
+      .filter(i => i.AvailablePhoneNumber.startsWith('1414277'))
+      .filter(i => !batchPhoneNumbers.includes(i.AvailablePhoneNumber))
+      .forEach(i => p1.appendChild(new Option(i.AvailablePhoneNumber, i.AvailablePhoneNumber)));
+  }
+  
+  const p2 = document.getElementById('modifyCQPhoneNumber');
+  if (p2) {
+    p2.innerHTML = '<option value="">Select a phone number…</option>';
+    phoneNumbers
+      .filter(i => i.AvailablePhoneNumber.startsWith('1414277'))
+      .forEach(i => p2.appendChild(new Option(i.AvailablePhoneNumber, i.AvailablePhoneNumber)));
+  }
+  
+  // Populate reserved numbers
+  const addReserved = document.getElementById('addCQReservedNumber');
+  if (addReserved) {
+    addReserved.innerHTML = '<option value="">-- Select a reserved number (optional) --</option>';
+    reservedNumbers.forEach(num => {
+      const option = new Option(
+        `${formatPhoneNumber(num.AvailablePhoneNumber)} - ${num.ReservedNotes || 'No notes'}`,
+        num.AvailablePhoneNumber
+      );
+      addReserved.appendChild(option);
+    });
+  }
+  
+  const modifyReserved = document.getElementById('modifyCQReservedNumber');
+  if (modifyReserved) {
+    modifyReserved.innerHTML = '<option value="">-- Select a reserved number (optional) --</option>';
+    reservedNumbers.forEach(num => {
+      const option = new Option(
+        `${formatPhoneNumber(num.AvailablePhoneNumber)} - ${num.ReservedNotes || 'No notes'}`,
+        num.AvailablePhoneNumber
+      );
+      modifyReserved.appendChild(option);
+    });
+  }
+}
+
+function populateCQDropdowns() {
+  // This would normally load from API, using mock data for now
+  const mockCallQueues = ['Helpdesk_CQ', 'Admissions_CQ', 'IT_Support_CQ'];
+  
+  const modifySelect = document.getElementById('modifyCQName');
+  if (modifySelect) {
+    modifySelect.innerHTML = '<option value="">Select call queue…</option>';
+    mockCallQueues.forEach(cq => modifySelect.appendChild(new Option(cq, cq)));
+  }
+  
+  const deprovisionSelect = document.getElementById('deprovisionCQName');
+  if (deprovisionSelect) {
+    deprovisionSelect.innerHTML = '<option value="">Select call queue…</option>';
+    mockCallQueues.forEach(cq => deprovisionSelect.appendChild(new Option(cq, cq)));
+  }
+}
+
+function validateAddCQForm() {
+  const name = document.getElementById('addCQName').value.trim();
+  const selectedPhone = document.getElementById('addCQPhoneNumber').value;
+  const selectedReserved = document.getElementById('addCQReservedNumber').value;
+  
+  const phoneToUse = selectedReserved || selectedPhone;
+  
+  // Check if CQ name already in batch
+  const nameInBatch = batchCQOperations.some(op => 
+    op.action === 'add' && op.cqName.toLowerCase() === name.toLowerCase()
+  );
+  
+  // Check if phone already in batch
+  const phoneInBatch = [...batchOperations, ...batchDeviceOperations, ...batchCQOperations].some(op => 
+    op.action === 'add' && op.phoneNumber === phoneToUse
+  );
+  
+  if (nameInBatch && name) {
+    showMessage('addCQMessages', 
+      '<div class="error">This call queue is already in the batch queue</div>');
+    document.getElementById('addCQName').value = '';
+  }
+  
+  if (phoneInBatch && phoneToUse) {
+    showMessage('addCQMessages', 
+      '<div class="error">This phone number is already in the batch queue</div>');
+    document.getElementById('addCQPhoneNumber').value = '';
+    document.getElementById('addCQReservedNumber').value = '';
+  }
+  
+  document.getElementById('addCQSubmit').disabled = !(name && phoneToUse);
+}
+
+function handleCQReservedNumberSelection() {
+  const reserved = document.getElementById('addCQReservedNumber').value;
+  const regular = document.getElementById('addCQPhoneNumber');
+  
+  if (reserved) {
+    regular.value = '';
+    regular.disabled = true;
+  } else {
+    regular.disabled = false;
+  }
+  
+  validateAddCQForm();
+}
+
+function handleCQModifyReservedNumberSelection() {
+  const reserved = document.getElementById('modifyCQReservedNumber').value;
+  const regular = document.getElementById('modifyCQPhoneNumber');
+  
+  if (reserved) {
+    regular.value = '';
+    regular.disabled = true;
+  } else {
+    regular.disabled = false;
+  }
+}
+
+function addCQToBatch() {
+  const name = document.getElementById('addCQName').value.trim();
+  const selectedReserved = document.getElementById('addCQReservedNumber').value;
+  const selectedPhone = document.getElementById('addCQPhoneNumber').value;
+  const phoneToUse = selectedReserved || selectedPhone;
+  
+  const operation = {
+    id: Date.now(),
+    action: 'add',
+    cqName: name + '_CQ',
+    phoneNumber: phoneToUse,
+    agentGroup: `qg${name.toLowerCase().replace(/\s+/g, '')}@msoe.edu`,
+    distributionMethod: 'AttendantRouting',
+    conferenceMode: true,
+    overflow: 'SharedVoicemail',
+    wasReserved: !!selectedReserved
+  };
+  
+  batchCQOperations.push(operation);
+  updateCQBatchTable();
+  clearAddCQFormOnly();
+  
+  // Refresh dropdowns
+  loadCQPhoneNumbers();
+  
+  showMessage('addCQMessages', 
+    `<div class="success">Call Queue ${operation.cqName} added to batch queue${operation.wasReserved ? ' (using reserved number)' : ''}</div>`);
+}
+
+function lookupCQ() {
+  const cqName = document.getElementById('modifyCQName').value.trim();
+  if (!cqName) return showMessage('modifyCQMessages', 'Please select a call queue', 'error');
+  
+  // Mock lookup - in production this would call your API
+  currentCQ = {
+    cqName: cqName,
+    phoneNumber: '14142771234',
+    agentGroup: `qg${cqName.toLowerCase().replace('_cq', '').replace(/\s+/g, '')}@msoe.edu`,
+    distributionMethod: 'AttendantRouting',
+    conferenceMode: true,
+    overflow: 'SharedVoicemail'
+  };
+  
+  displayCurrentCQSettings();
+  showModifyCQFields();
+}
+
+function displayCurrentCQSettings() {
+  const s = document.getElementById('currentCQSettings');
+  s.innerHTML = `
+    <div class="current-setting"><strong>Name:</strong> ${currentCQ.cqName}</div>
+    <div class="current-setting"><strong>Phone Number:</strong> ${formatPhoneNumber(currentCQ.phoneNumber)}</div>
+    <div class="current-setting"><strong>Agent Group:</strong> ${currentCQ.agentGroup}</div>
+    <div class="current-setting"><strong>Distribution:</strong> ${currentCQ.distributionMethod}</div>
+    <div class="current-setting"><strong>Conference Mode:</strong> ${currentCQ.conferenceMode ? 'Yes' : 'No'}</div>`;
+  document.getElementById('currentCQInfo').style.display = 'block';
+}
+
+function showModifyCQFields() {
+  document.getElementById('modifyCQPhoneGroup').style.display = 'block';
+  document.getElementById('modifyCQSubmit').style.display = 'block';
+}
+
+function addModifyCQToBatch() {
+  const cqName = document.getElementById('modifyCQName').value.trim();
+  const selectedReserved = document.getElementById('modifyCQReservedNumber').value;
+  const selectedPhone = document.getElementById('modifyCQPhoneNumber').value;
+  const phoneToUse = selectedReserved || selectedPhone || currentCQ.phoneNumber;
+  
+  const operation = {
+    id: Date.now(),
+    action: 'modify',
+    cqName: cqName,
+    phoneNumber: phoneToUse,
+    originalCQ: {...currentCQ},
+    wasReserved: !!selectedReserved
+  };
+  
+  batchCQOperations.push(operation);
+  updateCQBatchTable();
+  clearModifyCQFormOnly();
+  showMessage('modifyCQMessages', 
+    `<div class="success">Modification for ${cqName} added to batch queue${operation.wasReserved ? ' (using reserved number)' : ''}</div>`);
+}
+
+function lookupDeprovisionCQ() {
+  const cqName = document.getElementById('deprovisionCQName').value.trim();
+  if (!cqName) return showMessage('deprovisionCQMessages', 'Please select a call queue', 'error');
+  
+  // Mock lookup
+  const cq = {
+    cqName: cqName,
+    phoneNumber: '14142771234',
+    agentGroup: `qg${cqName.toLowerCase().replace('_cq', '').replace(/\s+/g, '')}@msoe.edu`
+  };
+  
+  displayDeprovisionCQSettings(cq);
+}
+
+function displayDeprovisionCQSettings(cq) {
+  const d = document.getElementById('deprovisionCQSettings');
+  d.innerHTML = `
+    <div class="current-setting"><strong>Name:</strong> ${cq.cqName}</div>
+    <div class="current-setting"><strong>Phone:</strong> ${formatPhoneNumber(cq.phoneNumber)}</div>
+    <div class="current-setting"><strong>Agent Group:</strong> ${cq.agentGroup}</div>`;
+  document.getElementById('deprovisionCQInfo').style.display = 'block';
+  document.getElementById('deprovisionCQSubmit').style.display = 'block';
+}
+
+function addDeprovisionCQToBatch() {
+  const cqName = document.getElementById('deprovisionCQName').value.trim();
+  const operation = {
+    id: Date.now(),
+    action: 'deprovision',
+    cqName: cqName
+  };
+  
+  batchCQOperations.push(operation);
+  updateCQBatchTable();
+  clearDeprovisionCQFormOnly();
+  showMessage('deprovisionCQMessages', 
+    `<div class="success">Deprovision for ${cqName} added to batch queue</div>`);
+}
+
+function updateCQBatchTable() {
+  const addCount = batchCQOperations.filter(op => op.action === 'add').length;
+  const modifyCount = batchCQOperations.filter(op => op.action === 'modify').length;
+  const deprovisionCount = batchCQOperations.filter(op => op.action === 'deprovision').length;
+  const totalCount = batchCQOperations.length;
+  
+  document.getElementById('batchCQAddCount').textContent = addCount;
+  document.getElementById('batchCQModifyCount').textContent = modifyCount;
+  document.getElementById('batchCQDeprovisionCount').textContent = deprovisionCount;
+  document.getElementById('batchCQTotalCount').textContent = totalCount;
+  
+  const emptyMsg = document.getElementById('batchCQEmptyMessage');
+  const table = document.getElementById('batchCQTable');
+  const submitBtn = document.getElementById('submitAllCQBatch');
+  const clearBtn = document.getElementById('clearAllCQBatch');
+  
+  if (totalCount === 0) {
+    emptyMsg.style.display = 'block';
+    table.style.display = 'none';
+    submitBtn.style.display = 'none';
+    clearBtn.style.display = 'none';
+  } else {
+    emptyMsg.style.display = 'none';
+    table.style.display = 'table';
+    submitBtn.style.display = 'block';
+    clearBtn.style.display = 'block';
+    populateCQBatchTableRows();
+  }
+}
+
+function populateCQBatchTableRows() {
+  const tbody = document.getElementById('batchCQTableBody');
+  tbody.innerHTML = '';
+  
+  batchCQOperations.forEach(op => {
+    const row = document.createElement('tr');
+    row.className = `action-${op.action}`;
+    
+    let details = '';
+    switch(op.action) {
+      case 'add':
+        details = `Phone: ${formatPhoneNumber(op.phoneNumber)}<br>Agent Group: ${op.agentGroup}`;
+        break;
+      case 'modify':
+        details = `Phone: ${formatPhoneNumber(op.phoneNumber)}`;
+        break;
+      case 'deprovision':
+        details = 'Remove call queue';
+        break;
+    }
+    
+    row.innerHTML = `
+      <td style="text-transform:capitalize; font-weight:bold">${op.action}</td>
+      <td>${op.cqName}</td>
+      <td>${details}</td>
+      <td><button class="remove-batch-item" onclick="removeCQBatchOperation(${op.id})">Remove</button></td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+function removeCQBatchOperation(id) {
+  batchCQOperations = batchCQOperations.filter(op => op.id !== id);
+  updateCQBatchTable();
+  loadCQPhoneNumbers();
+}
+
+function clearAllCQBatch() {
+  batchCQOperations = [];
+  updateCQBatchTable();
+  document.getElementById('batchCQResults').innerHTML = '';
+  document.getElementById('resetCQPageBtn').style.display = 'none';
+  loadCQPhoneNumbers();
+  
+  const btn = document.getElementById('clearAllCQBatch');
+  const originalText = btn.textContent;
+  btn.textContent = '✅ Cleared!';
+  btn.style.background = '#28a745';
+  
+  setTimeout(() => {
+    btn.textContent = originalText;
+    btn.style.background = '#6c757d';
+  }, 2000);
+}
+
+function clearAddCQFormOnly() {
+  document.getElementById('addCQName').value = '';
+  document.getElementById('addCQPhoneNumber').value = '';
+  document.getElementById('addCQReservedNumber').value = '';
+  document.getElementById('cqAgentGroupPreview').textContent = 'qg[name]@msoe.edu';
+  document.getElementById('addCQMessages').innerHTML = '';
+  validateAddCQForm();
+}
+
+function clearModifyCQFormOnly() {
+  document.getElementById('modifyCQName').value = '';
+  document.getElementById('modifyCQPhoneGroup').style.display = 'none';
+  document.getElementById('currentCQInfo').style.display = 'none';
+  document.getElementById('modifyCQSubmit').style.display = 'none';
+  currentCQ = null;
+  document.getElementById('modifyCQMessages').innerHTML = '';
+}
+
+function clearDeprovisionCQFormOnly() {
+  document.getElementById('deprovisionCQName').value = '';
+  document.getElementById('deprovisionCQInfo').style.display = 'none';
+  document.getElementById('deprovisionCQSubmit').style.display = 'none';
+  document.getElementById('deprovisionCQMessages').innerHTML = '';
+}
+
+function resetCQPage() {
+  batchCQOperations = [];
+  updateCQBatchTable();
+  document.getElementById('batchCQResults').innerHTML = '';
+  document.getElementById('resetCQPageBtn').style.display = 'none';
+  
+  clearAddCQFormOnly();
+  clearModifyCQFormOnly();
+  clearDeprovisionCQFormOnly();
+  
+  currentCQ = null;
+  
+  setTimeout(() => {
+    loadCQPhoneNumbers();
+    populateCQDropdowns();
+  }, 100);
+  
+  const btn = document.getElementById('resetCQPageBtn');
+  const originalText = btn.textContent;
+  btn.textContent = '✅ Page Reset!';
+  btn.style.background = '#28a745';
+  setTimeout(() => {
+    btn.textContent = originalText;
+    btn.style.background = '#007bff';
+    btn.style.display = 'none';
+  }, 2000);
+}
+
+async function submitAllCQOperations() {
+  if (!batchCQOperations.length) return;
+  
+  const submitBtn = document.getElementById('submitAllCQBatch');
+  const originalText = submitBtn.textContent;
+  submitBtn.disabled = true;
+  
+  // For now, just simulate success since API isn't ready
+  submitBtn.textContent = '✅ Operations Submitted!';
+  
+  setTimeout(() => {
+    displayCQBatchResults([{
+      operation: { action: 'batch', cqName: 'system' },
+      success: true,
+      message: 'Call Queue operations submitted successfully (mock mode)'
+    }], 1, 0);
+    
+    batchCQOperations = [];
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
+    updateCQBatchTable();
+    loadCQPhoneNumbers();
+  }, 1000);
+}
+
+function displayCQBatchResults(results, successCount, errorCount) {
+  const resultsDiv = document.getElementById('batchCQResults');
+  
+  let html = `<div class="batch-summary">
+    <strong>Batch Results:</strong><br>
+    Successful: ${successCount}<br>
+    Failed: ${errorCount}<br>
+    Total: ${results.length}
+  </div>`;
+  
+  results.forEach(result => {
+    const className = result.success ? 'success' : 'error';
+    html += `<div class="${className}" style="margin-bottom:5px; padding:5px; font-size:12px;">
+      <strong>${result.operation.action.toUpperCase()}</strong> ${result.operation.cqName}: ${result.message}
+    </div>`;
+  });
+  
+  resultsDiv.innerHTML = html;
+  
+  if (errorCount > 0 && successCount === 0) {
+    document.getElementById('resetCQPageBtn').style.display = 'block';
+  }
+}
   </script>
 
 </body>
