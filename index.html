@@ -157,6 +157,7 @@
 <button class="tab-button" onclick="showTab('shared-devices', event)">Teams Shared Devices</button>
 <button class="tab-button" onclick="showTab('call-queues', event)">Call Queues</button>
 <button class="tab-button" onclick="showTab('auto-attendants', event)">Auto Attendants</button>
+<button class="tab-button" onclick="showTab('aa-cq-pairs', event)">AA/CQ Pairs</button>
     </div>
 
     <!-- TEAMS PHONE USERS TAB -->
@@ -679,55 +680,438 @@
 
     <!-- CALL QUEUES TAB (unchanged) -->
     <div id="call-queues" class="tab-content">
-      <div class="main-layout">
-        <div class="left-panel">
-          <div class="columns">
-            <div class="column" style="min-width:100%;">
-              <div class="column-header">Call Queue Management</div>
-              <div style="text-align:center; padding:40px; color:#666;">
-                <h3>🚧 Coming Soon</h3>
-                <p>Call Queue provisioning functionality will be available in a future release.</p>
-              </div>
+  <div class="main-layout">
+    <div class="left-panel">
+      <div class="columns">
+        
+        <!-- ADD CALL QUEUE -->
+        <div class="column">
+          <div class="column-header">Add a Call Queue</div>
+          <div id="addCQMessages"></div>
+          
+          <div class="form-group">
+            <label for="addCQName">Call Queue Name:</label>
+            <input type="text" id="addCQName" class="form-control" 
+                   placeholder="Enter base name (e.g., Helpdesk)"/>
+            <div class="help-text">Will create: [Name]_CQ</div>
+          </div>
+          
+          <div class="form-group">
+            <label for="addCQPhoneNumber">Assign Phone Number:</label>
+            <select id="addCQPhoneNumber" class="form-control">
+              <option value="">Select a phone number (optional)...</option>
+            </select>
+            <div class="help-text">Or use a reserved number</div>
+            <select id="addCQReservedNumber" class="form-control" style="margin-top:5px">
+              <option value="">-- Select a reserved number (optional) --</option>
+            </select>
+          </div>
+          
+          <div class="form-group" style="background:#f0f0f0; padding:10px; border-radius:4px;">
+            <h5 style="margin-bottom:10px;">Preview:</h5>
+            <div id="cqPreview" style="font-size:12px; line-height:1.5;">
+              <div><strong>CQ Name:</strong> <span id="previewCQName">-</span></div>
+              <div><strong>Resource Account:</strong> <span id="previewCQUPN">-</span></div>
+              <div><strong>Agent Group:</strong> <span id="previewCQAgentGroup">-</span></div>
+              <div><strong>Phone:</strong> <span id="previewCQPhone">-</span></div>
             </div>
           </div>
+          
+          <button id="addCQSubmit" class="btn btn-primary submit-button" disabled style="width:100%;">
+            Add to Batch Queue
+          </button>
         </div>
-        <div class="right-panel">
-          <div class="batch-panel">
-            <div class="batch-header">Call Queue Operations</div>
-            <div class="batch-empty">
-              Call Queue operations will appear here when the feature is implemented.
-            </div>
+        
+        <!-- MODIFY CALL QUEUE -->
+        <div class="column">
+          <div class="column-header">Modify a Call Queue</div>
+          <div id="modifyCQMessages"></div>
+          
+          <div class="form-group">
+            <label for="modifyCQSelect">Select Call Queue:</label>
+            <select id="modifyCQSelect" class="form-control">
+              <option value="">Loading call queues...</option>
+            </select>
+            <button id="modifyCQLookupBtn" class="btn btn-secondary" style="margin-top:10px">
+              Lookup Call Queue
+            </button>
           </div>
+          
+          <div id="currentCQInfo" class="user-info" style="display:none">
+            <h4>Current Call Queue Settings:</h4>
+            <div id="currentCQSettings"></div>
+          </div>
+          
+          <div id="modifyCQPhoneGroup" class="form-group" style="display:none">
+            <label>Change Phone Number:</label>
+            <select id="modifyCQPhoneNumber" class="form-control">
+              <option value="">Select new phone number...</option>
+            </select>
+            <select id="modifyCQReservedNumber" class="form-control" style="margin-top:5px">
+              <option value="">-- Select a reserved number (optional) --</option>
+            </select>
+          </div>
+          
+          <button id="modifyCQSubmit" class="btn btn-primary submit-button" 
+                  style="display:none; width:100%;">
+            Add Modification to Batch
+          </button>
         </div>
+        
+        <!-- DEPROVISION CALL QUEUE -->
+        <div class="column">
+          <div class="column-header">Deprovision a Call Queue</div>
+          <div id="deprovisionCQMessages"></div>
+          
+          <div class="form-group">
+            <label for="deprovisionCQSelect">Select Call Queue:</label>
+            <select id="deprovisionCQSelect" class="form-control">
+              <option value="">Loading call queues...</option>
+            </select>
+            <button id="deprovCQLookupBtn" class="btn btn-secondary" style="margin-top:10px">
+              Lookup Call Queue
+            </button>
+          </div>
+          
+          <div id="deprovisionCQInfo" class="user-info" style="display:none">
+            <h4>Call Queue to be Deprovisioned:</h4>
+            <div id="deprovisionCQSettings"></div>
+          </div>
+          
+          <button id="deprovisionCQSubmit" class="btn btn-danger submit-button" 
+                  style="display:none; width:100%;">
+            Add Deprovision to Batch
+          </button>
+        </div>
+        
       </div>
     </div>
+    
+    <!-- RIGHT PANEL - Batch Operations -->
+    <div class="right-panel">
+      <div class="batch-panel">
+        <div class="batch-header">Batch Operations Queue - Call Queues</div>
+        
+        <div class="batch-summary">
+          <strong>Summary:</strong>
+          <div>Adds: <span id="batchCQAddCount">0</span></div>
+          <div>Modifications: <span id="batchCQModifyCount">0</span></div>
+          <div>Deprovisions: <span id="batchCQDeprovisionCount">0</span></div>
+          <div><strong>Total: <span id="batchCQTotalCount">0</span></strong></div>
+        </div>
+        
+        <div id="batchCQTableContainer">
+          <div id="batchCQEmptyMessage" class="batch-empty">
+            No operations queued. Use the forms on the left to add operations to the batch.
+          </div>
+          <table id="batchCQTable" class="batch-table" style="display:none">
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>Call Queue</th>
+                <th>Details</th>
+                <th>Remove</th>
+              </tr>
+            </thead>
+            <tbody id="batchCQTableBody">
+            </tbody>
+          </table>
+        </div>
+        
+        <div style="margin-top:15px;">
+          <button id="submitAllCQBatch" class="btn btn-success" style="width:100%; display:none">
+            Submit All Operations
+          </button>
+          <button id="clearAllCQBatch" class="btn btn-secondary" style="width:100%; margin-top:10px; display:none">
+            Clear All
+          </button>
+        </div>
+        
+        <div id="batchCQResults" style="margin-top:15px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
     <!-- AUTO ATTENDANTS TAB (unchanged) -->
     <div id="auto-attendants" class="tab-content">
+  <div class="main-layout">
+    <div class="left-panel">
+      <div class="columns">
+        
+        <!-- ADD AUTO ATTENDANT -->
+        <div class="column">
+          <div class="column-header">Add an Auto Attendant</div>
+          <div id="addAAMessages"></div>
+          
+          <div class="form-group">
+            <label for="addAAName">Auto Attendant Name:</label>
+            <input type="text" id="addAAName" class="form-control" 
+                   placeholder="Enter base name (e.g., MainMenu)"/>
+            <div class="help-text">Will create: [Name]_AA</div>
+          </div>
+          
+          <div class="form-group">
+            <label for="addAARedirect">Redirect to Call Queue (Optional):</label>
+            <select id="addAARedirect" class="form-control">
+              <option value="">None - No redirect</option>
+            </select>
+            <div class="help-text">Select a Call Queue to redirect calls to</div>
+          </div>
+          
+          <div class="form-group">
+            <label for="addAAPhoneNumber">Assign Phone Number:</label>
+            <select id="addAAPhoneNumber" class="form-control">
+              <option value="">Select a phone number (optional)...</option>
+            </select>
+            <div class="help-text">Or use a reserved number</div>
+            <select id="addAAReservedNumber" class="form-control" style="margin-top:5px">
+              <option value="">-- Select a reserved number (optional) --</option>
+            </select>
+          </div>
+          
+          <div class="form-group" style="background:#f0f0f0; padding:10px; border-radius:4px;">
+            <h5 style="margin-bottom:10px;">Preview:</h5>
+            <div id="aaPreview" style="font-size:12px; line-height:1.5;">
+              <div><strong>AA Name:</strong> <span id="previewAAName">-</span></div>
+              <div><strong>Resource Account:</strong> <span id="previewAAUPN">-</span></div>
+              <div><strong>Redirect To:</strong> <span id="previewAARedirect">None</span></div>
+              <div><strong>Phone:</strong> <span id="previewAAPhone">-</span></div>
+            </div>
+          </div>
+          
+          <button id="addAASubmit" class="btn btn-primary submit-button" disabled style="width:100%;">
+            Add to Batch Queue
+          </button>
+        </div>
+        
+        <!-- MODIFY AUTO ATTENDANT -->
+        <div class="column">
+          <div class="column-header">Modify an Auto Attendant</div>
+          <div id="modifyAAMessages"></div>
+          
+          <div class="form-group">
+            <label for="modifyAASelect">Select Auto Attendant:</label>
+            <select id="modifyAASelect" class="form-control">
+              <option value="">Loading auto attendants...</option>
+            </select>
+            <button id="modifyAALookupBtn" class="btn btn-secondary" style="margin-top:10px">
+              Lookup Auto Attendant
+            </button>
+          </div>
+          
+          <div id="currentAAInfo" class="user-info" style="display:none">
+            <h4>Current Auto Attendant Settings:</h4>
+            <div id="currentAASettings"></div>
+          </div>
+          
+          <div id="modifyAAPhoneGroup" class="form-group" style="display:none">
+            <label>Change Phone Number:</label>
+            <select id="modifyAAPhoneNumber" class="form-control">
+              <option value="">Select new phone number...</option>
+            </select>
+            <select id="modifyAAReservedNumber" class="form-control" style="margin-top:5px">
+              <option value="">-- Select a reserved number (optional) --</option>
+            </select>
+          </div>
+          
+          <button id="modifyAASubmit" class="btn btn-primary submit-button" 
+                  style="display:none; width:100%;">
+            Add Modification to Batch
+          </button>
+        </div>
+        
+        <!-- DEPROVISION AUTO ATTENDANT -->
+        <div class="column">
+          <div class="column-header">Deprovision an Auto Attendant</div>
+          <div id="deprovisionAAMessages"></div>
+          
+          <div class="form-group">
+            <label for="deprovisionAASelect">Select Auto Attendant:</label>
+            <select id="deprovisionAASelect" class="form-control">
+              <option value="">Loading auto attendants...</option>
+            </select>
+            <button id="deprovAALookupBtn" class="btn btn-secondary" style="margin-top:10px">
+              Lookup Auto Attendant
+            </button>
+          </div>
+          
+          <div id="deprovisionAAInfo" class="user-info" style="display:none">
+            <h4>Auto Attendant to be Deprovisioned:</h4>
+            <div id="deprovisionAASettings"></div>
+          </div>
+          
+          <button id="deprovisionAASubmit" class="btn btn-danger submit-button" 
+                  style="display:none; width:100%;">
+            Add Deprovision to Batch
+          </button>
+        </div>
+        
+      </div>
+    </div>
+    
+    <!-- RIGHT PANEL - Batch Operations -->
+    <div class="right-panel">
+      <div class="batch-panel">
+        <div class="batch-header">Batch Operations Queue - Auto Attendants</div>
+        
+        <div class="batch-summary">
+          <strong>Summary:</strong>
+          <div>Adds: <span id="batchAAAddCount">0</span></div>
+          <div>Modifications: <span id="batchAAModifyCount">0</span></div>
+          <div>Deprovisions: <span id="batchAADeprovisionCount">0</span></div>
+          <div><strong>Total: <span id="batchAATotalCount">0</span></strong></div>
+        </div>
+        
+        <div id="batchAATableContainer">
+          <div id="batchAAEmptyMessage" class="batch-empty">
+            No operations queued. Use the forms on the left to add operations to the batch.
+          </div>
+          <table id="batchAATable" class="batch-table" style="display:none">
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>Auto Attendant</th>
+                <th>Details</th>
+                <th>Remove</th>
+              </tr>
+            </thead>
+            <tbody id="batchAATableBody">
+            </tbody>
+          </table>
+        </div>
+        
+        <div style="margin-top:15px;">
+          <button id="submitAllAABatch" class="btn btn-success" style="width:100%; display:none">
+            Submit All Operations
+          </button>
+          <button id="clearAllAABatch" class="btn btn-secondary" style="width:100%; margin-top:10px; display:none">
+            Clear All
+          </button>
+        </div>
+        
+        <div id="batchAAResults" style="margin-top:15px;"></div>
+      </div>
+    </div>
+  </div>
+<!-- AA/CQ PAIRS TAB -->
+    <div id="aa-cq-pairs" class="tab-content">
       <div class="main-layout">
         <div class="left-panel">
           <div class="columns">
+            
+            <!-- ADD AA/CQ PAIR -->
             <div class="column" style="min-width:100%;">
-              <div class="column-header">Auto Attendant Management</div>
-              <div style="text-align:center; padding:40px; color:#666;">
-                <h3>🚧 Coming Soon</h3>
-                <p>Auto Attendant provisioning functionality will be available in a future release.</p>
+              <div class="column-header">Add an AA/CQ Pair</div>
+              <div id="addPairMessages"></div>
+              
+              <div class="form-group">
+                <label for="addPairName">Pair Base Name:</label>
+                <input type="text" id="addPairName" class="form-control" 
+                       placeholder="Enter base name (e.g., Support)"/>
+                <div class="help-text">Will create both [Name]_AA and [Name]_CQ linked together</div>
+              </div>
+              
+              <div class="form-group">
+                <label>Phone Number Assignment:</label>
+                <div class="radio-group">
+                  <label><input type="radio" name="pairPhoneAssign" value="aa" checked> Assign to AA only</label>
+                  <label><input type="radio" name="pairPhoneAssign" value="cq"> Assign to CQ only</label>
+                  <label><input type="radio" name="pairPhoneAssign" value="both"> Assign to both</label>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="addPairPhoneNumber">Select Phone Number:</label>
+                <select id="addPairPhoneNumber" class="form-control">
+                  <option value="">Select a phone number (optional)...</option>
+                </select>
+                <div class="help-text">Or use a reserved number</div>
+                <select id="addPairReservedNumber" class="form-control" style="margin-top:5px">
+                  <option value="">-- Select a reserved number (optional) --</option>
+                </select>
+              </div>
+              
+              <div style="display:flex; gap:20px;">
+                <!-- AA Preview -->
+                <div class="form-group" style="flex:1; background:#e6f3ff; padding:10px; border-radius:4px;">
+                  <h5 style="margin-bottom:10px; color:#0066cc;">Auto Attendant Preview:</h5>
+                  <div style="font-size:12px; line-height:1.5;">
+                    <div><strong>AA Name:</strong> <span id="previewPairAAName">-</span></div>
+                    <div><strong>Resource Account:</strong> <span id="previewPairAAUPN">-</span></div>
+                    <div><strong>Redirects to:</strong> <span id="previewPairAARedirect">-</span></div>
+                    <div><strong>Phone:</strong> <span id="previewPairAAPhone">-</span></div>
+                  </div>
+                </div>
+                
+                <!-- CQ Preview -->
+                <div class="form-group" style="flex:1; background:#ffe6e6; padding:10px; border-radius:4px;">
+                  <h5 style="margin-bottom:10px; color:#cc0000;">Call Queue Preview:</h5>
+                  <div style="font-size:12px; line-height:1.5;">
+                    <div><strong>CQ Name:</strong> <span id="previewPairCQName">-</span></div>
+                    <div><strong>Resource Account:</strong> <span id="previewPairCQUPN">-</span></div>
+                    <div><strong>Agent Group:</strong> <span id="previewPairCQAgentGroup">-</span></div>
+                    <div><strong>Phone:</strong> <span id="previewPairCQPhone">-</span></div>
+                  </div>
+                </div>
+              </div>
+              
+              <button id="addPairSubmit" class="btn btn-primary submit-button" disabled style="width:100%; margin-top:20px;">
+                Add Pair to Batch Queue
+              </button>
+              
+              <div class="help-text" style="margin-top:10px; padding:10px; background:#fff3cd; border:1px solid #ffc107; border-radius:4px;">
+                <strong>Note:</strong> To modify or deprovision individual components of a pair after creation, 
+                use the respective Call Queue or Auto Attendant tabs.
               </div>
             </div>
+            
           </div>
         </div>
+        
+        <!-- RIGHT PANEL - Batch Operations -->
         <div class="right-panel">
           <div class="batch-panel">
-            <div class="batch-header">Auto Attendant Operations</div>
-            <div class="batch-empty">
-              Auto Attendant operations will appear here when the feature is implemented.
+            <div class="batch-header">Batch Operations Queue - AA/CQ Pairs</div>
+            
+            <div class="batch-summary">
+              <strong>Summary:</strong>
+              <div>Pairs to Add: <span id="batchPairCount">0</span></div>
             </div>
+            
+            <div id="batchPairTableContainer">
+              <div id="batchPairEmptyMessage" class="batch-empty">
+                No pairs queued. Use the form on the left to add pairs to the batch.
+              </div>
+              <table id="batchPairTable" class="batch-table" style="display:none">
+                <thead>
+                  <tr>
+                    <th>Pair Name</th>
+                    <th>AA Details</th>
+                    <th>CQ Details</th>
+                    <th>Remove</th>
+                  </tr>
+                </thead>
+                <tbody id="batchPairTableBody">
+                </tbody>
+              </table>
+            </div>
+            
+            <div style="margin-top:15px;">
+              <button id="submitAllPairBatch" class="btn btn-success" style="width:100%; display:none">
+                Submit All Pairs
+              </button>
+              <button id="clearAllPairBatch" class="btn btn-secondary" style="width:100%; margin-top:10px; display:none">
+                Clear All
+              </button>
+            </div>
+            
+            <div id="batchPairResults" style="margin-top:15px;"></div>
           </div>
         </div>
       </div>
     </div>
-
-  </div>
+</div>
 
   <!-- Teams SDK -->
   <script src="https://statics.teams.microsoft.com/sdk/v1.11.0/js/MicrosoftTeams.min.js"></script>
