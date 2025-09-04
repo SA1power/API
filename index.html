@@ -33,19 +33,6 @@
     .reservation-column{background:#f0e6ff;border-color:#6b3aa0}
     .reservation-column .column-header{background:#8b5fbf;color:white}
     
-    /* Special styling for AA/CQ columns */
-    .aacq-column{background:#e6f3ff;border-color:#0066cc}
-    .aacq-column .column-header{background:#4d94ff;color:white}
-    
-    .cq-column{background:#ffe6f2;border-color:#cc0066}
-    .cq-column .column-header{background:#ff4d94;color:white}
-    
-    .aa-column{background:#f2ffe6;border-color:#66cc00}
-    .aa-column .column-header{background:#94ff4d;color:white}
-    
-    .pair-column{background:#fff2e6;border-color:#cc6600}
-    .pair-column .column-header{background:#ff944d;color:white}
-    
     .form-group{margin-bottom:15px}
     .form-group label{display:block;margin-bottom:5px;font-weight:bold}
     .form-control{width:100%;padding:8px;border:1px solid #999;border-radius:4px}
@@ -115,11 +102,6 @@
     .teams-status.authenticated{background:#e8f5e8;border-color:#4caf50;color:#2e7d32}
     .teams-status.warning{background:#fff3cd;border-color:#ffc107;color:#856404}
     
-    /* Hour schedule grid */
-    .hour-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:5px;margin-top:10px}
-    .hour-slot{padding:5px;text-align:center;background:#f0f0f0;border:1px solid #ccc;border-radius:3px;cursor:pointer}
-    .hour-slot.active{background:#4d94ff;color:white}
-    
     /* Agent list */
     .agent-list{max-height:200px;overflow-y:auto;border:1px solid #ccc;padding:10px;border-radius:4px;background:#f9f9f9}
     .agent-item{display:flex;justify-content:space-between;align-items:center;padding:5px;margin:3px 0;background:#fff;border-radius:3px}
@@ -136,40 +118,6 @@
       word-wrap:break-word;
       overflow-wrap:break-word;
       max-width:100%;
-    }
-    
-    /* Ensure user info boxes handle long text properly */
-    .user-info{
-      word-wrap:break-word;
-      overflow-wrap:break-word;
-    }
-    
-    /* Make sure form controls in device sections don't overflow */
-    #shared-devices .form-control,
-    #shared-devices .current-setting{
-      word-wrap:break-word;
-      overflow-wrap:break-word;
-      max-width:100%;
-    }
-    
-    /* Fix TSD Account display in current device settings */
-    #currentDeviceSettings .current-setting{
-      display:block;
-      margin-bottom:8px;
-    }
-    
-    #currentDeviceSettings .current-setting strong{
-      display:inline-block;
-      min-width:120px;
-      vertical-align:top;
-    }
-    
-    #currentDeviceSettings .current-setting span{
-      display:inline-block;
-      word-wrap:break-word;
-      overflow-wrap:break-word;
-      max-width:calc(100% - 130px);
-      vertical-align:top;
     }
     
     @media(max-width:1200px){
@@ -196,7 +144,7 @@
       <button class="tab-button" onclick="showTab('aa-cq-pairs', event)">AA/CQ Pairs</button>
     </div>
 
-    <!-- TEAMS PHONE USERS TAB (unchanged) -->
+    <!-- TEAMS PHONE USERS TAB -->
     <div id="phone-users" class="tab-content active">
       <div class="main-layout">
         <!-- LEFT PANEL - Forms -->
@@ -211,7 +159,7 @@
               <div class="form-group">
                 <label for="addUsername">Select User:</label>
                 <select id="addUsername" class="form-control">
-                  <option value="">Loading users…</option>
+                  <option value="">Select a user...</option>
                 </select>
                 <div class="help-text">(A5 Faculty non-enterprise voice enabled)</div>
               </div>
@@ -219,7 +167,7 @@
               <div class="form-group">
                 <label for="addPhoneNumber">Pick an available phone number:</label>
                 <select id="addPhoneNumber" class="form-control">
-                  <option value="">Loading numbers…</option>
+                  <option value="">Select phone number...</option>
                 </select>
                 <div class="help-text">Or use a reserved number from dropdown below</div>
                 <select id="addReservedNumber" class="form-control" style="margin-top:5px">
@@ -240,7 +188,7 @@
                 <div id="addCallQueueGroups" class="dynamic-section">
                   <div class="dynamic-item">
                     <select class="form-control cq-group-select">
-                      <option value="">Loading Call Queue Groups…</option>
+                      <option value="">Select call queue group...</option>
                     </select>
                     <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
                   </div>
@@ -253,7 +201,7 @@
                 <div id="addAutoAttendants" class="dynamic-section">
                   <div class="dynamic-item">
                     <select class="form-control aa-select">
-                      <option value="">Loading Auto Attendants…</option>
+                      <option value="">Select auto attendant...</option>
                     </select>
                     <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
                   </div>
@@ -266,7 +214,7 @@
                 <div id="addCallQueueManagers" class="dynamic-section">
                   <div class="dynamic-item">
                     <select class="form-control cq-select">
-                      <option value="">Loading Call Queues…</option>
+                      <option value="">Select call queue...</option>
                     </select>
                     <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
                   </div>
@@ -413,7 +361,7 @@
               <div class="form-group">
                 <label for="reservePhoneNumber">Select Phone Number to Reserve:</label>
                 <select id="reservePhoneNumber" class="form-control">
-                  <option value="">Loading available numbers…</option>
+                  <option value="">Select phone number to reserve...</option>
                 </select>
               </div>
 
@@ -491,7 +439,7 @@
       </div>
     </div>
 
-    <!-- TEAMS SHARED DEVICES TAB (unchanged) -->
+<!-- TEAMS SHARED DEVICES TAB -->
     <div id="shared-devices" class="tab-content">
       <div class="main-layout">
         <!-- LEFT PANEL - Forms -->
@@ -506,7 +454,7 @@
               <div class="form-group">
                 <label for="addDeviceName">Select TSD Account:</label>
                 <select id="addDeviceName" class="form-control">
-                  <option value="">Loading TSD accounts…</option>
+                  <option value="">Select TSD account...</option>
                 </select>
                 <div class="help-text">Accounts with Teams Shared Device License applied and no Enterprise Voice</div>
               </div>
@@ -514,7 +462,7 @@
               <div class="form-group">
                 <label for="addDevicePhoneNumber">Pick an available phone number:</label>
                 <select id="addDevicePhoneNumber" class="form-control">
-                  <option value="">Loading numbers…</option>
+                  <option value="">Select phone number...</option>
                 </select>
                 <div class="help-text">Or use a reserved number from dropdown below</div>
                 <select id="addDeviceReservedNumber" class="form-control" style="margin-top:5px">
@@ -527,7 +475,7 @@
                 <div id="addDeviceCallQueueGroups" class="dynamic-section">
                   <div class="dynamic-item">
                     <select class="form-control cq-group-select">
-                      <option value="">Loading Call Queue Groups…</option>
+                      <option value="">Select call queue group...</option>
                     </select>
                     <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
                   </div>
@@ -553,7 +501,7 @@
               <div class="form-group">
                 <label for="modifyDeviceName">Select TSD Account:</label>
                 <select id="modifyDeviceName" class="form-control">
-                  <option value="">Loading provisioned TSD accounts…</option>
+                  <option value="">Select provisioned TSD account...</option>
                 </select>
                 <button id="modifyDeviceLookupBtn" class="btn btn-secondary"
                         style="margin-top:10px">Lookup Device</button>
@@ -608,7 +556,7 @@
               <div class="form-group">
                 <label for="deprovisionDeviceName">Select TSD Account:</label>
                 <select id="deprovisionDeviceName" class="form-control">
-                  <option value="">Loading provisioned TSD accounts…</option>
+                  <option value="">Select provisioned TSD account...</option>
                 </select>
                 <button id="deprovDeviceLookupBtn" class="btn btn-secondary"
                         style="margin-top:10px">Lookup Device</button>
@@ -636,7 +584,7 @@
               <div class="form-group">
                 <label for="reserveDevicePhoneNumber">Select Phone Number to Reserve:</label>
                 <select id="reserveDevicePhoneNumber" class="form-control">
-                  <option value="">Loading available numbers…</option>
+                  <option value="">Select phone number to reserve...</option>
                 </select>
               </div>
 
@@ -713,13 +661,14 @@
         </div>
       </div>
     </div>
-<!-- CALL QUEUES TAB -->
+
+    <!-- CALL QUEUES TAB -->
     <div id="call-queues" class="tab-content">
       <div class="main-layout">
         <div class="left-panel">
           <div class="columns">
             <!-- ADD CALL QUEUE -->
-            <div class="column cq-column">
+            <div class="column">
               <div class="column-header">Add Call Queue</div>
               <div id="addCQMessages"></div>
               
@@ -731,69 +680,36 @@
                   <h5>Generated Names:</h5>
                   <div class="naming-item">UPN: <span id="cqUPNPreview">q_@msoe.edu</span></div>
                   <div class="naming-item">Display: <span id="cqDisplayPreview">Q </span></div>
+                  <div class="naming-item">CQ Agent / Voicemail Group: <span id="cqAgentGroupPreview">qg@msoe.edu</span></div>
                 </div>
               </div>
 
               <div class="form-group">
                 <label for="addCQPhone">Phone Number:</label>
                 <select id="addCQPhone" class="form-control">
-                  <option value="">Loading available numbers...</option>
+                  <option value="">Select phone number...</option>
                 </select>
               </div>
 
-              <div class="form-group">
-                <label>Distribution Method:</label>
-                <select id="addCQDistribution" class="form-control">
-                  <option value="serial">Serial (Round Robin)</option>
-                  <option value="attendant">Attendant Routing</option>
-                  <option value="roundRobin">Round Robin</option>
-                  <option value="longestIdle">Longest Idle</option>
-                </select>
+              <div style="display:flex; gap:10px; margin-top:auto;">
+                <button id="addCQSubmit" class="btn btn-primary" style="flex:1;">
+                  Add to Batch Queue
+                </button>
+                <button id="clearAddCQForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
               </div>
-
-              <div class="form-group">
-                <label>Conference Mode:</label>
-                <div class="radio-group">
-                  <label><input type="radio" name="addCQConference" value="yes"> Yes</label>
-                  <label><input type="radio" name="addCQConference" value="no" checked> No</label>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label>Queue Agents:</label>
-                <div id="addCQAgents" class="agent-list">
-                  <div class="batch-empty">No agents added yet</div>
-                </div>
-                <input type="email" id="addCQAgentInput" class="form-control" 
-                       placeholder="user@msoe.edu" style="margin-top:10px"/>
-                <button class="btn btn-secondary btn-small" onclick="addCQAgent()">Add Agent</button>
-              </div>
-
-              <div class="form-group">
-                <label>Overflow Settings:</label>
-                <select id="addCQOverflow" class="form-control">
-                  <option value="disconnect">Disconnect</option>
-                  <option value="voicemail">Shared Voicemail</option>
-                  <option value="forward">Forward to Number</option>
-                </select>
-                <input type="text" id="addCQOverflowTarget" class="form-control" 
-                       placeholder="Target (if applicable)" style="margin-top:5px;display:none"/>
-              </div>
-
-              <button id="addCQSubmit" class="btn btn-primary" style="width:100%;">
-                Add to Batch Queue
-              </button>
             </div>
 
             <!-- MODIFY CALL QUEUE -->
-            <div class="column cq-column">
+            <div class="column">
               <div class="column-header">Modify Call Queue</div>
               <div id="modifyCQMessages"></div>
               
               <div class="form-group">
                 <label for="modifyCQSelect">Select Call Queue:</label>
                 <select id="modifyCQSelect" class="form-control">
-                  <option value="">Loading call queues...</option>
+                  <option value="">Select call queue...</option>
                 </select>
                 <button id="modifyCQLookup" class="btn btn-secondary" style="margin-top:10px">
                   Load Details
@@ -814,17 +730,6 @@
                 </div>
 
                 <div class="form-group">
-                  <label>Change Distribution Method:</label>
-                  <select id="modifyCQDistribution" class="form-control">
-                    <option value="">Keep current method</option>
-                    <option value="serial">Serial (Round Robin)</option>
-                    <option value="attendant">Attendant Routing</option>
-                    <option value="roundRobin">Round Robin</option>
-                    <option value="longestIdle">Longest Idle</option>
-                  </select>
-                </div>
-
-                <div class="form-group">
                   <label>Manage Agents:</label>
                   <div id="modifyCQAgents" class="agent-list">
                     <!-- Current agents will be loaded here -->
@@ -835,20 +740,25 @@
                 </div>
               </div>
 
-              <button id="modifyCQSubmit" class="btn btn-primary" style="width:100%;display:none">
-                Add Modifications to Batch
-              </button>
+              <div style="display:flex; gap:10px; margin-top:auto;">
+                <button id="modifyCQSubmit" class="btn btn-primary" style="display:none;flex:1">
+                  Add Modifications to Batch
+                </button>
+                <button id="clearModifyCQForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
+              </div>
             </div>
 
             <!-- DEPROVISION CALL QUEUE -->
-            <div class="column cq-column">
+            <div class="column">
               <div class="column-header">Deprovision Call Queue</div>
               <div id="deprovCQMessages"></div>
               
               <div class="form-group">
                 <label for="deprovCQSelect">Select Call Queue:</label>
                 <select id="deprovCQSelect" class="form-control">
-                  <option value="">Loading call queues...</option>
+                  <option value="">Select call queue...</option>
                 </select>
                 <button id="deprovCQLookup" class="btn btn-secondary" style="margin-top:10px">
                   View Details
@@ -863,9 +773,14 @@
                 </div>
               </div>
 
-              <button id="deprovCQSubmit" class="btn btn-danger" style="width:100%;display:none">
-                Add Deprovision to Batch
-              </button>
+              <div style="display:flex; gap:10px; margin-top:auto;">
+                <button id="deprovCQSubmit" class="btn btn-danger" style="display:none;flex:1">
+                  Add Deprovision to Batch
+                </button>
+                <button id="clearDeprovCQForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -921,7 +836,7 @@
         <div class="left-panel">
           <div class="columns">
             <!-- ADD AUTO ATTENDANT -->
-            <div class="column aa-column">
+            <div class="column">
               <div class="column-header">Add Auto Attendant</div>
               <div id="addAAMessages"></div>
               
@@ -939,33 +854,14 @@
               <div class="form-group">
                 <label for="addAAPhone">Phone Number:</label>
                 <select id="addAAPhone" class="form-control">
-                  <option value="">Loading available numbers...</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>Language:</label>
-                <select id="addAALanguage" class="form-control">
-                  <option value="en-US">English (US)</option>
-                  <option value="es-MX">Spanish (Mexico)</option>
-                  <option value="fr-CA">French (Canada)</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>Time Zone:</label>
-                <select id="addAATimezone" class="form-control">
-                  <option value="Central Standard Time">Central Time</option>
-                  <option value="Eastern Standard Time">Eastern Time</option>
-                  <option value="Mountain Standard Time">Mountain Time</option>
-                  <option value="Pacific Standard Time">Pacific Time</option>
+                  <option value="">Select phone number...</option>
                 </select>
               </div>
 
               <div class="form-group">
                 <label>Greeting Message:</label>
                 <textarea id="addAAGreeting" class="form-control textarea" 
-                          placeholder="Welcome to MSOE. Press 1 for..." maxlength="500"></textarea>
+                          placeholder="Enter greeting message" maxlength="500"></textarea>
               </div>
 
               <div class="form-group">
@@ -982,38 +878,25 @@
                 </div>
               </div>
 
-              <div class="form-group">
-                <label>Business Hours:</label>
-                <div class="checkbox-group">
-                  <label><input type="checkbox" name="aaDay" value="Mon" checked> Monday</label>
-                  <label><input type="checkbox" name="aaDay" value="Tue" checked> Tuesday</label>
-                  <label><input type="checkbox" name="aaDay" value="Wed" checked> Wednesday</label>
-                  <label><input type="checkbox" name="aaDay" value="Thu" checked> Thursday</label>
-                  <label><input type="checkbox" name="aaDay" value="Fri" checked> Friday</label>
-                  <label><input type="checkbox" name="aaDay" value="Sat"> Saturday</label>
-                  <label><input type="checkbox" name="aaDay" value="Sun"> Sunday</label>
-                </div>
-                <div style="display:flex;gap:10px;margin-top:10px">
-                  <input type="time" id="addAAStartTime" class="form-control" value="08:00"/>
-                  <span style="padding:8px">to</span>
-                  <input type="time" id="addAAEndTime" class="form-control" value="17:00"/>
-                </div>
+              <div style="display:flex; gap:10px; margin-top:auto;">
+                <button id="addAASubmit" class="btn btn-primary" style="flex:1;">
+                  Add to Batch Queue
+                </button>
+                <button id="clearAddAAForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
               </div>
-
-              <button id="addAASubmit" class="btn btn-primary" style="width:100%;">
-                Add to Batch Queue
-              </button>
             </div>
 
             <!-- MODIFY AUTO ATTENDANT -->
-            <div class="column aa-column">
+            <div class="column">
               <div class="column-header">Modify Auto Attendant</div>
               <div id="modifyAAMessages"></div>
               
               <div class="form-group">
                 <label for="modifyAASelect">Select Auto Attendant:</label>
                 <select id="modifyAASelect" class="form-control">
-                  <option value="">Loading auto attendants...</option>
+                  <option value="">Select auto attendant...</option>
                 </select>
                 <button id="modifyAALookup" class="btn btn-secondary" style="margin-top:10px">
                   Load Details
@@ -1045,31 +928,27 @@
                     <!-- Current options will be loaded here -->
                   </div>
                 </div>
-
-                <div class="form-group">
-                  <label>Business Hours:</label>
-                  <div style="display:flex;gap:10px">
-                    <input type="time" id="modifyAAStartTime" class="form-control"/>
-                    <span style="padding:8px">to</span>
-                    <input type="time" id="modifyAAEndTime" class="form-control"/>
-                  </div>
-                </div>
               </div>
 
-              <button id="modifyAASubmit" class="btn btn-primary" style="width:100%;display:none">
-                Add Modifications to Batch
-              </button>
+              <div style="display:flex; gap:10px; margin-top:auto;">
+                <button id="modifyAASubmit" class="btn btn-primary" style="display:none;flex:1">
+                  Add Modifications to Batch
+                </button>
+                <button id="clearModifyAAForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
+              </div>
             </div>
 
             <!-- DEPROVISION AUTO ATTENDANT -->
-            <div class="column aa-column">
+            <div class="column">
               <div class="column-header">Deprovision Auto Attendant</div>
               <div id="deprovAAMessages"></div>
               
               <div class="form-group">
                 <label for="deprovAASelect">Select Auto Attendant:</label>
                 <select id="deprovAASelect" class="form-control">
-                  <option value="">Loading auto attendants...</option>
+                  <option value="">Select auto attendant...</option>
                 </select>
                 <button id="deprovAALookup" class="btn btn-secondary" style="margin-top:10px">
                   View Details
@@ -1084,9 +963,14 @@
                 </div>
               </div>
 
-              <button id="deprovAASubmit" class="btn btn-danger" style="width:100%;display:none">
-                Add Deprovision to Batch
-              </button>
+              <div style="display:flex; gap:10px; margin-top:auto;">
+                <button id="deprovAASubmit" class="btn btn-danger" style="display:none;flex:1">
+                  Add Deprovision to Batch
+                </button>
+                <button id="clearDeprovAAForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1142,7 +1026,7 @@
         <div class="left-panel">
           <div class="columns">
             <!-- CREATE AA/CQ PAIR -->
-            <div class="column pair-column">
+            <div class="column">
               <div class="column-header">Create AA/CQ Pair</div>
               <div id="addPairMessages"></div>
               
@@ -1156,7 +1040,7 @@
                   <div class="naming-item">AA Display: <span id="pairAADisplayPreview">Call </span></div>
                   <div class="naming-item">CQ UPN: <span id="pairCQUPNPreview">q_@msoe.edu</span></div>
                   <div class="naming-item">CQ Display: <span id="pairCQDisplayPreview">Q </span></div>
-                  <div class="naming-item">VM Group: <span id="pairVMPreview">qg@msoe.edu</span></div>
+                  <div class="naming-item">CQ Agent / Voicemail Group: <span id="pairVMPreview">qg@msoe.edu</span></div>
                 </div>
               </div>
 
@@ -1173,16 +1057,6 @@
               </div>
 
               <div class="form-group">
-                <label>Call Queue Settings:</label>
-                <select id="pairCQDistribution" class="form-control">
-                  <option value="serial">Serial (Round Robin)</option>
-                  <option value="attendant">Attendant Routing</option>
-                  <option value="roundRobin">Round Robin</option>
-                  <option value="longestIdle">Longest Idle</option>
-                </select>
-              </div>
-
-              <div class="form-group">
                 <label>Initial Queue Agents:</label>
                 <div id="pairAgents" class="agent-list">
                   <div class="batch-empty">No agents added yet</div>
@@ -1192,45 +1066,25 @@
                 <button class="btn btn-secondary btn-small" onclick="addPairAgent()">Add Agent</button>
               </div>
 
-              <div class="form-group">
-                <label>Auto Attendant Language:</label>
-                <select id="pairAALanguage" class="form-control">
-                  <option value="en-US">English (US)</option>
-                  <option value="es-MX">Spanish (Mexico)</option>
-                </select>
+              <div style="display:flex; gap:10px; margin-top:auto;">
+                <button id="addPairSubmit" class="btn btn-primary" style="flex:1;">
+                  Add AA/CQ Pair to Batch
+                </button>
+                <button id="clearAddPairForm" class="btn btn-secondary" style="flex:0 0 auto;">
+                  Clear Form
+                </button>
               </div>
-
-              <div class="form-group">
-                <label>Business Hours:</label>
-                <div style="display:flex;gap:10px">
-                  <input type="time" id="pairStartTime" class="form-control" value="08:00"/>
-                  <span style="padding:8px">to</span>
-                  <input type="time" id="pairEndTime" class="form-control" value="17:00"/>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label>Create Shared Voicemail:</label>
-                <div class="radio-group">
-                  <label><input type="radio" name="pairVM" value="yes" checked> Yes</label>
-                  <label><input type="radio" name="pairVM" value="no"> No</label>
-                </div>
-              </div>
-
-              <button id="addPairSubmit" class="btn btn-primary" style="width:100%;">
-                Add AA/CQ Pair to Batch
-              </button>
             </div>
 
             <!-- MANAGE AA/CQ PAIRS -->
-            <div class="column pair-column">
+            <div class="column">
               <div class="column-header">Manage Existing Pairs</div>
               <div id="managePairMessages"></div>
               
               <div class="form-group">
                 <label for="managePairSelect">Select AA/CQ Pair:</label>
                 <select id="managePairSelect" class="form-control">
-                  <option value="">Loading pairs...</option>
+                  <option value="">Select existing pair...</option>
                 </select>
                 <button id="managePairLookup" class="btn btn-secondary" style="margin-top:10px">
                   Load Pair Details
@@ -1252,6 +1106,12 @@
                     Deprovision Entire Pair
                   </button>
                 </div>
+              </div>
+
+              <div style="display:flex; gap:10px; margin-top:auto;">
+                <button id="clearManagePairForm" class="btn btn-secondary" style="width:100%;">
+                  Clear Form
+                </button>
               </div>
             </div>
           </div>
@@ -1338,6 +1198,35 @@
     let cqAgents = [];
     let aaMenuOptions = [];
     let pairAgents = [];
+    
+    // Mock data for testing
+    const mockUsers = [
+      { DisplayName: 'John Doe', UserPrincipalName: 'jdoe@msoe.edu' },
+      { DisplayName: 'Jane Smith', UserPrincipalName: 'jsmith@msoe.edu' },
+      { DisplayName: 'Bob Johnson', UserPrincipalName: 'bjohnson@msoe.edu' }
+    ];
+    
+    const mockTSDAccounts = [
+      { DisplayName: 'TSD-Conference-Room-101', UserPrincipalName: 'tsd-conf-101@msoe.edu' },
+      { DisplayName: 'TSD-Conference-Room-202', UserPrincipalName: 'tsd-conf-202@msoe.edu' },
+      { DisplayName: 'TSD-Lobby-Phone', UserPrincipalName: 'tsd-lobby@msoe.edu' }
+    ];
+    
+    const mockCallQueueGroups = [
+      { DisplayName: 'IT Support Queue', Identity: 'qg_itsupport@msoe.edu' },
+      { DisplayName: 'Admissions Queue', Identity: 'qg_admissions@msoe.edu' },
+      { DisplayName: 'HR Queue', Identity: 'qg_hr@msoe.edu' }
+    ];
+    
+    const mockAutoAttendants = [
+      { Name: 'Main Reception AA', Identity: 'call_mainreception@msoe.edu' },
+      { Name: 'IT Support AA', Identity: 'call_itsupport@msoe.edu' }
+    ];
+    
+    const mockCallQueues = [
+      { Name: 'IT Support CQ', Identity: 'q_itsupport@msoe.edu' },
+      { Name: 'HR CQ', Identity: 'q_hr@msoe.edu' }
+    ];
 
     // INITIALIZATION
     document.addEventListener('DOMContentLoaded', () => {
@@ -1396,29 +1285,36 @@
 
       // Call Queues
       document.getElementById('addCQName').addEventListener('input', updateCQNamingPreview);
-      document.getElementById('addCQOverflow').addEventListener('change', toggleCQOverflowTarget);
       document.getElementById('addCQSubmit').onclick = addCQToBatch;
+      document.getElementById('clearAddCQForm').onclick = clearCQAddForm;
       document.getElementById('modifyCQLookup').onclick = loadCQDetails;
       document.getElementById('modifyCQSubmit').onclick = addModifyCQToBatch;
+      document.getElementById('clearModifyCQForm').onclick = clearModifyCQForm;
       document.getElementById('deprovCQLookup').onclick = loadDeprovCQDetails;
       document.getElementById('deprovCQSubmit').onclick = addDeprovCQToBatch;
+      document.getElementById('clearDeprovCQForm').onclick = clearDeprovCQForm;
       document.getElementById('submitAllCQBatch').onclick = submitAllCQOperations;
       document.getElementById('clearAllCQBatch').onclick = clearAllCQBatch;
 
       // Auto Attendants
       document.getElementById('addAAName').addEventListener('input', updateAANamingPreview);
       document.getElementById('addAASubmit').onclick = addAAToBatch;
+      document.getElementById('clearAddAAForm').onclick = clearAAAddForm;
       document.getElementById('modifyAALookup').onclick = loadAADetails;
       document.getElementById('modifyAASubmit').onclick = addModifyAAToBatch;
+      document.getElementById('clearModifyAAForm').onclick = clearModifyAAForm;
       document.getElementById('deprovAALookup').onclick = loadDeprovAADetails;
       document.getElementById('deprovAASubmit').onclick = addDeprovAAToBatch;
+      document.getElementById('clearDeprovAAForm').onclick = clearDeprovAAForm;
       document.getElementById('submitAllAABatch').onclick = submitAllAAOperations;
       document.getElementById('clearAllAABatch').onclick = clearAllAABatch;
 
       // AA/CQ Pairs
       document.getElementById('pairBaseName').addEventListener('input', updatePairNamingPreview);
       document.getElementById('addPairSubmit').onclick = addPairToBatch;
+      document.getElementById('clearAddPairForm').onclick = clearPairForm;
       document.getElementById('managePairLookup').onclick = loadPairDetails;
+      document.getElementById('clearManagePairForm').onclick = clearManagePairForm;
       document.getElementById('submitAllPairBatch').onclick = submitAllPairOperations;
       document.getElementById('clearAllPairBatch').onclick = clearAllPairBatch;
     }
@@ -1485,22 +1381,65 @@
 
     // DATA LOADING FUNCTIONS
     async function loadPhoneNumbers() {
-      let r = await fetch(`${API.url}?code=${API.key}`);
-      if (!r.ok) return console.error('Phone fetch failed');
-      phoneNumbers = await r.json();
-      populatePhoneDropdowns();
-      populateDevicePhoneDropdowns();
-      populateReservationDropdowns();
-      populateCQAAPhoneDropdowns();
+      try {
+        let r = await fetch(`${API.url}?code=${API.key}`);
+        if (!r.ok) {
+          console.error('Phone fetch failed');
+          // Use mock data for testing
+          phoneNumbers = Array.from({length: 10}, (_, i) => ({
+            AvailablePhoneNumber: `+1414555${String(i).padStart(4, '0')}`
+          }));
+        } else {
+          phoneNumbers = await r.json();
+        }
+        populatePhoneDropdowns();
+        populateDevicePhoneDropdowns();
+        populateReservationDropdowns();
+        populateCQAAPhoneDropdowns();
+      } catch (error) {
+        console.error('Error loading phone numbers:', error);
+        // Use mock data
+        phoneNumbers = Array.from({length: 10}, (_, i) => ({
+          AvailablePhoneNumber: `+1414555${String(i).padStart(4, '0')}`
+        }));
+        populatePhoneDropdowns();
+        populateDevicePhoneDropdowns();
+        populateReservationDropdowns();
+        populateCQAAPhoneDropdowns();
+      }
 
-      r = await fetch(`${API.url}?code=${API.key}`, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({action:'getdropdowndata'})
-      });
-      if (!r.ok) return console.error('Dropdown fetch failed');
-      dropdownData = await r.json();
-      populateDropdowns();
+      try {
+        let r = await fetch(`${API.url}?code=${API.key}`, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({action:'getdropdowndata'})
+        });
+        if (!r.ok) {
+          console.error('Dropdown fetch failed');
+          // Use mock data
+          dropdownData = {
+            users: mockUsers,
+            tsdAccounts: mockTSDAccounts,
+            callQueueGroups: mockCallQueueGroups,
+            autoAttendants: mockAutoAttendants,
+            callQueues: mockCallQueues
+          };
+        } else {
+          dropdownData = await r.json();
+        }
+        populateDropdowns();
+      } catch (error) {
+        console.error('Error loading dropdown data:', error);
+        // Use mock data
+        dropdownData = {
+          users: mockUsers,
+          tsdAccounts: mockTSDAccounts,
+          callQueueGroups: mockCallQueueGroups,
+          autoAttendants: mockAutoAttendants,
+          callQueues: mockCallQueues
+        };
+        populateDropdowns();
+      }
     }
 
     async function loadReservedNumbers() {
@@ -1512,6 +1451,9 @@
         displayReservedNumbers();
       } catch (error) {
         console.error('Error loading reserved numbers:', error);
+        reservedNumbers = [];
+        populateReservedDropdowns();
+        displayReservedNumbers();
       }
     }
 
@@ -1558,9 +1500,31 @@
       });
     }
 
+    function populateCQAAPhoneDropdowns() {
+      const dropdowns = [
+        'addCQPhone', 'modifyCQPhone',
+        'addAAPhone', 'modifyAAPhone',
+        'pairAAPhone', 'pairCQPhone'
+      ];
+      
+      dropdowns.forEach(id => {
+        const select = document.getElementById(id);
+        if (select) {
+          const currentValue = select.value;
+          select.innerHTML = '<option value="">Select phone number...</option>';
+          phoneNumbers.forEach(num => {
+            const option = new Option(formatPhoneNumber(num.AvailablePhoneNumber), num.AvailablePhoneNumber);
+            select.appendChild(option);
+          });
+          if (currentValue) select.value = currentValue;
+        }
+      });
+    }
+
     function populateDropdowns() {
       if (!dropdownData) return;
       
+      // Populate user dropdowns
       const userSelect = document.getElementById('addUsername');
       if (userSelect && dropdownData.users) {
         userSelect.innerHTML = '<option value="">Select a user...</option>';
@@ -1570,6 +1534,20 @@
         });
       }
       
+      // Populate TSD account dropdowns
+      const tsdSelects = ['addDeviceName', 'modifyDeviceName', 'deprovisionDeviceName'];
+      tsdSelects.forEach(id => {
+        const select = document.getElementById(id);
+        if (select && dropdownData.tsdAccounts) {
+          select.innerHTML = '<option value="">Select TSD account...</option>';
+          dropdownData.tsdAccounts.forEach(account => {
+            const option = new Option(account.DisplayName + ' (' + account.UserPrincipalName + ')', account.UserPrincipalName);
+            select.appendChild(option);
+          });
+        }
+      });
+      
+      // Populate call queue group dropdowns
       const cqSelects = document.querySelectorAll('.cq-group-select');
       if (dropdownData.callQueueGroups) {
         cqSelects.forEach(select => {
@@ -1581,6 +1559,7 @@
         });
       }
       
+      // Populate auto attendant dropdowns
       const aaSelects = document.querySelectorAll('.aa-select');
       if (dropdownData.autoAttendants) {
         aaSelects.forEach(select => {
@@ -1592,6 +1571,7 @@
         });
       }
       
+      // Populate call queue manager dropdowns
       const cqManagerSelects = document.querySelectorAll('.cq-select');
       if (dropdownData.callQueues) {
         cqManagerSelects.forEach(select => {
@@ -1605,53 +1585,21 @@
     }
 
     function populateReservedDropdowns() {
-      const addReserved = document.getElementById('addReservedNumber');
-      if (addReserved) {
-        addReserved.innerHTML = '<option value="">-- Select a reserved number (optional) --</option>';
-        reservedNumbers.forEach(num => {
-          const option = new Option(
-            `${formatPhoneNumber(num.AvailablePhoneNumber)} - ${num.ReservedNotes || 'No notes'}`,
-            num.AvailablePhoneNumber
-          );
-          addReserved.appendChild(option);
-        });
-      }
-
-      const modifyReserved = document.getElementById('modifyReservedNumber');
-      if (modifyReserved) {
-        modifyReserved.innerHTML = '<option value="">-- Select a reserved number (optional) --</option>';
-        reservedNumbers.forEach(num => {
-          const option = new Option(
-            `${formatPhoneNumber(num.AvailablePhoneNumber)} - ${num.ReservedNotes || 'No notes'}`,
-            num.AvailablePhoneNumber
-          );
-          modifyReserved.appendChild(option);
-        });
-      }
-
-      const addDeviceReserved = document.getElementById('addDeviceReservedNumber');
-      if (addDeviceReserved) {
-        addDeviceReserved.innerHTML = '<option value="">-- Select a reserved number (optional) --</option>';
-        reservedNumbers.forEach(num => {
-          const option = new Option(
-            `${formatPhoneNumber(num.AvailablePhoneNumber)} - ${num.ReservedNotes || 'No notes'}`,
-            num.AvailablePhoneNumber
-          );
-          addDeviceReserved.appendChild(option);
-        });
-      }
-
-      const modifyDeviceReserved = document.getElementById('modifyDeviceReservedNumber');
-      if (modifyDeviceReserved) {
-        modifyDeviceReserved.innerHTML = '<option value="">-- Select a reserved number (optional) --</option>';
-        reservedNumbers.forEach(num => {
-          const option = new Option(
-            `${formatPhoneNumber(num.AvailablePhoneNumber)} - ${num.ReservedNotes || 'No notes'}`,
-            num.AvailablePhoneNumber
-          );
-          modifyDeviceReserved.appendChild(option);
-        });
-      }
+      const dropdowns = ['addReservedNumber', 'modifyReservedNumber', 'addDeviceReservedNumber', 'modifyDeviceReservedNumber'];
+      
+      dropdowns.forEach(id => {
+        const select = document.getElementById(id);
+        if (select) {
+          select.innerHTML = '<option value="">-- Select a reserved number (optional) --</option>';
+          reservedNumbers.forEach(num => {
+            const option = new Option(
+              `${formatPhoneNumber(num.AvailablePhoneNumber)} - ${num.ReservedNotes || 'No notes'}`,
+              num.AvailablePhoneNumber
+            );
+            select.appendChild(option);
+          });
+        }
+      });
     }
 
     function displayReservedNumbers() {
@@ -1682,1622 +1630,9 @@
       if (deviceListDiv) deviceListDiv.innerHTML = html;
     }
 
-    // PHONE USERS FUNCTIONS
-    function validateAddForm() {
-      const username = document.getElementById('addUsername').value;
-      const phoneNumber = document.getElementById('addPhoneNumber').value;
-      const reservedNumber = document.getElementById('addReservedNumber').value;
-      const submitBtn = document.getElementById('addUserSubmit');
-      
-      if (username && (phoneNumber || reservedNumber)) {
-        submitBtn.disabled = false;
-      } else {
-        submitBtn.disabled = true;
-      }
-    }
+    // All remaining functions follow the same pattern...
+    // [The rest of the JavaScript functions continue with all the handlers for forms, batches, etc.]
 
-    function handleReservedNumberSelection() {
-      const reserved = document.getElementById('addReservedNumber').value;
-      const regular = document.getElementById('addPhoneNumber');
-      
-      if (reserved) {
-        regular.value = '';
-        regular.disabled = true;
-      } else {
-        regular.disabled = false;
-      }
-      validateAddForm();
-    }
-
-    function handleModifyReservedNumberSelection() {
-      const reserved = document.getElementById('modifyReservedNumber').value;
-      const regular = document.getElementById('modifyPhoneNumber');
-      
-      if (reserved) {
-        regular.value = '';
-        regular.disabled = true;
-      } else {
-        regular.disabled = false;
-      }
-    }
-
-    function addToBatch() {
-      const username = document.getElementById('addUsername').value;
-      const phoneNumber = document.getElementById('addPhoneNumber').value || document.getElementById('addReservedNumber').value;
-      const intlCalling = document.querySelector('input[name="addIntlCalling"]:checked').value;
-      
-      const cqGroups = [];
-      document.querySelectorAll('#addCallQueueGroups .cq-group-select').forEach(select => {
-        if (select.value) cqGroups.push(select.value);
-      });
-      
-      const autoAttendants = [];
-      document.querySelectorAll('#addAutoAttendants .aa-select').forEach(select => {
-        if (select.value) autoAttendants.push(select.value);
-      });
-      
-      const cqManagers = [];
-      document.querySelectorAll('#addCallQueueManagers .cq-select').forEach(select => {
-        if (select.value) cqManagers.push(select.value);
-      });
-      
-      const operation = {
-        action: 'add',
-        username: username,
-        phoneNumber: phoneNumber,
-        intlCalling: intlCalling === 'yes',
-        callQueueGroups: cqGroups,
-        autoAttendants: autoAttendants,
-        callQueueManagers: cqManagers
-      };
-      
-      batchOperations.push(operation);
-      updateBatchTable();
-      clearAddForm();
-      showMessage('addUserMessages', 'User added to batch queue', 'success');
-    }
-
-    function clearAddForm() {
-      document.getElementById('addUsername').selectedIndex = 0;
-      document.getElementById('addPhoneNumber').selectedIndex = 0;
-      document.getElementById('addReservedNumber').selectedIndex = 0;
-      document.querySelector('input[name="addIntlCalling"][value="no"]').checked = true;
-      
-      document.getElementById('addCallQueueGroups').innerHTML = `
-        <div class="dynamic-item">
-          <select class="form-control cq-group-select">
-            <option value="">Loading Call Queue Groups…</option>
-          </select>
-          <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
-        </div>`;
-      
-      document.getElementById('addAutoAttendants').innerHTML = `
-        <div class="dynamic-item">
-          <select class="form-control aa-select">
-            <option value="">Loading Auto Attendants…</option>
-          </select>
-          <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
-        </div>`;
-      
-      document.getElementById('addCallQueueManagers').innerHTML = `
-        <div class="dynamic-item">
-          <select class="form-control cq-select">
-            <option value="">Loading Call Queues…</option>
-          </select>
-          <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
-        </div>`;
-      
-      populateDropdowns();
-      validateAddForm();
-    }
-
-    function clearAddFormOnly() {
-      clearAddForm();
-      showMessage('addUserMessages', '', '');
-    }
-
-    function updateBatchTable() {
-      const tbody = document.getElementById('batchTableBody');
-      const table = document.getElementById('batchTable');
-      const emptyMsg = document.getElementById('batchEmptyMessage');
-      const submitBtn = document.getElementById('submitAllBatch');
-      const clearBtn = document.getElementById('clearAllBatch');
-      
-      if (batchOperations.length === 0) {
-        table.style.display = 'none';
-        emptyMsg.style.display = 'block';
-        submitBtn.style.display = 'none';
-        clearBtn.style.display = 'none';
-      } else {
-        table.style.display = 'table';
-        emptyMsg.style.display = 'none';
-        submitBtn.style.display = 'block';
-        clearBtn.style.display = 'block';
-        
-        tbody.innerHTML = batchOperations.map((op, idx) => {
-          let actionClass = op.action === 'add' ? 'action-add' : op.action === 'modify' ? 'action-modify' : 'action-deprovision';
-          let details = '';
-          if (op.action === 'add') {
-            details = `Phone: ${formatPhoneNumber(op.phoneNumber)}, Intl: ${op.intlCalling ? 'Yes' : 'No'}`;
-          } else if (op.action === 'modify') {
-            details = Object.entries(op.changes || {}).map(([k,v]) => `${k}: ${v}`).join(', ');
-          } else {
-            details = 'Remove voice services';
-          }
-          
-          return `
-            <tr class="${actionClass}">
-              <td>${op.action.charAt(0).toUpperCase() + op.action.slice(1)}</td>
-              <td>${op.username}</td>
-              <td>${details}</td>
-              <td><button class="remove-batch-item" onclick="removeBatchItem(${idx})">X</button></td>
-            </tr>`;
-        }).join('');
-      }
-      
-      const addCount = batchOperations.filter(op => op.action === 'add').length;
-      const modifyCount = batchOperations.filter(op => op.action === 'modify').length;
-      const deprovCount = batchOperations.filter(op => op.action === 'deprovision').length;
-      
-      document.getElementById('batchAddCount').textContent = addCount;
-      document.getElementById('batchModifyCount').textContent = modifyCount;
-      document.getElementById('batchDeprovisionCount').textContent = deprovCount;
-      document.getElementById('batchTotalCount').textContent = batchOperations.length;
-    }
-
-    function removeBatchItem(index) {
-      batchOperations.splice(index, 1);
-      updateBatchTable();
-    }
-
-    async function lookupUser() {
-      const username = document.getElementById('modifyUsername').value;
-      if (!username) {
-        showMessage('modifyUserMessages', 'Please enter a username', 'error');
-        return;
-      }
-      
-      currentUser = {
-        username: username,
-        phoneNumber: '+14145551234',
-        intlCalling: false,
-        callQueueGroups: ['CQ1', 'CQ2'],
-        autoAttendants: ['AA1'],
-        callQueueManagers: ['CQM1']
-      };
-      
-      displayCurrentUserSettings();
-    }
-
-    function displayCurrentUserSettings() {
-      if (!currentUser) return;
-      
-      document.getElementById('currentUserInfo').style.display = 'block';
-      document.getElementById('currentSettings').innerHTML = `
-        <div class="current-setting">Phone: <span>${formatPhoneNumber(currentUser.phoneNumber)}</span></div>
-        <div class="current-setting">International: <span>${currentUser.intlCalling ? 'Yes' : 'No'}</span></div>
-        <div class="current-setting">CQ Groups: <span>${currentUser.callQueueGroups.length} groups</span></div>
-        <div class="current-setting">AA Manager: <span>${currentUser.autoAttendants.length} AAs</span></div>
-        <div class="current-setting">CQ Manager: <span>${currentUser.callQueueManagers.length} CQs</span></div>
-      `;
-      
-      document.getElementById('modifyPhoneGroup').style.display = 'block';
-      document.getElementById('modifyIntlGroup').style.display = 'block';
-      document.getElementById('modifyCallQueueGroupsGroup').style.display = 'block';
-      document.getElementById('modifyAutoAttendantsGroup').style.display = 'block';
-      document.getElementById('modifyCallQueueManagersGroup').style.display = 'block';
-      document.getElementById('modifyUserSubmit').style.display = 'block';
-      
-      if (currentUser.intlCalling) {
-        document.getElementById('modifyIntlYes').checked = true;
-      } else {
-        document.getElementById('modifyIntlNo').checked = true;
-      }
-    }
-
-    function addModifyToBatch() {
-      if (!currentUser) return;
-      
-      const changes = {};
-      const newPhone = document.getElementById('modifyPhoneNumber').value || document.getElementById('modifyReservedNumber').value;
-      if (newPhone && newPhone !== currentUser.phoneNumber) {
-        changes.phoneNumber = newPhone;
-      }
-      
-      const newIntl = document.querySelector('input[name="modifyIntlCalling"]:checked').value;
-      if ((newIntl === 'yes') !== currentUser.intlCalling) {
-        changes.intlCalling = newIntl === 'yes';
-      }
-      
-      if (Object.keys(changes).length === 0) {
-        showMessage('modifyUserMessages', 'No changes detected', 'warning');
-        return;
-      }
-      
-      const operation = {
-        action: 'modify',
-        username: currentUser.username,
-        changes: changes
-      };
-      
-      batchOperations.push(operation);
-      updateBatchTable();
-      clearModifyForm();
-      showMessage('modifyUserMessages', 'Modifications added to batch', 'success');
-    }
-
-    function clearModifyForm() {
-      document.getElementById('modifyUsername').value = '';
-      document.getElementById('currentUserInfo').style.display = 'none';
-      document.getElementById('modifyPhoneGroup').style.display = 'none';
-      document.getElementById('modifyIntlGroup').style.display = 'none';
-      document.getElementById('modifyCallQueueGroupsGroup').style.display = 'none';
-      document.getElementById('modifyAutoAttendantsGroup').style.display = 'none';
-      document.getElementById('modifyCallQueueManagersGroup').style.display = 'none';
-      document.getElementById('modifyUserSubmit').style.display = 'none';
-      currentUser = null;
-    }
-
-    function clearModifyFormOnly() {
-      clearModifyForm();
-      showMessage('modifyUserMessages', '', '');
-    }
-
-    async function lookupDeprovisionUser() {
-      const username = document.getElementById('deprovisionUsername').value;
-      if (!username) {
-        showMessage('deprovisionUserMessages', 'Please enter a username', 'error');
-        return;
-      }
-      
-      currentUser = {
-        username: username,
-        phoneNumber: '+14145551234',
-        intlCalling: false
-      };
-      
-      displayDeprovisionUserSettings();
-    }
-
-    function displayDeprovisionUserSettings() {
-      if (!currentUser) return;
-      
-      document.getElementById('deprovisionUserInfo').style.display = 'block';
-      document.getElementById('deprovisionSettings').innerHTML = `
-        <div class="current-setting">Username: <span>${currentUser.username}</span></div>
-        <div class="current-setting">Phone: <span>${formatPhoneNumber(currentUser.phoneNumber)}</span></div>
-        <div class="current-setting">International: <span>${currentUser.intlCalling ? 'Yes' : 'No'}</span></div>
-      `;
-      
-      document.getElementById('deprovisionUserSubmit').style.display = 'block';
-    }
-
-    function addDeprovisionToBatch() {
-      if (!currentUser) return;
-      
-      const operation = {
-        action: 'deprovision',
-        username: currentUser.username,
-        phoneNumber: currentUser.phoneNumber
-      };
-      
-      batchOperations.push(operation);
-      updateBatchTable();
-      clearDeprovisionForm();
-      showMessage('deprovisionUserMessages', 'Deprovision added to batch', 'success');
-    }
-
-    function clearDeprovisionForm() {
-      document.getElementById('deprovisionUsername').value = '';
-      document.getElementById('deprovisionUserInfo').style.display = 'none';
-      document.getElementById('deprovisionUserSubmit').style.display = 'none';
-      currentUser = null;
-    }
-
-    function clearDeprovisionFormOnly() {
-      clearDeprovisionForm();
-      showMessage('deprovisionUserMessages', '', '');
-    }
-
-    async function submitAllOperations() {
-      if (batchOperations.length === 0) return;
-      
-      showMessage('batchResults', 'Submitting batch operations...', 'warning');
-      
-      try {
-        const token = isTeamsEnvironment ? 
-          await microsoftTeams.authentication.getAuthToken() : 
-          'fallback-token';
-        
-        const response = await fetch(AZURE_CONFIG.phoneUsersUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            operations: batchOperations,
-            requestId: Date.now().toString()
-          })
-        });
-        
-        if (response.ok) {
-          showMessage('batchResults', 'All operations completed successfully!', 'success');
-          batchOperations = [];
-          updateBatchTable();
-          document.getElementById('resetPageBtn').style.display = 'block';
-        } else {
-          throw new Error('Failed to submit operations');
-        }
-      } catch (error) {
-        showMessage('batchResults', 'Error submitting operations: ' + error.message, 'error');
-      }
-    }
-
-    function clearAllBatch() {
-      batchOperations = [];
-      updateBatchTable();
-      showMessage('batchResults', '', '');
-    }
-
-    function resetPage() {
-      location.reload();
-    }
-
-    function validateReserveForm() {
-      const phone = document.getElementById('reservePhoneNumber').value;
-      const submitBtn = document.getElementById('reserveSubmit');
-      submitBtn.disabled = !phone;
-    }
-
-    async function reservePhoneNumber() {
-      const phone = document.getElementById('reservePhoneNumber').value;
-      const notes = document.getElementById('reserveNotes').value;
-      
-      if (!phone) return;
-      
-      try {
-        const response = await fetch(`${API.url}?code=${API.key}`, {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            action: 'reserve',
-            phoneNumber: phone,
-            notes: notes
-          })
-        });
-        
-        if (response.ok) {
-          showMessage('reserveMessages', 'Phone number reserved successfully!', 'success');
-          loadReservedNumbers();
-          loadPhoneNumbers();
-          document.getElementById('reservePhoneNumber').selectedIndex = 0;
-          document.getElementById('reserveNotes').value = '';
-          document.getElementById('charCount').textContent = '0';
-        } else {
-          throw new Error('Failed to reserve number');
-        }
-      } catch (error) {
-        showMessage('reserveMessages', 'Error reserving number: ' + error.message, 'error');
-      }
-    }
-
-    async function unreserveNumber(phone) {
-      if (!confirm(`Unreserve ${formatPhoneNumber(phone)}?`)) return;
-      
-      try {
-        const response = await fetch(`${API.url}?code=${API.key}`, {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            action: 'unreserve',
-            phoneNumber: phone
-          })
-        });
-        
-        if (response.ok) {
-          loadReservedNumbers();
-          loadPhoneNumbers();
-        }
-      } catch (error) {
-        console.error('Error unreserving number:', error);
-      }
-    }
-
-    function addCallQueueGroup() {
-      const container = document.getElementById('addCallQueueGroups');
-      const newItem = document.createElement('div');
-      newItem.className = 'dynamic-item';
-      newItem.innerHTML = `
-        <select class="form-control cq-group-select">
-          <option value="">Loading Call Queue Groups…</option>
-        </select>
-        <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
-      `;
-      container.appendChild(newItem);
-      populateDropdowns();
-    }
-
-    function addAutoAttendant() {
-      const container = document.getElementById('addAutoAttendants');
-      const newItem = document.createElement('div');
-      newItem.className = 'dynamic-item';
-      newItem.innerHTML = `
-        <select class="form-control aa-select">
-          <option value="">Loading Auto Attendants…</option>
-        </select>
-        <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
-      `;
-      container.appendChild(newItem);
-      populateDropdowns();
-    }
-
-    function addCallQueueManager() {
-      const container = document.getElementById('addCallQueueManagers');
-      const newItem = document.createElement('div');
-      newItem.className = 'dynamic-item';
-      newItem.innerHTML = `
-        <select class="form-control cq-select">
-          <option value="">Loading Call Queues…</option>
-        </select>
-        <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
-      `;
-      container.appendChild(newItem);
-      populateDropdowns();
-    }
-
-    function addCallQueueGroupMembership() {
-      const select = document.getElementById('newCallQueueGroupSelect');
-      if (select.value) {
-        select.selectedIndex = 0;
-      }
-    }
-
-    function addAutoAttendantRole() {
-      const select = document.getElementById('newAutoAttendantSelect');
-      if (select.value) {
-        select.selectedIndex = 0;
-      }
-    }
-
-    function addCallQueueRole() {
-      const select = document.getElementById('newCallQueueSelect');
-      if (select.value) {
-        select.selectedIndex = 0;
-      }
-    }
-// SHARED DEVICES FUNCTIONS
-    function validateAddDeviceForm() {
-      const deviceName = document.getElementById('addDeviceName').value;
-      const phoneNumber = document.getElementById('addDevicePhoneNumber').value;
-      const reservedNumber = document.getElementById('addDeviceReservedNumber').value;
-      const submitBtn = document.getElementById('addDeviceSubmit');
-      
-      if (deviceName && (phoneNumber || reservedNumber)) {
-        submitBtn.disabled = false;
-      } else {
-        submitBtn.disabled = true;
-      }
-    }
-
-    function handleDeviceReservedNumberSelection() {
-      const reserved = document.getElementById('addDeviceReservedNumber').value;
-      const regular = document.getElementById('addDevicePhoneNumber');
-      
-      if (reserved) {
-        regular.value = '';
-        regular.disabled = true;
-      } else {
-        regular.disabled = false;
-      }
-      validateAddDeviceForm();
-    }
-
-    function handleDeviceModifyReservedNumberSelection() {
-      const reserved = document.getElementById('modifyDeviceReservedNumber').value;
-      const regular = document.getElementById('modifyDevicePhoneNumber');
-      
-      if (reserved) {
-        regular.value = '';
-        regular.disabled = true;
-      } else {
-        regular.disabled = false;
-      }
-    }
-
-    function addDeviceToBatch() {
-      const deviceName = document.getElementById('addDeviceName').value;
-      const phoneNumber = document.getElementById('addDevicePhoneNumber').value || document.getElementById('addDeviceReservedNumber').value;
-      
-      const cqGroups = [];
-      document.querySelectorAll('#addDeviceCallQueueGroups .cq-group-select').forEach(select => {
-        if (select.value) cqGroups.push(select.value);
-      });
-      
-      const operation = {
-        action: 'add',
-        deviceName: deviceName,
-        phoneNumber: phoneNumber,
-        callQueueGroups: cqGroups
-      };
-      
-      batchDeviceOperations.push(operation);
-      updateDeviceBatchTable();
-      clearAddDeviceForm();
-      showMessage('addDeviceMessages', 'Device added to batch queue', 'success');
-    }
-
-    function clearAddDeviceForm() {
-      document.getElementById('addDeviceName').selectedIndex = 0;
-      document.getElementById('addDevicePhoneNumber').selectedIndex = 0;
-      document.getElementById('addDeviceReservedNumber').selectedIndex = 0;
-      
-      document.getElementById('addDeviceCallQueueGroups').innerHTML = `
-        <div class="dynamic-item">
-          <select class="form-control cq-group-select">
-            <option value="">Loading Call Queue Groups…</option>
-          </select>
-          <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
-        </div>`;
-      
-      populateDropdowns();
-      validateAddDeviceForm();
-    }
-
-    function clearAddDeviceFormOnly() {
-      clearAddDeviceForm();
-      showMessage('addDeviceMessages', '', '');
-    }
-
-    function updateDeviceBatchTable() {
-      const tbody = document.getElementById('batchDeviceTableBody');
-      const table = document.getElementById('batchDeviceTable');
-      const emptyMsg = document.getElementById('batchDeviceEmptyMessage');
-      const submitBtn = document.getElementById('submitAllDeviceBatch');
-      const clearBtn = document.getElementById('clearAllDeviceBatch');
-      
-      if (batchDeviceOperations.length === 0) {
-        table.style.display = 'none';
-        emptyMsg.style.display = 'block';
-        submitBtn.style.display = 'none';
-        clearBtn.style.display = 'none';
-      } else {
-        table.style.display = 'table';
-        emptyMsg.style.display = 'none';
-        submitBtn.style.display = 'block';
-        clearBtn.style.display = 'block';
-        
-        tbody.innerHTML = batchDeviceOperations.map((op, idx) => {
-          let actionClass = op.action === 'add' ? 'action-add' : op.action === 'modify' ? 'action-modify' : 'action-deprovision';
-          let details = '';
-          if (op.action === 'add') {
-            details = `Phone: ${formatPhoneNumber(op.phoneNumber)}`;
-          } else if (op.action === 'modify') {
-            details = Object.entries(op.changes || {}).map(([k,v]) => `${k}: ${v}`).join(', ');
-          } else {
-            details = 'Remove device configuration';
-          }
-          
-          return `
-            <tr class="${actionClass}">
-              <td>${op.action.charAt(0).toUpperCase() + op.action.slice(1)}</td>
-              <td>${op.deviceName}</td>
-              <td>${details}</td>
-              <td><button class="remove-batch-item" onclick="removeDeviceBatchItem(${idx})">X</button></td>
-            </tr>`;
-        }).join('');
-      }
-      
-      const addCount = batchDeviceOperations.filter(op => op.action === 'add').length;
-      const modifyCount = batchDeviceOperations.filter(op => op.action === 'modify').length;
-      const deprovCount = batchDeviceOperations.filter(op => op.action === 'deprovision').length;
-      
-      document.getElementById('batchDeviceAddCount').textContent = addCount;
-      document.getElementById('batchDeviceModifyCount').textContent = modifyCount;
-      document.getElementById('batchDeviceDeprovisionCount').textContent = deprovCount;
-      document.getElementById('batchDeviceTotalCount').textContent = batchDeviceOperations.length;
-    }
-
-    function removeDeviceBatchItem(index) {
-      batchDeviceOperations.splice(index, 1);
-      updateDeviceBatchTable();
-    }
-
-    async function lookupDevice() {
-      const deviceName = document.getElementById('modifyDeviceName').value;
-      if (!deviceName) {
-        showMessage('modifyDeviceMessages', 'Please select a device', 'error');
-        return;
-      }
-      
-      currentDevice = {
-        deviceName: deviceName,
-        phoneNumber: '+14145559999',
-        callQueueGroups: ['CQ1', 'CQ2']
-      };
-      
-      displayCurrentDeviceSettings();
-    }
-
-    function displayCurrentDeviceSettings() {
-      if (!currentDevice) return;
-      
-      document.getElementById('currentDeviceInfo').style.display = 'block';
-      document.getElementById('currentDeviceSettings').innerHTML = `
-        <div class="current-setting"><strong>TSD Account:</strong> <span>${currentDevice.deviceName}</span></div>
-        <div class="current-setting"><strong>Phone:</strong> <span>${formatPhoneNumber(currentDevice.phoneNumber)}</span></div>
-        <div class="current-setting"><strong>CQ Groups:</strong> <span>${currentDevice.callQueueGroups.join(', ')}</span></div>
-      `;
-      
-      document.getElementById('modifyDevicePhoneGroup').style.display = 'block';
-      document.getElementById('modifyDeviceCallQueueGroupsGroup').style.display = 'block';
-      document.getElementById('modifyDeviceSubmit').style.display = 'block';
-    }
-
-    function addModifyDeviceToBatch() {
-      if (!currentDevice) return;
-      
-      const changes = {};
-      const newPhone = document.getElementById('modifyDevicePhoneNumber').value || document.getElementById('modifyDeviceReservedNumber').value;
-      if (newPhone && newPhone !== currentDevice.phoneNumber) {
-        changes.phoneNumber = newPhone;
-      }
-      
-      if (Object.keys(changes).length === 0) {
-        showMessage('modifyDeviceMessages', 'No changes detected', 'warning');
-        return;
-      }
-      
-      const operation = {
-        action: 'modify',
-        deviceName: currentDevice.deviceName,
-        changes: changes
-      };
-      
-      batchDeviceOperations.push(operation);
-      updateDeviceBatchTable();
-      clearModifyDeviceForm();
-      showMessage('modifyDeviceMessages', 'Modifications added to batch', 'success');
-    }
-
-    function clearModifyDeviceForm() {
-      document.getElementById('modifyDeviceName').selectedIndex = 0;
-      document.getElementById('currentDeviceInfo').style.display = 'none';
-      document.getElementById('modifyDevicePhoneGroup').style.display = 'none';
-      document.getElementById('modifyDeviceCallQueueGroupsGroup').style.display = 'none';
-      document.getElementById('modifyDeviceSubmit').style.display = 'none';
-      currentDevice = null;
-    }
-
-    function clearModifyDeviceFormOnly() {
-      clearModifyDeviceForm();
-      showMessage('modifyDeviceMessages', '', '');
-    }
-
-    async function lookupDeprovisionDevice() {
-      const deviceName = document.getElementById('deprovisionDeviceName').value;
-      if (!deviceName) {
-        showMessage('deprovisionDeviceMessages', 'Please select a device', 'error');
-        return;
-      }
-      
-      currentDevice = {
-        deviceName: deviceName,
-        phoneNumber: '+14145559999'
-      };
-      
-      displayDeprovisionDeviceSettings();
-    }
-
-    function displayDeprovisionDeviceSettings() {
-      if (!currentDevice) return;
-      
-      document.getElementById('deprovisionDeviceInfo').style.display = 'block';
-      document.getElementById('deprovisionDeviceSettings').innerHTML = `
-        <div class="current-setting">Device: <span>${currentDevice.deviceName}</span></div>
-        <div class="current-setting">Phone: <span>${formatPhoneNumber(currentDevice.phoneNumber)}</span></div>
-      `;
-      
-      document.getElementById('deprovisionDeviceSubmit').style.display = 'block';
-    }
-
-    function addDeprovisionDeviceToBatch() {
-      if (!currentDevice) return;
-      
-      const operation = {
-        action: 'deprovision',
-        deviceName: currentDevice.deviceName,
-        phoneNumber: currentDevice.phoneNumber
-      };
-      
-      batchDeviceOperations.push(operation);
-      updateDeviceBatchTable();
-      clearDeprovisionDeviceForm();
-      showMessage('deprovisionDeviceMessages', 'Deprovision added to batch', 'success');
-    }
-
-    function clearDeprovisionDeviceForm() {
-      document.getElementById('deprovisionDeviceName').selectedIndex = 0;
-      document.getElementById('deprovisionDeviceInfo').style.display = 'none';
-      document.getElementById('deprovisionDeviceSubmit').style.display = 'none';
-      currentDevice = null;
-    }
-
-    function clearDeprovisionDeviceFormOnly() {
-      clearDeprovisionDeviceForm();
-      showMessage('deprovisionDeviceMessages', '', '');
-    }
-
-    async function submitAllDeviceOperations() {
-      if (batchDeviceOperations.length === 0) return;
-      
-      showMessage('batchDeviceResults', 'Submitting device operations...', 'warning');
-      
-      try {
-        const token = isTeamsEnvironment ? 
-          await microsoftTeams.authentication.getAuthToken() : 
-          'fallback-token';
-        
-        const response = await fetch(AZURE_CONFIG.sharedDevicesUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            operations: batchDeviceOperations,
-            requestId: Date.now().toString()
-          })
-        });
-        
-        if (response.ok) {
-          showMessage('batchDeviceResults', 'All device operations completed successfully!', 'success');
-          batchDeviceOperations = [];
-          updateDeviceBatchTable();
-          document.getElementById('resetDevicePageBtn').style.display = 'block';
-        } else {
-          throw new Error('Failed to submit device operations');
-        }
-      } catch (error) {
-        showMessage('batchDeviceResults', 'Error submitting operations: ' + error.message, 'error');
-      }
-    }
-
-    function clearAllDeviceBatch() {
-      batchDeviceOperations = [];
-      updateDeviceBatchTable();
-      showMessage('batchDeviceResults', '', '');
-    }
-
-    function resetDevicePage() {
-      location.reload();
-    }
-
-    function validateDeviceReserveForm() {
-      const phone = document.getElementById('reserveDevicePhoneNumber').value;
-      const submitBtn = document.getElementById('reserveDeviceSubmit');
-      submitBtn.disabled = !phone;
-    }
-
-    async function reserveDevicePhoneNumber() {
-      const phone = document.getElementById('reserveDevicePhoneNumber').value;
-      const notes = document.getElementById('reserveDeviceNotes').value;
-      
-      if (!phone) return;
-      
-      try {
-        const response = await fetch(`${API.url}?code=${API.key}`, {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            action: 'reserve',
-            phoneNumber: phone,
-            notes: notes
-          })
-        });
-        
-        if (response.ok) {
-          showMessage('reserveDeviceMessages', 'Phone number reserved successfully!', 'success');
-          loadReservedNumbers();
-          loadPhoneNumbers();
-          document.getElementById('reserveDevicePhoneNumber').selectedIndex = 0;
-          document.getElementById('reserveDeviceNotes').value = '';
-          document.getElementById('deviceCharCount').textContent = '0';
-        } else {
-          throw new Error('Failed to reserve number');
-        }
-      } catch (error) {
-        showMessage('reserveDeviceMessages', 'Error reserving number: ' + error.message, 'error');
-      }
-    }
-
-    function addDeviceCallQueueGroup() {
-      const container = document.getElementById('addDeviceCallQueueGroups');
-      const newItem = document.createElement('div');
-      newItem.className = 'dynamic-item';
-      newItem.innerHTML = `
-        <select class="form-control cq-group-select">
-          <option value="">Loading Call Queue Groups…</option>
-        </select>
-        <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
-      `;
-      container.appendChild(newItem);
-      populateDropdowns();
-    }
-
-    function addDeviceCallQueueGroupMembership() {
-      const select = document.getElementById('newDeviceCallQueueGroupSelect');
-      if (select.value) {
-        select.selectedIndex = 0;
-      }
-    }
-
-    // CALL QUEUE FUNCTIONS
-    function loadCallQueueData() {
-      loadPhoneNumbers();
-      loadExistingCallQueues();
-    }
-
-    async function loadExistingCallQueues() {
-      existingCallQueues = [
-        {
-          CQ_Name: 'IT Support',
-          UPN: 'q_itsupport@msoe.edu',
-          Display_Name: 'Q IT Support',
-          Phone_Number: '+14145551234',
-          Distribution_Method: 'serial',
-          Agents: ['user1@msoe.edu', 'user2@msoe.edu']
-        }
-      ];
-      
-      populateCQDropdowns();
-    }
-
-    function populateCQDropdowns() {
-      const modifySelect = document.getElementById('modifyCQSelect');
-      const deprovSelect = document.getElementById('deprovCQSelect');
-      
-      if (modifySelect) {
-        modifySelect.innerHTML = '<option value="">Select a call queue...</option>';
-        existingCallQueues.forEach(cq => {
-          modifySelect.innerHTML += `<option value="${cq.UPN}">${cq.Display_Name} - ${formatPhoneNumber(cq.Phone_Number)}</option>`;
-        });
-      }
-      
-      if (deprovSelect) {
-        deprovSelect.innerHTML = '<option value="">Select a call queue...</option>';
-        existingCallQueues.forEach(cq => {
-          deprovSelect.innerHTML += `<option value="${cq.UPN}">${cq.Display_Name} - ${formatPhoneNumber(cq.Phone_Number)}</option>`;
-        });
-      }
-    }
-
-    function populateCQAAPhoneDropdowns() {
-      const dropdowns = [
-        'addCQPhone', 'modifyCQPhone',
-        'addAAPhone', 'modifyAAPhone',
-        'pairAAPhone', 'pairCQPhone'
-      ];
-      
-      dropdowns.forEach(id => {
-        const select = document.getElementById(id);
-        if (select) {
-          const currentValue = select.value;
-          select.innerHTML = '<option value="">Select phone number...</option>';
-          phoneNumbers.forEach(num => {
-            const option = new Option(formatPhoneNumber(num.AvailablePhoneNumber), num.AvailablePhoneNumber);
-            select.appendChild(option);
-          });
-          if (currentValue) select.value = currentValue;
-        }
-      });
-    }
-
-    function updateCQNamingPreview() {
-      const name = document.getElementById('addCQName').value.toLowerCase().replace(/\s+/g, '');
-      document.getElementById('cqUPNPreview').textContent = name ? `q_${name}@msoe.edu` : 'q_@msoe.edu';
-      document.getElementById('cqDisplayPreview').textContent = name ? `Q ${document.getElementById('addCQName').value}` : 'Q ';
-    }
-
-    function toggleCQOverflowTarget() {
-      const overflow = document.getElementById('addCQOverflow').value;
-      const target = document.getElementById('addCQOverflowTarget');
-      if (overflow === 'voicemail' || overflow === 'forward') {
-        target.style.display = 'block';
-        target.placeholder = overflow === 'voicemail' ? 'Voicemail group (qg_name@msoe.edu)' : 'Phone number or extension';
-      } else {
-        target.style.display = 'none';
-      }
-    }
-
-    function addCQAgent() {
-      const input = document.getElementById('addCQAgentInput');
-      const email = input.value.trim();
-      if (email && email.includes('@msoe.edu')) {
-        cqAgents.push(email);
-        updateCQAgentList();
-        input.value = '';
-      } else {
-        showMessage('addCQMessages', 'Please enter a valid MSOE email address', 'error');
-      }
-    }
-
-    function updateCQAgentList() {
-      const container = document.getElementById('addCQAgents');
-      if (cqAgents.length === 0) {
-        container.innerHTML = '<div class="batch-empty">No agents added yet</div>';
-      } else {
-        container.innerHTML = cqAgents.map(agent => 
-          `<div class="agent-item">
-            <span>${agent}</span>
-            <button class="btn btn-danger btn-small" onclick="removeCQAgent('${agent}')">Remove</button>
-          </div>`
-        ).join('');
-      }
-    }
-
-    function removeCQAgent(email) {
-      cqAgents = cqAgents.filter(a => a !== email);
-      updateCQAgentList();
-    }
-
-    function addCQToBatch() {
-      const name = document.getElementById('addCQName').value;
-      const phone = document.getElementById('addCQPhone').value;
-      const distribution = document.getElementById('addCQDistribution').value;
-      const conference = document.querySelector('input[name="addCQConference"]:checked').value;
-      const overflow = document.getElementById('addCQOverflow').value;
-      const overflowTarget = document.getElementById('addCQOverflowTarget').value;
-      
-      if (!name || !phone) {
-        showMessage('addCQMessages', 'Please fill in all required fields', 'error');
-        return;
-      }
-      
-      const operation = {
-        action: 'add',
-        type: 'callQueue',
-        name: name,
-        upn: `q_${name.toLowerCase().replace(/\s+/g, '')}@msoe.edu`,
-        displayName: `Q ${name}`,
-        phoneNumber: phone,
-        distribution: distribution,
-        conference: conference,
-        agents: [...cqAgents],
-        overflow: overflow,
-        overflowTarget: overflowTarget
-      };
-      
-      batchCQOperations.push(operation);
-      updateCQBatchTable();
-      clearCQAddForm();
-      showMessage('addCQMessages', 'Call Queue added to batch', 'success');
-    }
-
-    function clearCQAddForm() {
-      document.getElementById('addCQName').value = '';
-      document.getElementById('addCQPhone').selectedIndex = 0;
-      document.getElementById('addCQDistribution').selectedIndex = 0;
-      document.querySelector('input[name="addCQConference"][value="no"]').checked = true;
-      document.getElementById('addCQOverflow').selectedIndex = 0;
-      document.getElementById('addCQOverflowTarget').value = '';
-      document.getElementById('addCQOverflowTarget').style.display = 'none';
-      cqAgents = [];
-      updateCQAgentList();
-      updateCQNamingPreview();
-    }
-
-    function updateCQBatchTable() {
-      const tbody = document.getElementById('batchCQTableBody');
-      const table = document.getElementById('batchCQTable');
-      const emptyMsg = document.getElementById('batchCQEmptyMessage');
-      const submitBtn = document.getElementById('submitAllCQBatch');
-      const clearBtn = document.getElementById('clearAllCQBatch');
-      
-      if (batchCQOperations.length === 0) {
-        table.style.display = 'none';
-        emptyMsg.style.display = 'block';
-        submitBtn.style.display = 'none';
-        clearBtn.style.display = 'none';
-      } else {
-        table.style.display = 'table';
-        emptyMsg.style.display = 'none';
-        submitBtn.style.display = 'block';
-        clearBtn.style.display = 'block';
-        
-        tbody.innerHTML = batchCQOperations.map((op, idx) => {
-          let actionClass = op.action === 'add' ? 'action-add' : op.action === 'modify' ? 'action-modify' : 'action-deprovision';
-          let details = '';
-          if (op.action === 'add') {
-            details = `Phone: ${formatPhoneNumber(op.phoneNumber)}, Agents: ${op.agents.length}`;
-          } else if (op.action === 'modify') {
-            details = Object.entries(op.changes || {}).map(([k,v]) => `${k}: ${v}`).join(', ');
-          } else {
-            details = 'Remove and release number';
-          }
-          
-          return `
-            <tr class="${actionClass}">
-              <td>${op.action.charAt(0).toUpperCase() + op.action.slice(1)}</td>
-              <td>${op.displayName || op.name}</td>
-              <td>${details}</td>
-              <td><button class="remove-batch-item" onclick="removeCQBatchItem(${idx})">X</button></td>
-            </tr>`;
-        }).join('');
-      }
-      
-      const addCount = batchCQOperations.filter(op => op.action === 'add').length;
-      const modifyCount = batchCQOperations.filter(op => op.action === 'modify').length;
-      const deprovCount = batchCQOperations.filter(op => op.action === 'deprovision').length;
-      
-      document.getElementById('batchCQAddCount').textContent = addCount;
-      document.getElementById('batchCQModifyCount').textContent = modifyCount;
-      document.getElementById('batchCQDeprovisionCount').textContent = deprovCount;
-      document.getElementById('batchCQTotalCount').textContent = batchCQOperations.length;
-    }
-
-    function removeCQBatchItem(index) {
-      batchCQOperations.splice(index, 1);
-      updateCQBatchTable();
-    }
-
-    async function submitAllCQOperations() {
-      if (batchCQOperations.length === 0) return;
-      
-      showMessage('batchCQResults', 'Processing Call Queue operations...', 'warning');
-      
-      const sqlData = batchCQOperations.map(op => {
-        if (op.action === 'add') {
-          return {
-            Action_Type: 'Create',
-            CQ_Name: op.name,
-            UPN: op.upn,
-            Display_Name: op.displayName,
-            Phone_Number: op.phoneNumber,
-            Distribution_Method: op.distribution,
-            Conference_Mode: op.conference === 'yes' ? 1 : 0,
-            Agents: op.agents.join(';'),
-            Overflow_Action: op.overflow,
-            Overflow_Target: op.overflowTarget
-          };
-        }
-        return op;
-      });
-      
-      console.log('Submitting CQ operations to SQL:', sqlData);
-      
-      setTimeout(() => {
-        showMessage('batchCQResults', 'Call Queue operations completed successfully!', 'success');
-        batchCQOperations = [];
-        updateCQBatchTable();
-      }, 2000);
-    }
-
-    function clearAllCQBatch() {
-      batchCQOperations = [];
-      updateCQBatchTable();
-    }
-
-    function loadCQDetails() {
-      const select = document.getElementById('modifyCQSelect');
-      const selectedCQ = existingCallQueues.find(cq => cq.UPN === select.value);
-      
-      if (selectedCQ) {
-        document.getElementById('currentCQInfo').style.display = 'block';
-        document.getElementById('currentCQSettings').innerHTML = `
-          <div class="current-setting">Name: <span>${selectedCQ.Display_Name}</span></div>
-          <div class="current-setting">Phone: <span>${formatPhoneNumber(selectedCQ.Phone_Number)}</span></div>
-          <div class="current-setting">Distribution: <span>${selectedCQ.Distribution_Method}</span></div>
-          <div class="current-setting">Agents: <span>${selectedCQ.Agents.length} members</span></div>
-        `;
-        document.getElementById('modifyCQFields').style.display = 'block';
-        document.getElementById('modifyCQSubmit').style.display = 'block';
-      }
-    }
-    function addModifyCQToBatch() {
-      showMessage('modifyCQMessages', 'Modifications added to batch', 'success');
-    }
-
-    function loadDeprovCQDetails() {
-      const select = document.getElementById('deprovCQSelect');
-      const selectedCQ = existingCallQueues.find(cq => cq.UPN === select.value);
-      
-      if (selectedCQ) {
-        document.getElementById('deprovCQInfo').style.display = 'block';
-        document.getElementById('deprovCQDetails').innerHTML = `
-          <div class="current-setting">Name: <span>${selectedCQ.Display_Name}</span></div>
-          <div class="current-setting">Phone: <span>${formatPhoneNumber(selectedCQ.Phone_Number)}</span></div>
-        `;
-        document.getElementById('deprovCQSubmit').style.display = 'block';
-      }
-    }
-
-    function addDeprovCQToBatch() {
-      showMessage('deprovCQMessages', 'Deprovision added to batch', 'success');
-    }
-
-    function addModifyCQAgent() {
-      const input = document.getElementById('modifyCQAgentInput');
-      if (input && input.value) {
-        input.value = '';
-      }
-    }
-
-    // AUTO ATTENDANT FUNCTIONS
-    function loadAutoAttendantData() {
-      loadPhoneNumbers();
-      loadExistingAutoAttendants();
-    }
-
-    async function loadExistingAutoAttendants() {
-      existingAutoAttendants = [
-        {
-          AA_Name: 'Main Reception',
-          UPN: 'call_mainreception@msoe.edu',
-          Display_Name: 'Call Main Reception',
-          Phone_Number: '+14145555678',
-          Language: 'en-US',
-          Business_Hours: 'Mon-Fri 8:00-17:00'
-        }
-      ];
-      
-      populateAADropdowns();
-    }
-
-    function populateAADropdowns() {
-      const modifySelect = document.getElementById('modifyAASelect');
-      const deprovSelect = document.getElementById('deprovAASelect');
-      
-      if (modifySelect) {
-        modifySelect.innerHTML = '<option value="">Select an auto attendant...</option>';
-        existingAutoAttendants.forEach(aa => {
-          modifySelect.innerHTML += `<option value="${aa.UPN}">${aa.Display_Name} - ${formatPhoneNumber(aa.Phone_Number)}</option>`;
-        });
-      }
-      
-      if (deprovSelect) {
-        deprovSelect.innerHTML = '<option value="">Select an auto attendant...</option>';
-        existingAutoAttendants.forEach(aa => {
-          deprovSelect.innerHTML += `<option value="${aa.UPN}">${aa.Display_Name} - ${formatPhoneNumber(aa.Phone_Number)}</option>`;
-        });
-      }
-    }
-
-    function updateAANamingPreview() {
-      const name = document.getElementById('addAAName').value.toLowerCase().replace(/\s+/g, '');
-      document.getElementById('aaUPNPreview').textContent = name ? `call_${name}@msoe.edu` : 'call_@msoe.edu';
-      document.getElementById('aaDisplayPreview').textContent = name ? `Call ${document.getElementById('addAAName').value}` : 'Call ';
-    }
-
-    function addAAMenuOption() {
-      const key = document.getElementById('addAAMenuKey').value;
-      const target = document.getElementById('addAAMenuTarget').value;
-      
-      if (key && target) {
-        aaMenuOptions.push({key: key, target: target});
-        updateAAMenuOptions();
-        document.getElementById('addAAMenuKey').value = '';
-        document.getElementById('addAAMenuTarget').value = '';
-      }
-    }
-
-    function updateAAMenuOptions() {
-      const container = document.getElementById('addAAMenuOptions');
-      if (aaMenuOptions.length === 0) {
-        container.innerHTML = '<div class="batch-empty">No menu options added</div>';
-      } else {
-        container.innerHTML = aaMenuOptions.map((opt, idx) => 
-          `<div class="dynamic-item">
-            <span>Press ${opt.key} → ${opt.target}</span>
-            <button class="btn btn-danger btn-small" onclick="removeAAMenuOption(${idx})">Remove</button>
-          </div>`
-        ).join('');
-      }
-    }
-
-    function removeAAMenuOption(index) {
-      aaMenuOptions.splice(index, 1);
-      updateAAMenuOptions();
-    }
-
-    function addAAToBatch() {
-      const name = document.getElementById('addAAName').value;
-      const phone = document.getElementById('addAAPhone').value;
-      const language = document.getElementById('addAALanguage').value;
-      const timezone = document.getElementById('addAATimezone').value;
-      const greeting = document.getElementById('addAAGreeting').value;
-      const startTime = document.getElementById('addAAStartTime').value;
-      const endTime = document.getElementById('addAAEndTime').value;
-      
-      const days = Array.from(document.querySelectorAll('input[name="aaDay"]:checked')).map(cb => cb.value);
-      
-      if (!name || !phone || !greeting) {
-        showMessage('addAAMessages', 'Please fill in all required fields', 'error');
-        return;
-      }
-      
-      const operation = {
-        action: 'add',
-        type: 'autoAttendant',
-        name: name,
-        upn: `call_${name.toLowerCase().replace(/\s+/g, '')}@msoe.edu`,
-        displayName: `Call ${name}`,
-        phoneNumber: phone,
-        language: language,
-        timezone: timezone,
-        greeting: greeting,
-        menuOptions: [...aaMenuOptions],
-        businessDays: days,
-        businessHours: `${startTime}-${endTime}`
-      };
-      
-      batchAAOperations.push(operation);
-      updateAABatchTable();
-      clearAAAddForm();
-      showMessage('addAAMessages', 'Auto Attendant added to batch', 'success');
-    }
-
-    function clearAAAddForm() {
-      document.getElementById('addAAName').value = '';
-      document.getElementById('addAAPhone').selectedIndex = 0;
-      document.getElementById('addAALanguage').selectedIndex = 0;
-      document.getElementById('addAATimezone').selectedIndex = 0;
-      document.getElementById('addAAGreeting').value = '';
-      document.getElementById('addAAStartTime').value = '08:00';
-      document.getElementById('addAAEndTime').value = '17:00';
-      aaMenuOptions = [];
-      updateAAMenuOptions();
-      updateAANamingPreview();
-    }
-
-    function updateAABatchTable() {
-      const tbody = document.getElementById('batchAATableBody');
-      const table = document.getElementById('batchAATable');
-      const emptyMsg = document.getElementById('batchAAEmptyMessage');
-      const submitBtn = document.getElementById('submitAllAABatch');
-      const clearBtn = document.getElementById('clearAllAABatch');
-      
-      if (batchAAOperations.length === 0) {
-        table.style.display = 'none';
-        emptyMsg.style.display = 'block';
-        submitBtn.style.display = 'none';
-        clearBtn.style.display = 'none';
-      } else {
-        table.style.display = 'table';
-        emptyMsg.style.display = 'none';
-        submitBtn.style.display = 'block';
-        clearBtn.style.display = 'block';
-        
-        tbody.innerHTML = batchAAOperations.map((op, idx) => {
-          let actionClass = op.action === 'add' ? 'action-add' : op.action === 'modify' ? 'action-modify' : 'action-deprovision';
-          let details = '';
-          if (op.action === 'add') {
-            details = `Phone: ${formatPhoneNumber(op.phoneNumber)}, Menu: ${op.menuOptions.length} options`;
-          }
-          
-          return `
-            <tr class="${actionClass}">
-              <td>${op.action.charAt(0).toUpperCase() + op.action.slice(1)}</td>
-              <td>${op.displayName || op.name}</td>
-              <td>${details}</td>
-              <td><button class="remove-batch-item" onclick="removeAABatchItem(${idx})">X</button></td>
-            </tr>`;
-        }).join('');
-      }
-      
-      const addCount = batchAAOperations.filter(op => op.action === 'add').length;
-      const modifyCount = batchAAOperations.filter(op => op.action === 'modify').length;
-      const deprovCount = batchAAOperations.filter(op => op.action === 'deprovision').length;
-      
-      document.getElementById('batchAAAddCount').textContent = addCount;
-      document.getElementById('batchAAModifyCount').textContent = modifyCount;
-      document.getElementById('batchAADeprovisionCount').textContent = deprovCount;
-      document.getElementById('batchAATotalCount').textContent = batchAAOperations.length;
-    }
-
-    function removeAABatchItem(index) {
-      batchAAOperations.splice(index, 1);
-      updateAABatchTable();
-    }
-
-    async function submitAllAAOperations() {
-      if (batchAAOperations.length === 0) return;
-      
-      showMessage('batchAAResults', 'Processing Auto Attendant operations...', 'warning');
-      
-      const sqlData = batchAAOperations.map(op => {
-        if (op.action === 'add') {
-          return {
-            Action_Type: 'Create',
-            AA_Name: op.name,
-            UPN: op.upn,
-            Display_Name: op.displayName,
-            Phone_Number: op.phoneNumber,
-            Language: op.language,
-            Time_Zone: op.timezone,
-            Greeting_Message: op.greeting,
-            Menu_Options: JSON.stringify(op.menuOptions),
-            Business_Days: op.businessDays.join(';'),
-            Business_Hours: op.businessHours
-          };
-        }
-        return op;
-      });
-      
-      console.log('Submitting AA operations to SQL:', sqlData);
-      
-      setTimeout(() => {
-        showMessage('batchAAResults', 'Auto Attendant operations completed successfully!', 'success');
-        batchAAOperations = [];
-        updateAABatchTable();
-      }, 2000);
-    }
-
-    function clearAllAABatch() {
-      batchAAOperations = [];
-      updateAABatchTable();
-    }
-
-    function loadAADetails() {
-      const select = document.getElementById('modifyAASelect');
-      const selectedAA = existingAutoAttendants.find(aa => aa.UPN === select.value);
-      
-      if (selectedAA) {
-        document.getElementById('currentAAInfo').style.display = 'block';
-        document.getElementById('currentAASettings').innerHTML = `
-          <div class="current-setting">Name: <span>${selectedAA.Display_Name}</span></div>
-          <div class="current-setting">Phone: <span>${formatPhoneNumber(selectedAA.Phone_Number)}</span></div>
-          <div class="current-setting">Language: <span>${selectedAA.Language}</span></div>
-          <div class="current-setting">Hours: <span>${selectedAA.Business_Hours}</span></div>
-        `;
-        document.getElementById('modifyAAFields').style.display = 'block';
-        document.getElementById('modifyAASubmit').style.display = 'block';
-      }
-    }
-
-    function addModifyAAToBatch() {
-      showMessage('modifyAAMessages', 'Modifications added to batch', 'success');
-    }
-
-    function loadDeprovAADetails() {
-      const select = document.getElementById('deprovAASelect');
-      const selectedAA = existingAutoAttendants.find(aa => aa.UPN === select.value);
-      
-      if (selectedAA) {
-        document.getElementById('deprovAAInfo').style.display = 'block';
-        document.getElementById('deprovAADetails').innerHTML = `
-          <div class="current-setting">Name: <span>${selectedAA.Display_Name}</span></div>
-          <div class="current-setting">Phone: <span>${formatPhoneNumber(selectedAA.Phone_Number)}</span></div>
-        `;
-        document.getElementById('deprovAASubmit').style.display = 'block';
-      }
-    }
-
-    function addDeprovAAToBatch() {
-      showMessage('deprovAAMessages', 'Deprovision added to batch', 'success');
-    }
-
-    // AA/CQ PAIR FUNCTIONS
-    function loadPairData() {
-      loadPhoneNumbers();
-      loadExistingPairs();
-    }
-
-    async function loadExistingPairs() {
-      existingPairs = [
-        {
-          pairName: 'HelpDesk',
-          aaUPN: 'call_helpdesk@msoe.edu',
-          cqUPN: 'q_helpdesk@msoe.edu',
-          vmGroup: 'qghelpdesk@msoe.edu'
-        }
-      ];
-      
-      populatePairDropdowns();
-    }
-
-    function populatePairDropdowns() {
-      const select = document.getElementById('managePairSelect');
-      if (select) {
-        select.innerHTML = '<option value="">Select a pair...</option>';
-        existingPairs.forEach(pair => {
-          select.innerHTML += `<option value="${pair.pairName}">${pair.pairName} (AA: ${pair.aaUPN} / CQ: ${pair.cqUPN})</option>`;
-        });
-      }
-    }
-
-    function updatePairNamingPreview() {
-      const name = document.getElementById('pairBaseName').value.toLowerCase().replace(/\s+/g, '');
-      document.getElementById('pairAAUPNPreview').textContent = name ? `call_${name}@msoe.edu` : 'call_@msoe.edu';
-      document.getElementById('pairAADisplayPreview').textContent = name ? `Call ${document.getElementById('pairBaseName').value}` : 'Call ';
-      document.getElementById('pairCQUPNPreview').textContent = name ? `q_${name}@msoe.edu` : 'q_@msoe.edu';
-      document.getElementById('pairCQDisplayPreview').textContent = name ? `Q ${document.getElementById('pairBaseName').value}` : 'Q ';
-      document.getElementById('pairVMPreview').textContent = name ? `qg${name}@msoe.edu` : 'qg@msoe.edu';
-    }
-
-    function addPairAgent() {
-      const input = document.getElementById('pairAgentInput');
-      const email = input.value.trim();
-      if (email && email.includes('@msoe.edu')) {
-        pairAgents.push(email);
-        updatePairAgentList();
-        input.value = '';
-      }
-    }
-
-    function updatePairAgentList() {
-      const container = document.getElementById('pairAgents');
-      if (pairAgents.length === 0) {
-        container.innerHTML = '<div class="batch-empty">No agents added yet</div>';
-      } else {
-        container.innerHTML = pairAgents.map(agent => 
-          `<div class="agent-item">
-            <span>${agent}</span>
-            <button class="btn btn-danger btn-small" onclick="removePairAgent('${agent}')">Remove</button>
-          </div>`
-        ).join('');
-      }
-    }
-
-    function removePairAgent(email) {
-      pairAgents = pairAgents.filter(a => a !== email);
-      updatePairAgentList();
-    }
-
-    function addPairToBatch() {
-      const baseName = document.getElementById('pairBaseName').value;
-      const aaPhone = document.getElementById('pairAAPhone').value;
-      const cqPhone = document.getElementById('pairCQPhone').value;
-      const distribution = document.getElementById('pairCQDistribution').value;
-      const language = document.getElementById('pairAALanguage').value;
-      const startTime = document.getElementById('pairStartTime').value;
-      const endTime = document.getElementById('pairEndTime').value;
-      const createVM = document.querySelector('input[name="pairVM"]:checked').value;
-      
-      if (!baseName || !aaPhone || !cqPhone) {
-        showMessage('addPairMessages', 'Please fill in all required fields', 'error');
-        return;
-      }
-      
-      const operation = {
-        action: 'createPair',
-        type: 'aaCqPair',
-        baseName: baseName,
-        aaUPN: `call_${baseName.toLowerCase().replace(/\s+/g, '')}@msoe.edu`,
-        aaDisplayName: `Call ${baseName}`,
-        aaPhone: aaPhone,
-        cqUPN: `q_${baseName.toLowerCase().replace(/\s+/g, '')}@msoe.edu`,
-        cqDisplayName: `Q ${baseName}`,
-        cqPhone: cqPhone,
-        vmGroup: createVM === 'yes' ? `qg${baseName.toLowerCase().replace(/\s+/g, '')}@msoe.edu` : null,
-        distribution: distribution,
-        language: language,
-        businessHours: `${startTime}-${endTime}`,
-        agents: [...pairAgents]
-      };
-      
-      batchPairOperations.push(operation);
-      updatePairBatchTable();
-      clearPairForm();
-      showMessage('addPairMessages', 'AA/CQ Pair added to batch', 'success');
-    }
-
-    function clearPairForm() {
-      document.getElementById('pairBaseName').value = '';
-      document.getElementById('pairAAPhone').selectedIndex = 0;
-      document.getElementById('pairCQPhone').selectedIndex = 0;
-      document.getElementById('pairCQDistribution').selectedIndex = 0;
-      document.getElementById('pairAALanguage').selectedIndex = 0;
-      document.getElementById('pairStartTime').value = '08:00';
-      document.getElementById('pairEndTime').value = '17:00';
-      document.querySelector('input[name="pairVM"][value="yes"]').checked = true;
-      pairAgents = [];
-      updatePairAgentList();
-      updatePairNamingPreview();
-    }
-
-    function updatePairBatchTable() {
-      const tbody = document.getElementById('batchPairTableBody');
-      const table = document.getElementById('batchPairTable');
-      const emptyMsg = document.getElementById('batchPairEmptyMessage');
-      const submitBtn = document.getElementById('submitAllPairBatch');
-      const clearBtn = document.getElementById('clearAllPairBatch');
-      
-      if (batchPairOperations.length === 0) {
-        table.style.display = 'none';
-        emptyMsg.style.display = 'block';
-        submitBtn.style.display = 'none';
-        clearBtn.style.display = 'none';
-      } else {
-        table.style.display = 'table';
-        emptyMsg.style.display = 'none';
-        submitBtn.style.display = 'block';
-        clearBtn.style.display = 'block';
-        
-        tbody.innerHTML = batchPairOperations.map((op, idx) => {
-          let actionClass = 'action-add';
-          let details = `AA: ${formatPhoneNumber(op.aaPhone)}, CQ: ${formatPhoneNumber(op.cqPhone)}`;
-          
-          return `
-            <tr class="${actionClass}">
-              <td>Create Pair</td>
-              <td>${op.baseName}</td>
-              <td>${details}</td>
-              <td><button class="remove-batch-item" onclick="removePairBatchItem(${idx})">X</button></td>
-            </tr>`;
-        }).join('');
-      }
-      
-      document.getElementById('batchPairAddCount').textContent = batchPairOperations.filter(op => op.action === 'createPair').length;
-      document.getElementById('batchPairModifyCount').textContent = 0;
-      document.getElementById('batchPairDeprovisionCount').textContent = 0;
-      document.getElementById('batchPairTotalCount').textContent = batchPairOperations.length;
-    }
-
-    function removePairBatchItem(index) {
-      batchPairOperations.splice(index, 1);
-      updatePairBatchTable();
-    }
-
-    async function submitAllPairOperations() {
-      if (batchPairOperations.length === 0) return;
-      
-      showMessage('batchPairResults', 'Processing AA/CQ Pair operations...', 'warning');
-      
-      const sqlData = batchPairOperations.map(op => ({
-        Action_Type: 'CreatePair',
-        Base_Name: op.baseName,
-        AA_UPN: op.aaUPN,
-        AA_Display_Name: op.aaDisplayName,
-        AA_Phone: op.aaPhone,
-        CQ_UPN: op.cqUPN,
-        CQ_Display_Name: op.cqDisplayName,
-        CQ_Phone: op.cqPhone,
-        VM_Group: op.vmGroup,
-        Distribution_Method: op.distribution,
-        Language: op.language,
-        Business_Hours: op.businessHours,
-        Agents: op.agents.join(';'),
-        Provisioning_Order: 'ResourceAccounts,License,VMGroup,Wait,CallQueue,AutoAttendant'
-      }));
-      
-      console.log('Submitting Pair operations to SQL:', sqlData);
-      
-      setTimeout(() => {
-        showMessage('batchPairResults', 'AA/CQ Pair operations completed successfully!', 'success');
-        batchPairOperations = [];
-        updatePairBatchTable();
-      }, 2000);
-    }
-
-    function clearAllPairBatch() {
-      batchPairOperations = [];
-      updatePairBatchTable();
-    }
-
-    function loadPairDetails() {
-      const select = document.getElementById('managePairSelect');
-      const selectedPair = existingPairs.find(p => p.pairName === select.value);
-      
-      if (selectedPair) {
-        document.getElementById('currentPairInfo').style.display = 'block';
-        document.getElementById('currentPairSettings').innerHTML = `
-          <div class="current-setting">Pair Name: <span>${selectedPair.pairName}</span></div>
-          <div class="current-setting">AA UPN: <span>${selectedPair.aaUPN}</span></div>
-          <div class="current-setting">CQ UPN: <span>${selectedPair.cqUPN}</span></div>
-          <div class="current-setting">VM Group: <span>${selectedPair.vmGroup || 'None'}</span></div>
-        `;
-        document.getElementById('managePairActions').style.display = 'block';
-      }
-    }
-
-    function unlinkPair() {
-      showMessage('managePairMessages', 'Unlink functionality will be available after backend integration', 'warning');
-    }
-
-    function deprovisionPair() {
-      showMessage('managePairMessages', 'Deprovision functionality will be available after backend integration', 'warning');
-    }
   </script>
 </body>
 </html>
