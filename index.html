@@ -106,20 +106,6 @@
     .agent-list{max-height:200px;overflow-y:auto;border:1px solid #ccc;padding:10px;border-radius:4px;background:#f9f9f9}
     .agent-item{display:flex;justify-content:space-between;align-items:center;padding:5px;margin:3px 0;background:#fff;border-radius:3px}
     
-    /* Fix for modify section width to accommodate longer UPNs */
-    .current-setting{
-      align-items:flex-start;
-      word-wrap:break-word;
-      overflow-wrap:break-word;
-      flex-wrap:wrap;
-    }
-    
-    .current-setting span{
-      word-wrap:break-word;
-      overflow-wrap:break-word;
-      max-width:100%;
-    }
-    
     @media(max-width:1200px){
       .main-layout{flex-direction:column}
       .left-panel,.right-panel{min-width:auto}
@@ -144,7 +130,7 @@
       <button class="tab-button" onclick="showTab('aa-cq-pairs', event)">AA/CQ Pairs</button>
     </div>
 
-    <!-- TEAMS PHONE USERS TAB -->
+<!-- TEAMS PHONE USERS TAB -->
     <div id="phone-users" class="tab-content active">
       <div class="main-layout">
         <!-- LEFT PANEL - Forms -->
@@ -266,54 +252,6 @@
                 <div class="radio-group">
                   <label><input type="radio" id="modifyIntlYes" name="modifyIntlCalling" value="yes"> Yes</label>
                   <label><input type="radio" id="modifyIntlNo"  name="modifyIntlCalling" value="no"> No</label>
-                </div>
-              </div>
-
-              <div id="modifyCallQueueGroupsGroup" class="form-group" style="display:none">
-                <label>Teams Call Queue Group Membership(s):</label>
-                <div id="currentCallQueueGroups">
-                  <h5 style="color:#1976d2">Current Group Memberships:</h5>
-                  <div id="currentCallQueueGroupsList"></div>
-                </div>
-                <div class="dynamic-section">
-                  <div class="dynamic-item">
-                    <select id="newCallQueueGroupSelect" class="form-control cq-group-select">
-                      <option value="">Select to add…</option>
-                    </select>
-                    <button class="btn btn-secondary btn-small" onclick="addCallQueueGroupMembership()">Add</button>
-                  </div>
-                </div>
-              </div>
-
-              <div id="modifyAutoAttendantsGroup" class="form-group" style="display:none">
-                <label>Add Auto Attendant Manager:</label>
-                <div id="currentAutoAttendants">
-                  <h5 style="color:#1976d2">Current Auto Attendants:</h5>
-                  <div id="currentAutoAttendantsList"></div>
-                </div>
-                <div class="dynamic-section">
-                  <div class="dynamic-item">
-                    <select id="newAutoAttendantSelect" class="form-control aa-select">
-                      <option value="">Select to add…</option>
-                    </select>
-                    <button class="btn btn-secondary btn-small" onclick="addAutoAttendantRole()">Add</button>
-                  </div>
-                </div>
-              </div>
-
-              <div id="modifyCallQueueManagersGroup" class="form-group" style="display:none">
-                <label>Add Call Queue Manager:</label>
-                <div id="currentCallQueueManagers">
-                  <h5 style="color:#1976d2">Current CQ Managers:</h5>
-                  <div id="currentCallQueueManagersList"></div>
-                </div>
-                <div class="dynamic-section">
-                  <div class="dynamic-item">
-                    <select id="newCallQueueSelect" class="form-control cq-select">
-                      <option value="">Select to add…</option>
-                    </select>
-                    <button class="btn btn-secondary btn-small" onclick="addCallQueueRole()">Add</button>
-                  </div>
                 </div>
               </div>
 
@@ -439,229 +377,6 @@
       </div>
     </div>
 
-<!-- TEAMS SHARED DEVICES TAB -->
-    <div id="shared-devices" class="tab-content">
-      <div class="main-layout">
-        <!-- LEFT PANEL - Forms -->
-        <div class="left-panel">
-          <div class="columns">
-
-            <!-- ADD SHARED DEVICE -->
-            <div class="column">
-              <div class="column-header">Add a Teams Shared Device</div>
-              <div id="addDeviceMessages"></div>
-
-              <div class="form-group">
-                <label for="addDeviceName">Select TSD Account:</label>
-                <select id="addDeviceName" class="form-control">
-                  <option value="">Select TSD account...</option>
-                </select>
-                <div class="help-text">Accounts with Teams Shared Device License applied and no Enterprise Voice</div>
-              </div>
-
-              <div class="form-group">
-                <label for="addDevicePhoneNumber">Pick an available phone number:</label>
-                <select id="addDevicePhoneNumber" class="form-control">
-                  <option value="">Select phone number...</option>
-                </select>
-                <div class="help-text">Or use a reserved number from dropdown below</div>
-                <select id="addDeviceReservedNumber" class="form-control" style="margin-top:5px">
-                  <option value="">-- Select a reserved number (optional) --</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>Teams Call Queue Group Membership(s):</label>
-                <div id="addDeviceCallQueueGroups" class="dynamic-section">
-                  <div class="dynamic-item">
-                    <select class="form-control cq-group-select">
-                      <option value="">Select call queue group...</option>
-                    </select>
-                    <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
-                  </div>
-                </div>
-                <button class="btn btn-secondary btn-small" onclick="addDeviceCallQueueGroup()">Add Another Group</button>
-              </div>
-
-              <div style="display:flex; gap:10px; margin-top:auto;">
-                <button id="addDeviceSubmit" class="btn btn-primary submit-button" disabled style="flex:1;">
-                  Add to Batch Queue
-                </button>
-                <button id="clearAddDeviceForm" class="btn btn-secondary" style="flex:0 0 auto;">
-                  Clear Form
-                </button>
-              </div>
-            </div>
-
-            <!-- MODIFY SHARED DEVICE -->
-            <div class="column">
-              <div class="column-header">Modify a Teams Shared Device</div>
-              <div id="modifyDeviceMessages"></div>
-
-              <div class="form-group">
-                <label for="modifyDeviceName">Select TSD Account:</label>
-                <select id="modifyDeviceName" class="form-control">
-                  <option value="">Select provisioned TSD account...</option>
-                </select>
-                <button id="modifyDeviceLookupBtn" class="btn btn-secondary"
-                        style="margin-top:10px">Lookup Device</button>
-              </div>
-
-              <div id="currentDeviceInfo" class="user-info" style="display:none">
-                <h4>Current Device Settings:</h4>
-                <div id="currentDeviceSettings"></div>
-              </div>
-
-              <div id="modifyDevicePhoneGroup" class="form-group" style="display:none">
-                <label>Change Phone Number:</label>
-                <select id="modifyDevicePhoneNumber" class="form-control">
-                  <option value="">Select new phone number…</option>
-                </select>
-                <div class="help-text">Or use a reserved number from dropdown below</div>
-                <select id="modifyDeviceReservedNumber" class="form-control" style="margin-top:5px">
-                  <option value="">-- Select a reserved number (optional) --</option>
-                </select>
-              </div>
-
-              <div id="modifyDeviceCallQueueGroupsGroup" class="form-group" style="display:none">
-                <label>Teams Call Queue Group Membership(s):</label>
-                <div id="currentDeviceCallQueueGroups">
-                  <h5 style="color:#1976d2">Current Group Memberships:</h5>
-                  <div id="currentDeviceCallQueueGroupsList"></div>
-                </div>
-                <div class="dynamic-section">
-                  <div class="dynamic-item">
-                    <select id="newDeviceCallQueueGroupSelect" class="form-control cq-group-select">
-                      <option value="">Select to add…</option>
-                    </select>
-                    <button class="btn btn-secondary btn-small" onclick="addDeviceCallQueueGroupMembership()">Add</button>
-                  </div>
-                </div>
-              </div>
-
-              <div id="modifyDeviceButtonGroup" style="display:flex; gap:10px; margin-top:auto;">
-                <button id="modifyDeviceSubmit" class="btn btn-primary submit-button"
-                        style="display:none; flex:1;">Add Modification to Batch</button>
-                <button id="clearModifyDeviceForm" class="btn btn-secondary" style="flex:0 0 auto;">
-                  Clear Form
-                </button>
-              </div>
-            </div>
-
-            <!-- DEPROVISION SHARED DEVICE -->
-            <div class="column">
-              <div class="column-header">Deprovision a Teams Shared Device</div>
-              <div id="deprovisionDeviceMessages"></div>
-
-              <div class="form-group">
-                <label for="deprovisionDeviceName">Select TSD Account:</label>
-                <select id="deprovisionDeviceName" class="form-control">
-                  <option value="">Select provisioned TSD account...</option>
-                </select>
-                <button id="deprovDeviceLookupBtn" class="btn btn-secondary"
-                        style="margin-top:10px">Lookup Device</button>
-              </div>
-
-              <div id="deprovisionDeviceInfo" class="user-info" style="display:none">
-                <h4>Device to be Deprovisioned:</h4>
-                <div id="deprovisionDeviceSettings"></div>
-              </div>
-
-              <div id="deprovisionDeviceButtonGroup" style="display:flex; gap:10px; margin-top:auto;">
-                <button id="deprovisionDeviceSubmit" class="btn btn-danger submit-button"
-                        style="display:none; flex:1;">Add Deprovision to Batch</button>
-                <button id="clearDeprovisionDeviceForm" class="btn btn-secondary" style="flex:0 0 auto;">
-                  Clear Form
-                </button>
-              </div>
-            </div>
-
-            <!-- RESERVE PHONE NUMBER FOR DEVICES -->
-            <div class="column reservation-column">
-              <div class="column-header">Reserve Phone Number for Device</div>
-              <div id="reserveDeviceMessages"></div>
-
-              <div class="form-group">
-                <label for="reserveDevicePhoneNumber">Select Phone Number to Reserve:</label>
-                <select id="reserveDevicePhoneNumber" class="form-control">
-                  <option value="">Select phone number to reserve...</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label for="reserveDeviceNotes">Reservation Notes:</label>
-                <textarea id="reserveDeviceNotes" class="form-control textarea" 
-                          placeholder="Enter notes about this reservation (optional)"
-                          maxlength="500"></textarea>
-                <div class="char-counter">
-                  <span id="deviceCharCount">0</span> / 500 characters
-                </div>
-              </div>
-
-              <button id="reserveDeviceSubmit" class="btn btn-reserve submit-button" disabled style="width:100%;">
-                Reserve Phone Number
-              </button>
-
-              <div style="margin-top:20px;border-top:1px solid #999;padding-top:15px;">
-                <h4 style="margin-bottom:10px;color:#6b3aa0;">Currently Reserved Numbers:</h4>
-                <div id="reservedDeviceNumbersList" class="dynamic-section">
-                  <div class="batch-empty">Loading reserved numbers...</div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        <!-- RIGHT PANEL - Batch Operations -->
-        <div class="right-panel">
-          <div class="batch-panel">
-            <div class="batch-header">Batch Operations Queue - Shared Devices</div>
-            
-            <div class="batch-summary">
-              <strong>Summary:</strong>
-              <div>Adds: <span id="batchDeviceAddCount">0</span></div>
-              <div>Modifications: <span id="batchDeviceModifyCount">0</span></div>
-              <div>Deprovisions: <span id="batchDeviceDeprovisionCount">0</span></div>
-              <div><strong>Total: <span id="batchDeviceTotalCount">0</span></strong></div>
-            </div>
-
-            <div id="batchDeviceTableContainer">
-              <div id="batchDeviceEmptyMessage" class="batch-empty">
-                No operations queued. Use the forms on the left to add operations to the batch.
-              </div>
-              <table id="batchDeviceTable" class="batch-table" style="display:none">
-                <thead>
-                  <tr>
-                    <th>Action</th>
-                    <th>TSD Account</th>
-                    <th>Details</th>
-                    <th>Remove</th>
-                  </tr>
-                </thead>
-                <tbody id="batchDeviceTableBody">
-                </tbody>
-              </table>
-            </div>
-
-            <div style="margin-top:15px;">
-              <button id="submitAllDeviceBatch" class="btn btn-success" style="width:100%; display:none">
-                Submit All Operations
-              </button>
-              <button id="clearAllDeviceBatch" class="btn btn-secondary" style="width:100%; margin-top:10px; display:none">
-                Clear All
-              </button>
-              <button id="resetDevicePageBtn" class="btn btn-primary" style="width:100%; margin-top:10px; display:none">
-                🔄 Reset Page
-              </button>
-            </div>
-
-            <div id="batchDeviceResults" style="margin-top:15px;"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- CALL QUEUES TAB -->
     <div id="call-queues" class="tab-content">
       <div class="main-layout">
@@ -701,86 +416,18 @@
               </div>
             </div>
 
-            <!-- MODIFY CALL QUEUE -->
+            <!-- MODIFY CALL QUEUE - Simplified for now -->
             <div class="column">
               <div class="column-header">Modify Call Queue</div>
               <div id="modifyCQMessages"></div>
-              
-              <div class="form-group">
-                <label for="modifyCQSelect">Select Call Queue:</label>
-                <select id="modifyCQSelect" class="form-control">
-                  <option value="">Select call queue...</option>
-                </select>
-                <button id="modifyCQLookup" class="btn btn-secondary" style="margin-top:10px">
-                  Load Details
-                </button>
-              </div>
-
-              <div id="currentCQInfo" class="user-info" style="display:none">
-                <h4>Current Settings:</h4>
-                <div id="currentCQSettings"></div>
-              </div>
-
-              <div id="modifyCQFields" style="display:none">
-                <div class="form-group">
-                  <label for="modifyCQPhone">Change Phone Number:</label>
-                  <select id="modifyCQPhone" class="form-control">
-                    <option value="">Keep current number</option>
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <label>Manage Agents:</label>
-                  <div id="modifyCQAgents" class="agent-list">
-                    <!-- Current agents will be loaded here -->
-                  </div>
-                  <input type="email" id="modifyCQAgentInput" class="form-control" 
-                         placeholder="Add new agent" style="margin-top:10px"/>
-                  <button class="btn btn-secondary btn-small" onclick="addModifyCQAgent()">Add Agent</button>
-                </div>
-              </div>
-
-              <div style="display:flex; gap:10px; margin-top:auto;">
-                <button id="modifyCQSubmit" class="btn btn-primary" style="display:none;flex:1">
-                  Add Modifications to Batch
-                </button>
-                <button id="clearModifyCQForm" class="btn btn-secondary" style="flex:0 0 auto;">
-                  Clear Form
-                </button>
-              </div>
+              <p style="color:#666;font-style:italic;padding:20px;">Modification functionality coming soon</p>
             </div>
 
-            <!-- DEPROVISION CALL QUEUE -->
+            <!-- DEPROVISION CALL QUEUE - Simplified for now -->
             <div class="column">
               <div class="column-header">Deprovision Call Queue</div>
               <div id="deprovCQMessages"></div>
-              
-              <div class="form-group">
-                <label for="deprovCQSelect">Select Call Queue:</label>
-                <select id="deprovCQSelect" class="form-control">
-                  <option value="">Select call queue...</option>
-                </select>
-                <button id="deprovCQLookup" class="btn btn-secondary" style="margin-top:10px">
-                  View Details
-                </button>
-              </div>
-
-              <div id="deprovCQInfo" class="user-info" style="display:none">
-                <h4>Call Queue to Remove:</h4>
-                <div id="deprovCQDetails"></div>
-                <div class="warning" style="margin-top:10px">
-                  Warning: This will remove the call queue and release the phone number.
-                </div>
-              </div>
-
-              <div style="display:flex; gap:10px; margin-top:auto;">
-                <button id="deprovCQSubmit" class="btn btn-danger" style="display:none;flex:1">
-                  Add Deprovision to Batch
-                </button>
-                <button id="clearDeprovCQForm" class="btn btn-secondary" style="flex:0 0 auto;">
-                  Clear Form
-                </button>
-              </div>
+              <p style="color:#666;font-style:italic;padding:20px;">Deprovision functionality coming soon</p>
             </div>
           </div>
         </div>
@@ -792,10 +439,7 @@
             
             <div class="batch-summary">
               <strong>Summary:</strong>
-              <div>Adds: <span id="batchCQAddCount">0</span></div>
-              <div>Modifications: <span id="batchCQModifyCount">0</span></div>
-              <div>Deprovisions: <span id="batchCQDeprovisionCount">0</span></div>
-              <div><strong>Total: <span id="batchCQTotalCount">0</span></strong></div>
+              <div>Total: <span id="batchCQTotalCount">0</span></div>
             </div>
 
             <div id="batchCQTableContainer">
@@ -805,9 +449,8 @@
               <table id="batchCQTable" class="batch-table" style="display:none">
                 <thead>
                   <tr>
-                    <th>Action</th>
                     <th>Call Queue</th>
-                    <th>Details</th>
+                    <th>Phone</th>
                     <th>Remove</th>
                   </tr>
                 </thead>
@@ -830,341 +473,18 @@
       </div>
     </div>
 
-    <!-- AUTO ATTENDANTS TAB -->
+    <!-- Similar simplified structures for AUTO ATTENDANTS and AA/CQ PAIRS tabs -->
     <div id="auto-attendants" class="tab-content">
-      <div class="main-layout">
-        <div class="left-panel">
-          <div class="columns">
-            <!-- ADD AUTO ATTENDANT -->
-            <div class="column">
-              <div class="column-header">Add Auto Attendant</div>
-              <div id="addAAMessages"></div>
-              
-              <div class="form-group">
-                <label for="addAAName">Auto Attendant Name:</label>
-                <input type="text" id="addAAName" class="form-control" 
-                       placeholder="e.g., Main Reception" maxlength="50"/>
-                <div class="naming-preview">
-                  <h5>Generated Names:</h5>
-                  <div class="naming-item">UPN: <span id="aaUPNPreview">call_@msoe.edu</span></div>
-                  <div class="naming-item">Display: <span id="aaDisplayPreview">Call </span></div>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="addAAPhone">Phone Number:</label>
-                <select id="addAAPhone" class="form-control">
-                  <option value="">Select phone number...</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>Greeting Message:</label>
-                <textarea id="addAAGreeting" class="form-control textarea" 
-                          placeholder="Enter greeting message" maxlength="500"></textarea>
-              </div>
-
-              <div class="form-group">
-                <label>Menu Options:</label>
-                <div id="addAAMenuOptions" class="dynamic-section">
-                  <div class="batch-empty">No menu options added</div>
-                </div>
-                <div style="display:flex;gap:10px;margin-top:10px">
-                  <input type="text" id="addAAMenuKey" class="form-control" 
-                         placeholder="Key (0-9)" style="width:80px"/>
-                  <input type="text" id="addAAMenuTarget" class="form-control" 
-                         placeholder="Target (extension/queue)"/>
-                  <button class="btn btn-secondary btn-small" onclick="addAAMenuOption()">Add Option</button>
-                </div>
-              </div>
-
-              <div style="display:flex; gap:10px; margin-top:auto;">
-                <button id="addAASubmit" class="btn btn-primary" style="flex:1;">
-                  Add to Batch Queue
-                </button>
-                <button id="clearAddAAForm" class="btn btn-secondary" style="flex:0 0 auto;">
-                  Clear Form
-                </button>
-              </div>
-            </div>
-
-            <!-- MODIFY AUTO ATTENDANT -->
-            <div class="column">
-              <div class="column-header">Modify Auto Attendant</div>
-              <div id="modifyAAMessages"></div>
-              
-              <div class="form-group">
-                <label for="modifyAASelect">Select Auto Attendant:</label>
-                <select id="modifyAASelect" class="form-control">
-                  <option value="">Select auto attendant...</option>
-                </select>
-                <button id="modifyAALookup" class="btn btn-secondary" style="margin-top:10px">
-                  Load Details
-                </button>
-              </div>
-
-              <div id="currentAAInfo" class="user-info" style="display:none">
-                <h4>Current Settings:</h4>
-                <div id="currentAASettings"></div>
-              </div>
-
-              <div id="modifyAAFields" style="display:none">
-                <div class="form-group">
-                  <label for="modifyAAPhone">Change Phone Number:</label>
-                  <select id="modifyAAPhone" class="form-control">
-                    <option value="">Keep current number</option>
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <label>Update Greeting:</label>
-                  <textarea id="modifyAAGreeting" class="form-control textarea" 
-                            placeholder="Leave blank to keep current"></textarea>
-                </div>
-
-                <div class="form-group">
-                  <label>Menu Options:</label>
-                  <div id="modifyAAMenuOptions" class="dynamic-section">
-                    <!-- Current options will be loaded here -->
-                  </div>
-                </div>
-              </div>
-
-              <div style="display:flex; gap:10px; margin-top:auto;">
-                <button id="modifyAASubmit" class="btn btn-primary" style="display:none;flex:1">
-                  Add Modifications to Batch
-                </button>
-                <button id="clearModifyAAForm" class="btn btn-secondary" style="flex:0 0 auto;">
-                  Clear Form
-                </button>
-              </div>
-            </div>
-
-            <!-- DEPROVISION AUTO ATTENDANT -->
-            <div class="column">
-              <div class="column-header">Deprovision Auto Attendant</div>
-              <div id="deprovAAMessages"></div>
-              
-              <div class="form-group">
-                <label for="deprovAASelect">Select Auto Attendant:</label>
-                <select id="deprovAASelect" class="form-control">
-                  <option value="">Select auto attendant...</option>
-                </select>
-                <button id="deprovAALookup" class="btn btn-secondary" style="margin-top:10px">
-                  View Details
-                </button>
-              </div>
-
-              <div id="deprovAAInfo" class="user-info" style="display:none">
-                <h4>Auto Attendant to Remove:</h4>
-                <div id="deprovAADetails"></div>
-                <div class="warning" style="margin-top:10px">
-                  Warning: This will remove the auto attendant and release the phone number.
-                </div>
-              </div>
-
-              <div style="display:flex; gap:10px; margin-top:auto;">
-                <button id="deprovAASubmit" class="btn btn-danger" style="display:none;flex:1">
-                  Add Deprovision to Batch
-                </button>
-                <button id="clearDeprovAAForm" class="btn btn-secondary" style="flex:0 0 auto;">
-                  Clear Form
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- RIGHT PANEL - AA Batch Operations -->
-        <div class="right-panel">
-          <div class="batch-panel">
-            <div class="batch-header">Auto Attendant Operations Queue</div>
-            
-            <div class="batch-summary">
-              <strong>Summary:</strong>
-              <div>Adds: <span id="batchAAAddCount">0</span></div>
-              <div>Modifications: <span id="batchAAModifyCount">0</span></div>
-              <div>Deprovisions: <span id="batchAADeprovisionCount">0</span></div>
-              <div><strong>Total: <span id="batchAATotalCount">0</span></strong></div>
-            </div>
-
-            <div id="batchAATableContainer">
-              <div id="batchAAEmptyMessage" class="batch-empty">
-                No operations queued. Use the forms on the left to add operations.
-              </div>
-              <table id="batchAATable" class="batch-table" style="display:none">
-                <thead>
-                  <tr>
-                    <th>Action</th>
-                    <th>Auto Attendant</th>
-                    <th>Details</th>
-                    <th>Remove</th>
-                  </tr>
-                </thead>
-                <tbody id="batchAATableBody"></tbody>
-              </table>
-            </div>
-
-            <div style="margin-top:15px;">
-              <button id="submitAllAABatch" class="btn btn-success" style="width:100%; display:none">
-                Submit All AA Operations
-              </button>
-              <button id="clearAllAABatch" class="btn btn-secondary" style="width:100%; margin-top:10px; display:none">
-                Clear All
-              </button>
-            </div>
-
-            <div id="batchAAResults" style="margin-top:15px;"></div>
-          </div>
-        </div>
-      </div>
+      <p style="padding:40px;text-align:center;color:#666;">Auto Attendants module - Coming soon</p>
     </div>
 
-    <!-- AA/CQ PAIRS TAB -->
     <div id="aa-cq-pairs" class="tab-content">
-      <div class="main-layout">
-        <div class="left-panel">
-          <div class="columns">
-            <!-- CREATE AA/CQ PAIR -->
-            <div class="column">
-              <div class="column-header">Create AA/CQ Pair</div>
-              <div id="addPairMessages"></div>
-              
-              <div class="form-group">
-                <label for="pairBaseName">Base Name (used for both AA and CQ):</label>
-                <input type="text" id="pairBaseName" class="form-control" 
-                       placeholder="e.g., HelpDesk" maxlength="40"/>
-                <div class="naming-preview">
-                  <h5>Generated Names:</h5>
-                  <div class="naming-item">AA UPN: <span id="pairAAUPNPreview">call_@msoe.edu</span></div>
-                  <div class="naming-item">AA Display: <span id="pairAADisplayPreview">Call </span></div>
-                  <div class="naming-item">CQ UPN: <span id="pairCQUPNPreview">q_@msoe.edu</span></div>
-                  <div class="naming-item">CQ Display: <span id="pairCQDisplayPreview">Q </span></div>
-                  <div class="naming-item">CQ Agent / Voicemail Group: <span id="pairVMPreview">qg@msoe.edu</span></div>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label>Phone Numbers:</label>
-                <label for="pairAAPhone" style="font-weight:normal;margin-top:10px">Auto Attendant Number:</label>
-                <select id="pairAAPhone" class="form-control">
-                  <option value="">Select AA phone number...</option>
-                </select>
-                <label for="pairCQPhone" style="font-weight:normal;margin-top:10px">Call Queue Number:</label>
-                <select id="pairCQPhone" class="form-control">
-                  <option value="">Select CQ phone number...</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>Initial Queue Agents:</label>
-                <div id="pairAgents" class="agent-list">
-                  <div class="batch-empty">No agents added yet</div>
-                </div>
-                <input type="email" id="pairAgentInput" class="form-control" 
-                       placeholder="user@msoe.edu" style="margin-top:10px"/>
-                <button class="btn btn-secondary btn-small" onclick="addPairAgent()">Add Agent</button>
-              </div>
-
-              <div style="display:flex; gap:10px; margin-top:auto;">
-                <button id="addPairSubmit" class="btn btn-primary" style="flex:1;">
-                  Add AA/CQ Pair to Batch
-                </button>
-                <button id="clearAddPairForm" class="btn btn-secondary" style="flex:0 0 auto;">
-                  Clear Form
-                </button>
-              </div>
-            </div>
-
-            <!-- MANAGE AA/CQ PAIRS -->
-            <div class="column">
-              <div class="column-header">Manage Existing Pairs</div>
-              <div id="managePairMessages"></div>
-              
-              <div class="form-group">
-                <label for="managePairSelect">Select AA/CQ Pair:</label>
-                <select id="managePairSelect" class="form-control">
-                  <option value="">Select existing pair...</option>
-                </select>
-                <button id="managePairLookup" class="btn btn-secondary" style="margin-top:10px">
-                  Load Pair Details
-                </button>
-              </div>
-
-              <div id="currentPairInfo" class="user-info" style="display:none">
-                <h4>Current Pair Configuration:</h4>
-                <div id="currentPairSettings"></div>
-              </div>
-
-              <div id="managePairActions" style="display:none">
-                <div class="form-group">
-                  <label>Pair Actions:</label>
-                  <button class="btn btn-secondary" onclick="unlinkPair()" style="width:100%;margin-bottom:10px">
-                    Unlink AA from CQ
-                  </button>
-                  <button class="btn btn-danger" onclick="deprovisionPair()" style="width:100%">
-                    Deprovision Entire Pair
-                  </button>
-                </div>
-              </div>
-
-              <div style="display:flex; gap:10px; margin-top:auto;">
-                <button id="clearManagePairForm" class="btn btn-secondary" style="width:100%;">
-                  Clear Form
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- RIGHT PANEL - Pair Batch Operations -->
-        <div class="right-panel">
-          <div class="batch-panel">
-            <div class="batch-header">AA/CQ Pair Operations Queue</div>
-            
-            <div class="batch-summary">
-              <strong>Summary:</strong>
-              <div>Pair Creates: <span id="batchPairAddCount">0</span></div>
-              <div>Pair Modifications: <span id="batchPairModifyCount">0</span></div>
-              <div>Pair Deprovisions: <span id="batchPairDeprovisionCount">0</span></div>
-              <div><strong>Total: <span id="batchPairTotalCount">0</span></strong></div>
-            </div>
-
-            <div id="batchPairTableContainer">
-              <div id="batchPairEmptyMessage" class="batch-empty">
-                No pair operations queued. Use the forms on the left to add operations.
-              </div>
-              <table id="batchPairTable" class="batch-table" style="display:none">
-                <thead>
-                  <tr>
-                    <th>Action</th>
-                    <th>Pair Name</th>
-                    <th>Details</th>
-                    <th>Remove</th>
-                  </tr>
-                </thead>
-                <tbody id="batchPairTableBody"></tbody>
-              </table>
-            </div>
-
-            <div style="margin-top:15px;">
-              <button id="submitAllPairBatch" class="btn btn-success" style="width:100%; display:none">
-                Submit All Pair Operations
-              </button>
-              <button id="clearAllPairBatch" class="btn btn-secondary" style="width:100%; margin-top:10px; display:none">
-                Clear All
-              </button>
-            </div>
-
-            <div id="batchPairResults" style="margin-top:15px;"></div>
-          </div>
-        </div>
-      </div>
+      <p style="padding:40px;text-align:center;color:#666;">AA/CQ Pairs module - Coming soon</p>
     </div>
 
   </div>
 
-  <!-- Teams SDK -->
+<!-- Teams SDK -->
   <script src="https://statics.teams.microsoft.com/sdk/v1.11.0/js/MicrosoftTeams.min.js"></script>
 
   <script>
@@ -1174,42 +494,20 @@
       key: 'NULL'
     };
 
-    const AZURE_CONFIG = {
-      functionAppClientId: 'f2068d39-85c7-4507-9fd3-0758b193b0a9',
-      phoneUsersUrl: 'https://provisionteamsphonesystemusers-a5b3b9fjcxcva8g4.northcentralus-01.azurewebsites.net/api/TriggerRunbook',
-      sharedDevicesUrl: 'https://provisionteamsphonesystemusers-a5b3b9fjcxcva8g4.northcentralus-01.azurewebsites.net/api/TriggerSharedDeviceRunbook',
-      callQueuesUrl: 'https://provisionteamsphonesystemusers-a5b3b9fjcxcva8g4.northcentralus-01.azurewebsites.net/api/TriggerCQRunbook',
-      autoAttendantsUrl: 'https://provisionteamsphonesystemusers-a5b3b9fjcxcva8g4.northcentralus-01.azurewebsites.net/api/TriggerAARunbook',
-      pairsUrl: 'https://provisionteamsphonesystemusers-a5b3b9fjcxcva8g4.northcentralus-01.azurewebsites.net/api/TriggerPairRunbook'
-    };
-
     // GLOBAL VARIABLES
-    let phoneNumbers = [], dropdownData = null, currentUser = null, currentDevice = null;
+    let phoneNumbers = [];
+    let dropdownData = null;
+    let currentUser = null;
     let reservedNumbers = [];
     let batchOperations = [];
-    let batchDeviceOperations = [];
     let batchCQOperations = [];
-    let batchAAOperations = [];
-    let batchPairOperations = [];
     let isTeamsEnvironment = false;
-    let existingCallQueues = [];
-    let existingAutoAttendants = [];
-    let existingPairs = [];
-    let cqAgents = [];
-    let aaMenuOptions = [];
-    let pairAgents = [];
     
     // Mock data for testing
     const mockUsers = [
       { DisplayName: 'John Doe', UserPrincipalName: 'jdoe@msoe.edu' },
       { DisplayName: 'Jane Smith', UserPrincipalName: 'jsmith@msoe.edu' },
       { DisplayName: 'Bob Johnson', UserPrincipalName: 'bjohnson@msoe.edu' }
-    ];
-    
-    const mockTSDAccounts = [
-      { DisplayName: 'TSD-Conference-Room-101', UserPrincipalName: 'tsd-conf-101@msoe.edu' },
-      { DisplayName: 'TSD-Conference-Room-202', UserPrincipalName: 'tsd-conf-202@msoe.edu' },
-      { DisplayName: 'TSD-Lobby-Phone', UserPrincipalName: 'tsd-lobby@msoe.edu' }
     ];
     
     const mockCallQueueGroups = [
@@ -1231,8 +529,7 @@
     // INITIALIZATION
     document.addEventListener('DOMContentLoaded', () => {
       initializeTeams();
-      loadPhoneNumbers();
-      loadReservedNumbers();
+      loadInitialData();
       setupEventHandlers();
     });
 
@@ -1242,17 +539,16 @@
       document.getElementById('addPhoneNumber').addEventListener('change', validateAddForm);
       document.getElementById('addReservedNumber').addEventListener('change', handleReservedNumberSelection);
       document.getElementById('addUserSubmit').onclick = addToBatch;
-      document.getElementById('clearAddForm').onclick = clearAddFormOnly;
+      document.getElementById('clearAddForm').onclick = clearAddForm;
       document.getElementById('modifyLookupBtn').addEventListener('click', lookupUser);
-      document.getElementById('modifyReservedNumber').addEventListener('change', handleModifyReservedNumberSelection);
       document.getElementById('modifyUserSubmit').onclick = addModifyToBatch;
-      document.getElementById('clearModifyForm').onclick = clearModifyFormOnly;
+      document.getElementById('clearModifyForm').onclick = clearModifyForm;
       document.getElementById('deprovLookupBtn').addEventListener('click', lookupDeprovisionUser);
       document.getElementById('deprovisionUserSubmit').onclick = addDeprovisionToBatch;
-      document.getElementById('clearDeprovisionForm').onclick = clearDeprovisionFormOnly;
+      document.getElementById('clearDeprovisionForm').onclick = clearDeprovisionForm;
       document.getElementById('submitAllBatch').onclick = submitAllOperations;
       document.getElementById('clearAllBatch').onclick = clearAllBatch;
-      document.getElementById('resetPageBtn').onclick = resetPage;
+      document.getElementById('resetPageBtn').onclick = () => location.reload();
       document.getElementById('reservePhoneNumber').addEventListener('change', validateReserveForm);
       document.getElementById('reserveNotes').addEventListener('input', function() {
         document.getElementById('charCount').textContent = this.value.length;
@@ -1260,63 +556,12 @@
       });
       document.getElementById('reserveSubmit').onclick = reservePhoneNumber;
 
-      // Shared Devices
-      document.getElementById('addDeviceName').addEventListener('change', validateAddDeviceForm);
-      document.getElementById('addDevicePhoneNumber').addEventListener('change', validateAddDeviceForm);
-      document.getElementById('addDeviceReservedNumber').addEventListener('change', handleDeviceReservedNumberSelection);
-      document.getElementById('addDeviceSubmit').onclick = addDeviceToBatch;
-      document.getElementById('clearAddDeviceForm').onclick = clearAddDeviceFormOnly;
-      document.getElementById('modifyDeviceLookupBtn').addEventListener('click', lookupDevice);
-      document.getElementById('modifyDeviceReservedNumber').addEventListener('change', handleDeviceModifyReservedNumberSelection);
-      document.getElementById('modifyDeviceSubmit').onclick = addModifyDeviceToBatch;
-      document.getElementById('clearModifyDeviceForm').onclick = clearModifyDeviceFormOnly;
-      document.getElementById('deprovDeviceLookupBtn').addEventListener('click', lookupDeprovisionDevice);
-      document.getElementById('deprovisionDeviceSubmit').onclick = addDeprovisionDeviceToBatch;
-      document.getElementById('clearDeprovisionDeviceForm').onclick = clearDeprovisionDeviceFormOnly;
-      document.getElementById('submitAllDeviceBatch').onclick = submitAllDeviceOperations;
-      document.getElementById('clearAllDeviceBatch').onclick = clearAllDeviceBatch;
-      document.getElementById('resetDevicePageBtn').onclick = resetDevicePage;
-      document.getElementById('reserveDevicePhoneNumber').addEventListener('change', validateDeviceReserveForm);
-      document.getElementById('reserveDeviceNotes').addEventListener('input', function() {
-        document.getElementById('deviceCharCount').textContent = this.value.length;
-        validateDeviceReserveForm();
-      });
-      document.getElementById('reserveDeviceSubmit').onclick = reserveDevicePhoneNumber;
-
       // Call Queues
       document.getElementById('addCQName').addEventListener('input', updateCQNamingPreview);
       document.getElementById('addCQSubmit').onclick = addCQToBatch;
-      document.getElementById('clearAddCQForm').onclick = clearCQAddForm;
-      document.getElementById('modifyCQLookup').onclick = loadCQDetails;
-      document.getElementById('modifyCQSubmit').onclick = addModifyCQToBatch;
-      document.getElementById('clearModifyCQForm').onclick = clearModifyCQForm;
-      document.getElementById('deprovCQLookup').onclick = loadDeprovCQDetails;
-      document.getElementById('deprovCQSubmit').onclick = addDeprovCQToBatch;
-      document.getElementById('clearDeprovCQForm').onclick = clearDeprovCQForm;
+      document.getElementById('clearAddCQForm').onclick = clearCQForm;
       document.getElementById('submitAllCQBatch').onclick = submitAllCQOperations;
       document.getElementById('clearAllCQBatch').onclick = clearAllCQBatch;
-
-      // Auto Attendants
-      document.getElementById('addAAName').addEventListener('input', updateAANamingPreview);
-      document.getElementById('addAASubmit').onclick = addAAToBatch;
-      document.getElementById('clearAddAAForm').onclick = clearAAAddForm;
-      document.getElementById('modifyAALookup').onclick = loadAADetails;
-      document.getElementById('modifyAASubmit').onclick = addModifyAAToBatch;
-      document.getElementById('clearModifyAAForm').onclick = clearModifyAAForm;
-      document.getElementById('deprovAALookup').onclick = loadDeprovAADetails;
-      document.getElementById('deprovAASubmit').onclick = addDeprovAAToBatch;
-      document.getElementById('clearDeprovAAForm').onclick = clearDeprovAAForm;
-      document.getElementById('submitAllAABatch').onclick = submitAllAAOperations;
-      document.getElementById('clearAllAABatch').onclick = clearAllAABatch;
-
-      // AA/CQ Pairs
-      document.getElementById('pairBaseName').addEventListener('input', updatePairNamingPreview);
-      document.getElementById('addPairSubmit').onclick = addPairToBatch;
-      document.getElementById('clearAddPairForm').onclick = clearPairForm;
-      document.getElementById('managePairLookup').onclick = loadPairDetails;
-      document.getElementById('clearManagePairForm').onclick = clearManagePairForm;
-      document.getElementById('submitAllPairBatch').onclick = submitAllPairOperations;
-      document.getElementById('clearAllPairBatch').onclick = clearAllPairBatch;
     }
 
     // TAB MANAGEMENT
@@ -1329,17 +574,6 @@
       });
       document.getElementById(tabName).classList.add('active');
       event.target.classList.add('active');
-      
-      if (tabName === 'shared-devices') {
-        loadPhoneNumbers();
-        loadReservedNumbers();
-      } else if (tabName === 'call-queues') {
-        loadCallQueueData();
-      } else if (tabName === 'auto-attendants') {
-        loadAutoAttendantData();
-      } else if (tabName === 'aa-cq-pairs') {
-        loadPairData();
-      }
     }
 
     // TEAMS INITIALIZATION
@@ -1352,12 +586,12 @@
           document.getElementById('teamsStatus').className = 'teams-status authenticated';
         } else {
           isTeamsEnvironment = false;
-          document.getElementById('teamsStatus').textContent = '⚠️ Running outside Teams - using fallback authentication';
+          document.getElementById('teamsStatus').textContent = '⚠️ Running outside Teams - using mock data';
           document.getElementById('teamsStatus').className = 'teams-status warning';
         }
       } catch (error) {
         isTeamsEnvironment = false;
-        document.getElementById('teamsStatus').textContent = '⚠️ Teams initialization failed - using fallback authentication';
+        document.getElementById('teamsStatus').textContent = '⚠️ Teams initialization failed - using mock data';
         document.getElementById('teamsStatus').className = 'teams-status warning';
       }
     }
@@ -1372,7 +606,7 @@
 
     function showMessage(id,msg,type){
       let c=document.getElementById(id);
-      if(c) c.innerHTML=type?`<div class="${type}">${msg}</div>`:msg;
+      if(c) c.innerHTML=type?`<div class="${type}">${msg}</div>`:'';
     }
 
     function removeItem(btn){
@@ -1380,87 +614,52 @@
     }
 
     // DATA LOADING FUNCTIONS
-    async function loadPhoneNumbers() {
+    async function loadInitialData() {
+      // Load phone numbers
       try {
-        let r = await fetch(`${API.url}?code=${API.key}`);
-        if (!r.ok) {
-          console.error('Phone fetch failed');
-          // Use mock data for testing
-          phoneNumbers = Array.from({length: 10}, (_, i) => ({
-            AvailablePhoneNumber: `+1414555${String(i).padStart(4, '0')}`
-          }));
+        const response = await fetch(`${API.url}?code=${API.key}`);
+        if (response.ok) {
+          phoneNumbers = await response.json();
         } else {
-          phoneNumbers = await r.json();
+          throw new Error('API failed');
         }
-        populatePhoneDropdowns();
-        populateDevicePhoneDropdowns();
-        populateReservationDropdowns();
-        populateCQAAPhoneDropdowns();
       } catch (error) {
-        console.error('Error loading phone numbers:', error);
-        // Use mock data
+        console.log('Using mock phone numbers');
         phoneNumbers = Array.from({length: 10}, (_, i) => ({
           AvailablePhoneNumber: `+1414555${String(i).padStart(4, '0')}`
         }));
-        populatePhoneDropdowns();
-        populateDevicePhoneDropdowns();
-        populateReservationDropdowns();
-        populateCQAAPhoneDropdowns();
       }
 
+      // Load dropdown data
       try {
-        let r = await fetch(`${API.url}?code=${API.key}`, {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({action:'getdropdowndata'})
+        const response = await fetch(`${API.url}?code=${API.key}`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({action: 'getdropdowndata'})
         });
-        if (!r.ok) {
-          console.error('Dropdown fetch failed');
-          // Use mock data
-          dropdownData = {
-            users: mockUsers,
-            tsdAccounts: mockTSDAccounts,
-            callQueueGroups: mockCallQueueGroups,
-            autoAttendants: mockAutoAttendants,
-            callQueues: mockCallQueues
-          };
+        if (response.ok) {
+          dropdownData = await response.json();
         } else {
-          dropdownData = await r.json();
+          throw new Error('API failed');
         }
-        populateDropdowns();
       } catch (error) {
-        console.error('Error loading dropdown data:', error);
-        // Use mock data
+        console.log('Using mock dropdown data');
         dropdownData = {
           users: mockUsers,
-          tsdAccounts: mockTSDAccounts,
           callQueueGroups: mockCallQueueGroups,
           autoAttendants: mockAutoAttendants,
           callQueues: mockCallQueues
         };
-        populateDropdowns();
       }
+
+      // Populate all dropdowns
+      populateAllDropdowns();
     }
 
-    async function loadReservedNumbers() {
-      try {
-        const response = await fetch(`${API.url}?code=${API.key}&includeReserved=true`);
-        if (!response.ok) throw new Error('Failed to fetch reserved numbers');
-        reservedNumbers = await response.json();
-        populateReservedDropdowns();
-        displayReservedNumbers();
-      } catch (error) {
-        console.error('Error loading reserved numbers:', error);
-        reservedNumbers = [];
-        populateReservedDropdowns();
-        displayReservedNumbers();
-      }
-    }
-
-    // DROPDOWN POPULATION FUNCTIONS
-    function populatePhoneDropdowns() {
-      const selects = ['addPhoneNumber', 'modifyPhoneNumber'];
-      selects.forEach(id => {
+    function populateAllDropdowns() {
+      // Phone number dropdowns
+      const phoneSelects = ['addPhoneNumber', 'modifyPhoneNumber', 'reservePhoneNumber', 'addCQPhone'];
+      phoneSelects.forEach(id => {
         const select = document.getElementById(id);
         if (select) {
           select.innerHTML = '<option value="">Select phone number...</option>';
@@ -1470,61 +669,8 @@
           });
         }
       });
-    }
 
-    function populateDevicePhoneDropdowns() {
-      const selects = ['addDevicePhoneNumber', 'modifyDevicePhoneNumber'];
-      selects.forEach(id => {
-        const select = document.getElementById(id);
-        if (select) {
-          select.innerHTML = '<option value="">Select phone number...</option>';
-          phoneNumbers.forEach(num => {
-            const option = new Option(formatPhoneNumber(num.AvailablePhoneNumber), num.AvailablePhoneNumber);
-            select.appendChild(option);
-          });
-        }
-      });
-    }
-
-    function populateReservationDropdowns() {
-      const selects = ['reservePhoneNumber', 'reserveDevicePhoneNumber'];
-      selects.forEach(id => {
-        const select = document.getElementById(id);
-        if (select) {
-          select.innerHTML = '<option value="">Select phone number to reserve...</option>';
-          phoneNumbers.forEach(num => {
-            const option = new Option(formatPhoneNumber(num.AvailablePhoneNumber), num.AvailablePhoneNumber);
-            select.appendChild(option);
-          });
-        }
-      });
-    }
-
-    function populateCQAAPhoneDropdowns() {
-      const dropdowns = [
-        'addCQPhone', 'modifyCQPhone',
-        'addAAPhone', 'modifyAAPhone',
-        'pairAAPhone', 'pairCQPhone'
-      ];
-      
-      dropdowns.forEach(id => {
-        const select = document.getElementById(id);
-        if (select) {
-          const currentValue = select.value;
-          select.innerHTML = '<option value="">Select phone number...</option>';
-          phoneNumbers.forEach(num => {
-            const option = new Option(formatPhoneNumber(num.AvailablePhoneNumber), num.AvailablePhoneNumber);
-            select.appendChild(option);
-          });
-          if (currentValue) select.value = currentValue;
-        }
-      });
-    }
-
-    function populateDropdowns() {
-      if (!dropdownData) return;
-      
-      // Populate user dropdowns
+      // User dropdown
       const userSelect = document.getElementById('addUsername');
       if (userSelect && dropdownData.users) {
         userSelect.innerHTML = '<option value="">Select a user...</option>';
@@ -1533,105 +679,380 @@
           userSelect.appendChild(option);
         });
       }
-      
-      // Populate TSD account dropdowns
-      const tsdSelects = ['addDeviceName', 'modifyDeviceName', 'deprovisionDeviceName'];
-      tsdSelects.forEach(id => {
-        const select = document.getElementById(id);
-        if (select && dropdownData.tsdAccounts) {
-          select.innerHTML = '<option value="">Select TSD account...</option>';
-          dropdownData.tsdAccounts.forEach(account => {
-            const option = new Option(account.DisplayName + ' (' + account.UserPrincipalName + ')', account.UserPrincipalName);
-            select.appendChild(option);
-          });
-        }
-      });
-      
-      // Populate call queue group dropdowns
-      const cqSelects = document.querySelectorAll('.cq-group-select');
-      if (dropdownData.callQueueGroups) {
-        cqSelects.forEach(select => {
-          select.innerHTML = '<option value="">Select call queue group...</option>';
+
+      // Call Queue Groups
+      const cqGroups = document.querySelectorAll('.cq-group-select');
+      cqGroups.forEach(select => {
+        select.innerHTML = '<option value="">Select call queue group...</option>';
+        if (dropdownData.callQueueGroups) {
           dropdownData.callQueueGroups.forEach(group => {
             const option = new Option(group.DisplayName, group.Identity);
             select.appendChild(option);
           });
-        });
-      }
-      
-      // Populate auto attendant dropdowns
+        }
+      });
+
+      // Auto Attendants
       const aaSelects = document.querySelectorAll('.aa-select');
-      if (dropdownData.autoAttendants) {
-        aaSelects.forEach(select => {
-          select.innerHTML = '<option value="">Select auto attendant...</option>';
+      aaSelects.forEach(select => {
+        select.innerHTML = '<option value="">Select auto attendant...</option>';
+        if (dropdownData.autoAttendants) {
           dropdownData.autoAttendants.forEach(aa => {
             const option = new Option(aa.Name, aa.Identity);
             select.appendChild(option);
           });
-        });
-      }
-      
-      // Populate call queue manager dropdowns
-      const cqManagerSelects = document.querySelectorAll('.cq-select');
-      if (dropdownData.callQueues) {
-        cqManagerSelects.forEach(select => {
-          select.innerHTML = '<option value="">Select call queue...</option>';
+        }
+      });
+
+      // Call Queues
+      const cqSelects = document.querySelectorAll('.cq-select');
+      cqSelects.forEach(select => {
+        select.innerHTML = '<option value="">Select call queue...</option>';
+        if (dropdownData.callQueues) {
           dropdownData.callQueues.forEach(cq => {
             const option = new Option(cq.Name, cq.Identity);
-            select.appendChild(option);
-          });
-        });
-      }
-    }
-
-    function populateReservedDropdowns() {
-      const dropdowns = ['addReservedNumber', 'modifyReservedNumber', 'addDeviceReservedNumber', 'modifyDeviceReservedNumber'];
-      
-      dropdowns.forEach(id => {
-        const select = document.getElementById(id);
-        if (select) {
-          select.innerHTML = '<option value="">-- Select a reserved number (optional) --</option>';
-          reservedNumbers.forEach(num => {
-            const option = new Option(
-              `${formatPhoneNumber(num.AvailablePhoneNumber)} - ${num.ReservedNotes || 'No notes'}`,
-              num.AvailablePhoneNumber
-            );
             select.appendChild(option);
           });
         }
       });
     }
 
-    function displayReservedNumbers() {
-      const listDiv = document.getElementById('reservedNumbersList');
-      const deviceListDiv = document.getElementById('reservedDeviceNumbersList');
+    // PHONE USERS FUNCTIONS
+    function validateAddForm() {
+      const username = document.getElementById('addUsername').value;
+      const phoneNumber = document.getElementById('addPhoneNumber').value;
+      const reservedNumber = document.getElementById('addReservedNumber').value;
+      const submitBtn = document.getElementById('addUserSubmit');
       
-      if (!reservedNumbers || reservedNumbers.length === 0) {
-        if (listDiv) listDiv.innerHTML = '<div class="batch-empty">No reserved numbers</div>';
-        if (deviceListDiv) deviceListDiv.innerHTML = '<div class="batch-empty">No reserved numbers</div>';
-        return;
-      }
-
-      let html = '';
-      reservedNumbers.forEach(num => {
-        html += `
-  <div class="reserved-item">
-    <div class="reserved-item-content">
-      <div class="reserved-phone">${formatPhoneNumber(num.AvailablePhoneNumber)}</div>
-      <div class="reserved-notes">${num.ReservedNotes || 'No notes'}</div>
-    </div>
-    <button class="btn btn-danger btn-small" onclick="unreserveNumber('${num.AvailablePhoneNumber}')">
-      Unreserve
-    </button>
-  </div>`;
-      });
-      
-      if (listDiv) listDiv.innerHTML = html;
-      if (deviceListDiv) deviceListDiv.innerHTML = html;
+      submitBtn.disabled = !(username && (phoneNumber || reservedNumber));
     }
 
-    // All remaining functions follow the same pattern...
-    // [The rest of the JavaScript functions continue with all the handlers for forms, batches, etc.]
+    function handleReservedNumberSelection() {
+      const reserved = document.getElementById('addReservedNumber').value;
+      const regular = document.getElementById('addPhoneNumber');
+      
+      if (reserved) {
+        regular.value = '';
+        regular.disabled = true;
+      } else {
+        regular.disabled = false;
+      }
+      validateAddForm();
+    }
+
+    function addToBatch() {
+      const username = document.getElementById('addUsername').value;
+      const phoneNumber = document.getElementById('addPhoneNumber').value || document.getElementById('addReservedNumber').value;
+      const intlCalling = document.querySelector('input[name="addIntlCalling"]:checked').value;
+      
+      const operation = {
+        action: 'add',
+        username: username,
+        phoneNumber: phoneNumber,
+        intlCalling: intlCalling === 'yes'
+      };
+      
+      batchOperations.push(operation);
+      updateBatchTable();
+      clearAddForm();
+      showMessage('addUserMessages', 'User added to batch queue', 'success');
+    }
+
+    function clearAddForm() {
+      document.getElementById('addUsername').selectedIndex = 0;
+      document.getElementById('addPhoneNumber').selectedIndex = 0;
+      document.getElementById('addReservedNumber').selectedIndex = 0;
+      document.querySelector('input[name="addIntlCalling"][value="no"]').checked = true;
+      validateAddForm();
+      showMessage('addUserMessages', '', '');
+    }
+
+    function updateBatchTable() {
+      const tbody = document.getElementById('batchTableBody');
+      const table = document.getElementById('batchTable');
+      const emptyMsg = document.getElementById('batchEmptyMessage');
+      const submitBtn = document.getElementById('submitAllBatch');
+      const clearBtn = document.getElementById('clearAllBatch');
+      
+      if (batchOperations.length === 0) {
+        table.style.display = 'none';
+        emptyMsg.style.display = 'block';
+        submitBtn.style.display = 'none';
+        clearBtn.style.display = 'none';
+      } else {
+        table.style.display = 'table';
+        emptyMsg.style.display = 'none';
+        submitBtn.style.display = 'block';
+        clearBtn.style.display = 'block';
+        
+        tbody.innerHTML = batchOperations.map((op, idx) => {
+          let actionClass = op.action === 'add' ? 'action-add' : op.action === 'modify' ? 'action-modify' : 'action-deprovision';
+          let details = '';
+          if (op.action === 'add') {
+            details = `Phone: ${formatPhoneNumber(op.phoneNumber)}, Intl: ${op.intlCalling ? 'Yes' : 'No'}`;
+          } else if (op.action === 'modify') {
+            details = `Phone: ${formatPhoneNumber(op.phoneNumber)}`;
+          } else {
+            details = 'Remove voice services';
+          }
+          
+          return `
+            <tr class="${actionClass}">
+              <td>${op.action.charAt(0).toUpperCase() + op.action.slice(1)}</td>
+              <td>${op.username}</td>
+              <td>${details}</td>
+              <td><button class="remove-batch-item" onclick="removeBatchItem(${idx})">X</button></td>
+            </tr>`;
+        }).join('');
+      }
+      
+      const addCount = batchOperations.filter(op => op.action === 'add').length;
+      const modifyCount = batchOperations.filter(op => op.action === 'modify').length;
+      const deprovCount = batchOperations.filter(op => op.action === 'deprovision').length;
+      
+      document.getElementById('batchAddCount').textContent = addCount;
+      document.getElementById('batchModifyCount').textContent = modifyCount;
+      document.getElementById('batchDeprovisionCount').textContent = deprovCount;
+      document.getElementById('batchTotalCount').textContent = batchOperations.length;
+    }
+
+    function removeBatchItem(index) {
+      batchOperations.splice(index, 1);
+      updateBatchTable();
+    }
+
+    function lookupUser() {
+      const username = document.getElementById('modifyUsername').value;
+      if (!username) {
+        showMessage('modifyUserMessages', 'Please enter a username', 'error');
+        return;
+      }
+      
+      // Mock user data
+      currentUser = {
+        username: username,
+        phoneNumber: '+14145551234',
+        intlCalling: false
+      };
+      
+      document.getElementById('currentUserInfo').style.display = 'block';
+      document.getElementById('currentSettings').innerHTML = `
+        <div class="current-setting">Phone: <span>${formatPhoneNumber(currentUser.phoneNumber)}</span></div>
+        <div class="current-setting">International: <span>${currentUser.intlCalling ? 'Yes' : 'No'}</span></div>
+      `;
+      
+      document.getElementById('modifyPhoneGroup').style.display = 'block';
+      document.getElementById('modifyIntlGroup').style.display = 'block';
+      document.getElementById('modifyUserSubmit').style.display = 'block';
+    }
+
+    function addModifyToBatch() {
+      if (!currentUser) return;
+      
+      const newPhone = document.getElementById('modifyPhoneNumber').value;
+      const operation = {
+        action: 'modify',
+        username: currentUser.username,
+        phoneNumber: newPhone || currentUser.phoneNumber
+      };
+      
+      batchOperations.push(operation);
+      updateBatchTable();
+      clearModifyForm();
+      showMessage('modifyUserMessages', 'Modification added to batch', 'success');
+    }
+
+    function clearModifyForm() {
+      document.getElementById('modifyUsername').value = '';
+      document.getElementById('currentUserInfo').style.display = 'none';
+      document.getElementById('modifyPhoneGroup').style.display = 'none';
+      document.getElementById('modifyIntlGroup').style.display = 'none';
+      document.getElementById('modifyUserSubmit').style.display = 'none';
+      currentUser = null;
+      showMessage('modifyUserMessages', '', '');
+    }
+
+    function lookupDeprovisionUser() {
+      const username = document.getElementById('deprovisionUsername').value;
+      if (!username) {
+        showMessage('deprovisionUserMessages', 'Please enter a username', 'error');
+        return;
+      }
+      
+      currentUser = {
+        username: username,
+        phoneNumber: '+14145551234'
+      };
+      
+      document.getElementById('deprovisionUserInfo').style.display = 'block';
+      document.getElementById('deprovisionSettings').innerHTML = `
+        <div class="current-setting">Username: <span>${currentUser.username}</span></div>
+        <div class="current-setting">Phone: <span>${formatPhoneNumber(currentUser.phoneNumber)}</span></div>
+      `;
+      
+      document.getElementById('deprovisionUserSubmit').style.display = 'block';
+    }
+
+    function addDeprovisionToBatch() {
+      if (!currentUser) return;
+      
+      const operation = {
+        action: 'deprovision',
+        username: currentUser.username,
+        phoneNumber: currentUser.phoneNumber
+      };
+      
+      batchOperations.push(operation);
+      updateBatchTable();
+      clearDeprovisionForm();
+      showMessage('deprovisionUserMessages', 'Deprovision added to batch', 'success');
+    }
+
+    function clearDeprovisionForm() {
+      document.getElementById('deprovisionUsername').value = '';
+      document.getElementById('deprovisionUserInfo').style.display = 'none';
+      document.getElementById('deprovisionUserSubmit').style.display = 'none';
+      currentUser = null;
+      showMessage('deprovisionUserMessages', '', '');
+    }
+
+    function submitAllOperations() {
+      showMessage('batchResults', 'Operations submitted successfully (mock)', 'success');
+      document.getElementById('resetPageBtn').style.display = 'block';
+    }
+
+    function clearAllBatch() {
+      batchOperations = [];
+      updateBatchTable();
+    }
+
+    function validateReserveForm() {
+      const phone = document.getElementById('reservePhoneNumber').value;
+      document.getElementById('reserveSubmit').disabled = !phone;
+    }
+
+    function reservePhoneNumber() {
+      showMessage('reserveMessages', 'Phone number reserved successfully (mock)', 'success');
+      document.getElementById('reservePhoneNumber').selectedIndex = 0;
+      document.getElementById('reserveNotes').value = '';
+      document.getElementById('charCount').textContent = '0';
+    }
+
+    function addCallQueueGroup() {
+      const container = document.getElementById('addCallQueueGroups');
+      const newItem = document.createElement('div');
+      newItem.className = 'dynamic-item';
+      newItem.innerHTML = `
+        <select class="form-control cq-group-select">
+          <option value="">Select call queue group...</option>
+        </select>
+        <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+      `;
+      container.appendChild(newItem);
+      populateAllDropdowns();
+    }
+
+    function addAutoAttendant() {
+      const container = document.getElementById('addAutoAttendants');
+      const newItem = document.createElement('div');
+      newItem.className = 'dynamic-item';
+      newItem.innerHTML = `
+        <select class="form-control aa-select">
+          <option value="">Select auto attendant...</option>
+        </select>
+        <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+      `;
+      container.appendChild(newItem);
+      populateAllDropdowns();
+    }
+
+    function addCallQueueManager() {
+      const container = document.getElementById('addCallQueueManagers');
+      const newItem = document.createElement('div');
+      newItem.className = 'dynamic-item';
+      newItem.innerHTML = `
+        <select class="form-control cq-select">
+          <option value="">Select call queue...</option>
+        </select>
+        <button class="btn btn-danger btn-small" onclick="removeItem(this)">Remove</button>
+      `;
+      container.appendChild(newItem);
+      populateAllDropdowns();
+    }
+
+    // CALL QUEUE FUNCTIONS
+    function updateCQNamingPreview() {
+      const name = document.getElementById('addCQName').value.toLowerCase().replace(/\s+/g, '');
+      document.getElementById('cqUPNPreview').textContent = name ? `q_${name}@msoe.edu` : 'q_@msoe.edu';
+      document.getElementById('cqDisplayPreview').textContent = name ? `Q ${document.getElementById('addCQName').value}` : 'Q ';
+      document.getElementById('cqAgentGroupPreview').textContent = name ? `qg${name}@msoe.edu` : 'qg@msoe.edu';
+    }
+
+    function addCQToBatch() {
+      const name = document.getElementById('addCQName').value;
+      const phone = document.getElementById('addCQPhone').value;
+      
+      if (!name || !phone) {
+        showMessage('addCQMessages', 'Please fill in all fields', 'error');
+        return;
+      }
+      
+      batchCQOperations.push({name, phone});
+      updateCQBatchTable();
+      clearCQForm();
+      showMessage('addCQMessages', 'Call Queue added to batch', 'success');
+    }
+
+    function clearCQForm() {
+      document.getElementById('addCQName').value = '';
+      document.getElementById('addCQPhone').selectedIndex = 0;
+      updateCQNamingPreview();
+      showMessage('addCQMessages', '', '');
+    }
+
+    function updateCQBatchTable() {
+      const tbody = document.getElementById('batchCQTableBody');
+      const table = document.getElementById('batchCQTable');
+      const emptyMsg = document.getElementById('batchCQEmptyMessage');
+      const submitBtn = document.getElementById('submitAllCQBatch');
+      const clearBtn = document.getElementById('clearAllCQBatch');
+      
+      if (batchCQOperations.length === 0) {
+        table.style.display = 'none';
+        emptyMsg.style.display = 'block';
+        submitBtn.style.display = 'none';
+        clearBtn.style.display = 'none';
+      } else {
+        table.style.display = 'table';
+        emptyMsg.style.display = 'none';
+        submitBtn.style.display = 'block';
+        clearBtn.style.display = 'block';
+        
+        tbody.innerHTML = batchCQOperations.map((op, idx) => `
+          <tr>
+            <td>${op.name}</td>
+            <td>${formatPhoneNumber(op.phone)}</td>
+            <td><button class="remove-batch-item" onclick="removeCQBatchItem(${idx})">X</button></td>
+          </tr>`
+        ).join('');
+      }
+      
+      document.getElementById('batchCQTotalCount').textContent = batchCQOperations.length;
+    }
+
+    function removeCQBatchItem(index) {
+      batchCQOperations.splice(index, 1);
+      updateCQBatchTable();
+    }
+
+    function submitAllCQOperations() {
+      showMessage('batchCQResults', 'Call Queue operations submitted (mock)', 'success');
+    }
+
+    function clearAllCQBatch() {
+      batchCQOperations = [];
+      updateCQBatchTable();
+    }
 
   </script>
 </body>
