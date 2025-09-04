@@ -1015,13 +1015,9 @@
               </div>
               
               <div class="form-group">
-                <label>Phone Number Assignment:</label>
-                <div class="radio-group">
-                  <label><input type="radio" name="pairPhoneAssign" value="aa" checked> Assign to AA only</label>
-                  <label><input type="radio" name="pairPhoneAssign" value="cq"> Assign to CQ only</label>
-                  <label><input type="radio" name="pairPhoneAssign" value="both"> Assign to both</label>
-                </div>
-              </div>
+  <label>Phone Number Assignment:</label>
+  <div class="help-text">Phone numbers can only be assigned to the Auto Attendant in pairs</div>
+</div>
               
               <div class="form-group">
                 <label for="addPairPhoneNumber">Select Phone Number:</label>
@@ -1135,6 +1131,9 @@ const AZURE_CONFIG = {
     let batchOperations = [];
     let batchDeviceOperations = [];
     let isTeamsEnvironment = false;
+let batchCQOperations = [];
+    let batchAAOperations = [];
+    let batchPairOperations = [];
 
     // Tab Management
     function showTab(tabName, event) {
@@ -1283,6 +1282,66 @@ document.getElementById('clearAddDeviceForm').onclick = clearAddDeviceFormOnly;
         validateDeviceReserveForm();
       });
       document.getElementById('reserveDeviceSubmit').onclick = reserveDevicePhoneNumber;
+
+      // CALL QUEUES - Event Listeners
+      document.getElementById('addCQName').addEventListener('input', function() {
+        updateCQPreview();
+        validateAddCQForm();
+      });
+      document.getElementById('addCQPhoneNumber').addEventListener('change', function() {
+        updateCQPreview();
+        validateAddCQForm();
+      });
+      document.getElementById('addCQReservedNumber').addEventListener('change', function() {
+        handleCQReservedNumberSelection();
+        updateCQPreview();
+        validateAddCQForm();
+      });
+
+      // AUTO ATTENDANTS - Event Listeners
+      document.getElementById('addAAName').addEventListener('input', function() {
+        updateAAPreview();
+        validateAddAAForm();
+      });
+      document.getElementById('addAAPhoneNumber').addEventListener('change', function() {
+        updateAAPreview();
+        validateAddAAForm();
+      });
+      document.getElementById('addAAReservedNumber').addEventListener('change', function() {
+        handleAAReservedNumberSelection();
+        updateAAPreview();
+        validateAddAAForm();
+      });
+      document.getElementById('addAARedirect').addEventListener('change', function() {
+        updateAAPreview();
+      });
+
+      // AA/CQ PAIRS - Event Listeners
+      document.getElementById('addPairName').addEventListener('input', function() {
+        updatePairPreview();
+        validateAddPairForm();
+      });
+      document.getElementById('addPairPhoneNumber').addEventListener('change', function() {
+        updatePairPreview();
+        validateAddPairForm();
+      });
+      document.getElementById('addPairReservedNumber').addEventListener('change', function() {
+        handlePairReservedNumberSelection();
+        updatePairPreview();
+        validateAddPairForm();
+      });
+// CQ/AA/Pair Submit Button Handlers
+document.getElementById('addCQSubmit').onclick = addCQToBatch;
+document.getElementById('addAASubmit').onclick = addAAToBatch;
+document.getElementById('addPairSubmit').onclick = addPairToBatch;
+
+// CQ/AA/Pair Clear Button Handlers
+document.getElementById('submitAllCQBatch').onclick = submitAllCQOperations;
+document.getElementById('clearAllCQBatch').onclick = clearAllCQBatch;
+document.getElementById('submitAllAABatch').onclick = submitAllAAOperations;
+document.getElementById('clearAllAABatch').onclick = clearAllAABatch;
+document.getElementById('submitAllPairBatch').onclick = submitAllPairOperations;
+document.getElementById('clearAllPairBatch').onclick = clearAllPairBatch;
     });
 
     // Load reserved numbers
@@ -1916,6 +1975,49 @@ async function unreserveNumber(phoneNumber) {
         sel.innerHTML = '<option value="">Select Call Queue…</option>';
         (dropdownData.callQueues||[]).forEach(q=>sel.appendChild(new Option(q,q)));
       });
+
+      // Populate AA redirect dropdown with existing Call Queues
+      const aaRedirect = document.getElementById('addAARedirect');
+      if (aaRedirect) {
+        aaRedirect.innerHTML = '<option value="">None - No redirect</option>';
+        (dropdownData.callQueues||[]).forEach(cq => {
+          aaRedirect.appendChild(new Option(cq, cq));
+        });
+      }
+      
+      // Populate modify/deprovision CQ dropdowns
+      const modifyCQSelect = document.getElementById('modifyCQSelect');
+      if (modifyCQSelect) {
+        modifyCQSelect.innerHTML = '<option value="">Select a Call Queue...</option>';
+        (dropdownData.callQueues||[]).forEach(cq => {
+          modifyCQSelect.appendChild(new Option(cq, cq));
+        });
+      }
+      
+      const deprovisionCQSelect = document.getElementById('deprovisionCQSelect');
+      if (deprovisionCQSelect) {
+        deprovisionCQSelect.innerHTML = '<option value="">Select a Call Queue...</option>';
+        (dropdownData.callQueues||[]).forEach(cq => {
+          deprovisionCQSelect.appendChild(new Option(cq, cq));
+        });
+      }
+      
+      // Populate modify/deprovision AA dropdowns
+      const modifyAASelect = document.getElementById('modifyAASelect');
+      if (modifyAASelect) {
+        modifyAASelect.innerHTML = '<option value="">Select an Auto Attendant...</option>';
+        (dropdownData.autoAttendants||[]).forEach(aa => {
+          modifyAASelect.appendChild(new Option(aa, aa));
+        });
+      }
+      
+      const deprovisionAASelect = document.getElementById('deprovisionAASelect');
+      if (deprovisionAASelect) {
+        deprovisionAASelect.innerHTML = '<option value="">Select an Auto Attendant...</option>';
+        (dropdownData.autoAttendants||[]).forEach(aa => {
+          deprovisionAASelect.appendChild(new Option(aa, aa));
+        });
+      }
     }
 
     // UPDATED: populatePhoneDropdowns function with batch filtering
@@ -3153,6 +3255,363 @@ const resp = await fetch(AZURE_CONFIG.phoneUsersUrl, {
       if(d.length===10) return `+1 ${d.slice(0,3)} ${d.slice(3,6)} ${d.slice(6)}`;
       return p;
     }
+// Sanitize name for UPN (lowercase, spaces to underscores)
+    function sanitizeName(input) {
+      return input.trim().toLowerCase().replace(/\s+/g, '_');
+    }
+
+    // Convert to title case for display names
+    function toTitleCase(str) {
+      return str.replace(/\w\S*/g, function(txt) {
+        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+      });
+    }
+
+    // Generate Call Queue names
+    function generateCQNames(input) {
+      const sanitized = sanitizeName(input);
+      const titleCased = toTitleCase(input.trim());
+      return {
+        upn: `q_${sanitized}@msoe.edu`,
+        displayName: `Q ${titleCased}`,
+        agentGroup: `Q G ${titleCased}`
+      };
+    }
+
+    // Generate Auto Attendant names
+    function generateAANames(input) {
+      const sanitized = sanitizeName(input);
+      const titleCased = toTitleCase(input.trim());
+      return {
+        upn: `call_${sanitized}@msoe.edu`,
+        displayName: `Call ${titleCased}`
+      };
+    }
+// Update Call Queue preview
+    function updateCQPreview() {
+      const nameInput = document.getElementById('addCQName').value;
+      const phoneNumber = document.getElementById('addCQPhoneNumber').value || 
+                         document.getElementById('addCQReservedNumber').value || 
+                         '-';
+      
+      if (nameInput) {
+        const names = generateCQNames(nameInput);
+        document.getElementById('previewCQName').textContent = names.displayName;
+        document.getElementById('previewCQUPN').textContent = names.upn;
+        document.getElementById('previewCQAgentGroup').textContent = names.agentGroup;
+      } else {
+        document.getElementById('previewCQName').textContent = '-';
+        document.getElementById('previewCQUPN').textContent = '-';
+        document.getElementById('previewCQAgentGroup').textContent = '-';
+      }
+      
+      document.getElementById('previewCQPhone').textContent = 
+        phoneNumber !== '-' ? formatPhoneNumber(phoneNumber) : '-';
+    }
+
+    // Update Auto Attendant preview
+    function updateAAPreview() {
+      const nameInput = document.getElementById('addAAName').value;
+      const phoneNumber = document.getElementById('addAAPhoneNumber').value || 
+                         document.getElementById('addAAReservedNumber').value || 
+                         '-';
+      const redirectSelect = document.getElementById('addAARedirect');
+      const redirectText = redirectSelect.value || 'None';
+      
+      if (nameInput) {
+        const names = generateAANames(nameInput);
+        document.getElementById('previewAAName').textContent = names.displayName;
+        document.getElementById('previewAAUPN').textContent = names.upn;
+      } else {
+        document.getElementById('previewAAName').textContent = '-';
+        document.getElementById('previewAAUPN').textContent = '-';
+      }
+      
+      document.getElementById('previewAAPhone').textContent = 
+        phoneNumber !== '-' ? formatPhoneNumber(phoneNumber) : '-';
+      document.getElementById('previewAARedirect').textContent = redirectText;
+    }
+
+    // Update AA/CQ Pair preview
+function updatePairPreview() {
+  const nameInput = document.getElementById('addPairName').value;
+  const phoneNumber = document.getElementById('addPairPhoneNumber').value || 
+                     document.getElementById('addPairReservedNumber').value || 
+                     '-';
+      
+      if (nameInput) {
+        const cqNames = generateCQNames(nameInput);
+        const aaNames = generateAANames(nameInput);
+        
+        // AA Preview
+        document.getElementById('previewPairAAName').textContent = aaNames.displayName;
+        document.getElementById('previewPairAAUPN').textContent = aaNames.upn;
+        document.getElementById('previewPairAARedirect').textContent = cqNames.displayName;
+        
+        // CQ Preview  
+        document.getElementById('previewPairCQName').textContent = cqNames.displayName;
+        document.getElementById('previewPairCQUPN').textContent = cqNames.upn;
+        document.getElementById('previewPairCQAgentGroup').textContent = cqNames.agentGroup;
+        
+        // Phone assignment - AA only for pairs
+const formattedPhone = phoneNumber !== '-' ? formatPhoneNumber(phoneNumber) : '-';
+document.getElementById('previewPairAAPhone').textContent = formattedPhone;
+document.getElementById('previewPairCQPhone').textContent = '-'; // CQ never gets phone in pairs
+      } else {
+        // Reset all previews
+        document.getElementById('previewPairAAName').textContent = '-';
+        document.getElementById('previewPairAAUPN').textContent = '-';
+        document.getElementById('previewPairAARedirect').textContent = '-';
+        document.getElementById('previewPairAAPhone').textContent = '-';
+        document.getElementById('previewPairCQName').textContent = '-';
+        document.getElementById('previewPairCQUPN').textContent = '-';
+        document.getElementById('previewPairCQAgentGroup').textContent = '-';
+        document.getElementById('previewPairCQPhone').textContent = '-';
+      }
+    }
+// Validate Call Queue Add Form
+    function validateAddCQForm() {
+      const nameInput = document.getElementById('addCQName').value.trim();
+      const phoneNumber = document.getElementById('addCQPhoneNumber').value || 
+                         document.getElementById('addCQReservedNumber').value;
+      
+      // Check for duplicate CQ name
+      if (nameInput) {
+        const names = generateCQNames(nameInput);
+        const duplicateInBatch = batchCQOperations.some(op => 
+          op.action === 'add' && op.resourceAccountUPN === names.upn
+        );
+        
+        if (duplicateInBatch) {
+          showMessage('addCQMessages', 
+            '<div class="error">A Call Queue with this name is already in the batch queue</div>');
+          document.getElementById('addCQSubmit').disabled = true;
+          return;
+        }
+      }
+      
+      // Clear any error messages
+      showMessage('addCQMessages', '');
+      
+      // Enable submit if name is provided (phone is optional)
+      document.getElementById('addCQSubmit').disabled = !nameInput;
+    }
+// Handle Call Queue reserved number selection
+    function handleCQReservedNumberSelection() {
+      const reserved = document.getElementById('addCQReservedNumber').value;
+      const regular = document.getElementById('addCQPhoneNumber');
+      
+      if (reserved) {
+        regular.value = '';
+        regular.disabled = true;
+      } else {
+        regular.disabled = false;
+      }
+    }
+
+    // Handle Auto Attendant reserved number selection
+    function handleAAReservedNumberSelection() {
+      const reserved = document.getElementById('addAAReservedNumber').value;
+      const regular = document.getElementById('addAAPhoneNumber');
+      
+      if (reserved) {
+        regular.value = '';
+        regular.disabled = true;
+      } else {
+        regular.disabled = false;
+      }
+    }
+
+    // Handle Pair reserved number selection
+    function handlePairReservedNumberSelection() {
+      const reserved = document.getElementById('addPairReservedNumber').value;
+      const regular = document.getElementById('addPairPhoneNumber');
+      
+      if (reserved) {
+        regular.value = '';
+        regular.disabled = true;
+      } else {
+        regular.disabled = false;
+      }
+    }
+    // Validate Auto Attendant Add Form
+    function validateAddAAForm() {
+      const nameInput = document.getElementById('addAAName').value.trim();
+      const phoneNumber = document.getElementById('addAAPhoneNumber').value || 
+                         document.getElementById('addAAReservedNumber').value;
+      
+      // Check for duplicate AA name
+      if (nameInput) {
+        const names = generateAANames(nameInput);
+        const duplicateInBatch = batchAAOperations.some(op => 
+          op.action === 'add' && op.resourceAccountUPN === names.upn
+        );
+        
+        if (duplicateInBatch) {
+          showMessage('addAAMessages', 
+            '<div class="error">An Auto Attendant with this name is already in the batch queue</div>');
+          document.getElementById('addAASubmit').disabled = true;
+          return;
+        }
+      }
+      
+      // Clear any error messages
+      showMessage('addAAMessages', '');
+      
+      // Enable submit if name is provided (phone is optional)
+      document.getElementById('addAASubmit').disabled = !nameInput;
+    }
+
+    // Validate AA/CQ Pair Add Form
+    function validateAddPairForm() {
+      const nameInput = document.getElementById('addPairName').value.trim();
+      const phoneNumber = document.getElementById('addPairPhoneNumber').value || 
+                         document.getElementById('addPairReservedNumber').value;
+      
+      // Check for duplicate pair name
+      if (nameInput) {
+        const cqNames = generateCQNames(nameInput);
+        const aaNames = generateAANames(nameInput);
+        
+        const duplicateInPairs = batchPairOperations.some(op => 
+          op.cqResourceAccountUPN === cqNames.upn || op.aaResourceAccountUPN === aaNames.upn
+        );
+        
+        const duplicateCQ = batchCQOperations.some(op => 
+          op.action === 'add' && op.resourceAccountUPN === cqNames.upn
+        );
+        
+        const duplicateAA = batchAAOperations.some(op => 
+          op.action === 'add' && op.resourceAccountUPN === aaNames.upn
+        );
+        
+        if (duplicateInPairs || duplicateCQ || duplicateAA) {
+          showMessage('addPairMessages', 
+            '<div class="error">A Call Queue or Auto Attendant with this name is already in the batch queue</div>');
+          document.getElementById('addPairSubmit').disabled = true;
+          return;
+        }
+      }
+      
+      // Clear any error messages
+      showMessage('addPairMessages', '');
+      
+      // Enable submit if name is provided (phone is optional)
+      document.getElementById('addPairSubmit').disabled = !nameInput;
+    }
+// Add Call Queue to Batch
+function addCQToBatch() {
+  const nameInput = document.getElementById('addCQName').value.trim();
+  const phoneNumber = document.getElementById('addCQPhoneNumber').value || 
+                     document.getElementById('addCQReservedNumber').value;
+  
+  if (!nameInput) return;
+  
+  const names = generateCQNames(nameInput);
+  
+  const operation = {
+    id: Date.now(),
+    action: 'add',
+    type: 'callQueue',
+    displayName: names.displayName,
+    resourceAccountUPN: names.upn,
+    agentGroup: names.agentGroup,
+    phoneNumber: phoneNumber || null,
+    wasReserved: !!document.getElementById('addCQReservedNumber').value
+  };
+  
+  batchCQOperations.push(operation);
+  updateCQBatchTable();
+  
+  // Clear form
+  document.getElementById('addCQName').value = '';
+  document.getElementById('addCQPhoneNumber').value = '';
+  document.getElementById('addCQReservedNumber').value = '';
+  updateCQPreview();
+  validateAddCQForm();
+  
+  showMessage('addCQMessages', 
+    `<div class="success">Call Queue "${operation.displayName}" added to batch</div>`);
+}
+
+// Add Auto Attendant to Batch
+function addAAToBatch() {
+  const nameInput = document.getElementById('addAAName').value.trim();
+  const phoneNumber = document.getElementById('addAAPhoneNumber').value || 
+                     document.getElementById('addAAReservedNumber').value;
+  const redirectTo = document.getElementById('addAARedirect').value;
+  
+  if (!nameInput) return;
+  
+  const names = generateAANames(nameInput);
+  
+  const operation = {
+    id: Date.now(),
+    action: 'add',
+    type: 'autoAttendant',
+    displayName: names.displayName,
+    resourceAccountUPN: names.upn,
+    phoneNumber: phoneNumber || null,
+    redirectTo: redirectTo || null,
+    wasReserved: !!document.getElementById('addAAReservedNumber').value
+  };
+  
+  batchAAOperations.push(operation);
+  updateAABatchTable();
+  
+  // Clear form
+  document.getElementById('addAAName').value = '';
+  document.getElementById('addAAPhoneNumber').value = '';
+  document.getElementById('addAAReservedNumber').value = '';
+  document.getElementById('addAARedirect').value = '';
+  updateAAPreview();
+  validateAddAAForm();
+  
+  showMessage('addAAMessages', 
+    `<div class="success">Auto Attendant "${operation.displayName}" added to batch</div>`);
+}
+
+// Add AA/CQ Pair to Batch
+function addPairToBatch() {
+  const nameInput = document.getElementById('addPairName').value.trim();
+  const phoneNumber = document.getElementById('addPairPhoneNumber').value || 
+                     document.getElementById('addPairReservedNumber').value;
+  
+  if (!nameInput) return;
+  
+  const cqNames = generateCQNames(nameInput);
+  const aaNames = generateAANames(nameInput);
+  
+  const operation = {
+    id: Date.now(),
+    action: 'add',
+    type: 'pair',
+    baseName: nameInput,
+    // Auto Attendant details
+    aaDisplayName: aaNames.displayName,
+    aaResourceAccountUPN: aaNames.upn,
+    aaPhoneNumber: phoneNumber || null, // AA gets the phone
+    // Call Queue details
+    cqDisplayName: cqNames.displayName,
+    cqResourceAccountUPN: cqNames.upn,
+    cqAgentGroup: cqNames.agentGroup,
+    cqPhoneNumber: null, // CQ never gets phone in pairs
+    wasReserved: !!document.getElementById('addPairReservedNumber').value
+  };
+  
+  batchPairOperations.push(operation);
+  updatePairBatchTable();
+  
+  // Clear form
+  document.getElementById('addPairName').value = '';
+  document.getElementById('addPairPhoneNumber').value = '';
+  document.getElementById('addPairReservedNumber').value = '';
+  updatePairPreview();
+  validateAddPairForm();
+  
+  showMessage('addPairMessages', 
+    `<div class="success">AA/CQ Pair "${operation.baseName}" added to batch</div>`);
+}
 
     function showMessage(id,msg,type){
       let c=document.getElementById(id);
