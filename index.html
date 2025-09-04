@@ -708,14 +708,16 @@
           </div>
 
           <div class="form-group">
-            <label>Settings Preview:</label>
-            <div class="user-info">
-              <div class="current-setting"><strong>Distribution:</strong> Attendant Routing</div>
-              <div class="current-setting"><strong>Conference Mode:</strong> Yes</div>
-              <div class="current-setting"><strong>Agent Group:</strong> <span id="cqAgentGroupPreview">qg[name]@msoe.edu</span></div>
-              <div class="current-setting"><strong>Overflow:</strong> Shared Voicemail</div>
-            </div>
-          </div>
+  <label>Settings Preview:</label>
+  <div class="user-info">
+    <div class="current-setting"><strong>UPN:</strong> <span id="cqUPNPreview">[name]_CQ@msoe.edu</span></div>
+    <div class="current-setting"><strong>Display Name:</strong> <span id="cqDisplayNamePreview">[Name]_CQ</span></div>
+    <div class="current-setting"><strong>Agent/VM Group:</strong> <span id="cqAgentGroupPreview">qg[name]@msoe.edu</span></div>
+    <div class="current-setting"><strong>Distribution:</strong> Attendant Routing</div>
+    <div class="current-setting"><strong>Conference Mode:</strong> Yes</div>
+    <div class="current-setting"><strong>Overflow:</strong> Shared Voicemail</div>
+  </div>
+</div>
 
           <div style="display:flex; gap:10px; margin-top:auto;">
             <button id="addCQSubmit" class="btn btn-primary submit-button" disabled style="flex:1;">
@@ -3130,11 +3132,21 @@ setTimeout(() => {
     // Call Queue specific functions
 function updateCQAgentGroupPreview() {
   const name = document.getElementById('addCQName').value.trim();
-  const preview = document.getElementById('cqAgentGroupPreview');
+  const upnPreview = document.getElementById('cqUPNPreview');
+  const displayNamePreview = document.getElementById('cqDisplayNamePreview');
+  const agentGroupPreview = document.getElementById('cqAgentGroupPreview');
+  
   if (name) {
-    preview.textContent = `qg${name.toLowerCase().replace(/\s+/g, '')}@msoe.edu`;
+    // UPN format: lowercase with underscores, @msoe.edu
+    upnPreview.textContent = `${name.toLowerCase().replace(/\s+/g, '_')}_cq@msoe.edu`;
+    // Display Name: as typed with _CQ suffix
+    displayNamePreview.textContent = `${name}_CQ`;
+    // Agent Group: qg prefix, lowercase, no spaces
+    agentGroupPreview.textContent = `qg${name.toLowerCase().replace(/\s+/g, '')}@msoe.edu`;
   } else {
-    preview.textContent = 'qg[name]@msoe.edu';
+    upnPreview.textContent = '[name]_CQ@msoe.edu';
+    displayNamePreview.textContent = '[Name]_CQ';
+    agentGroupPreview.textContent = 'qg[name]@msoe.edu';
   }
 }
 
@@ -3529,27 +3541,71 @@ function resetCQPage() {
 
 async function submitAllCQOperations() {
   if (!batchCQOperations.length) return;
-  
+
   const submitBtn = document.getElementById('submitAllCQBatch');
   const originalText = submitBtn.textContent;
   submitBtn.disabled = true;
-  
-  // For now, just simulate success since API isn't ready
-  submitBtn.textContent = '✅ Operations Submitted!';
-  
-  setTimeout(() => {
+
+  // 1) First write to SQL via your existing GetAvailablePhoneNumbers API
+  const insertUrl = `${API.url}?code=${API.key}`;
+  try {
+    submitBtn.textContent = '💾 Writing to SQL…';
+
+    // Fire all INSERT calls in parallel
+    await Promise.all(batchCQOperations.map(op => {
+      // Transform the CQ operation to match what the API expects
+      const sqlPayload = {
+        action: op.action,
+        cqName: op.cqName,
+        phoneNumber: op.phoneNumber,
+        agentGroup: op.agentGroup,
+        distributionMethod: op.distributionMethod,
+        conferenceMode: op.conferenceMode,
+        overflow: op.overflow,
+        cqUPN: `${op.cqName.toLowerCase().replace(/\s+/g, '_')}@msoe.edu`,
+        cqDisplayName: op.cqName
+      };
+      
+      return fetch(insertUrl, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(sqlPayload)
+      }).then(resp => {
+        if (!resp.ok) {
+          return resp.json().then(err => Promise.reject(err.error || resp.status));
+        }
+      });
+    }));
+  } catch (writeErr) {
+    // If any insert failed
     displayCQBatchResults([{
       operation: { action: 'batch', cqName: 'system' },
-      success: true,
-      message: 'Call Queue operations submitted successfully (mock mode)'
-    }], 1, 0);
-    
-    batchCQOperations = [];
+      success: false,
+      message: `SQL write failed: ${writeErr}`
+    }], 0, 1);
     submitBtn.disabled = false;
     submitBtn.textContent = originalText;
-    updateCQBatchTable();
-    loadCQPhoneNumbers();
-  }, 1000);
+    return;
+  }
+
+  // 2) Now trigger the runbook (when ready - for now we'll skip this)
+  // TODO: Add runbook trigger when Azure Function is ready
+  
+  submitBtn.textContent = '✅ Operations Submitted!';
+  
+  displayCQBatchResults([{
+    operation: { action: 'batch', cqName: 'system' },
+    success: true,
+    message: 'Call Queue operations written to SQL successfully'
+  }], 1, 0);
+  
+  // Clear after success
+  batchCQOperations = [];
+  submitBtn.disabled = false;
+  submitBtn.textContent = originalText;
+  updateCQBatchTable();
+  loadCQPhoneNumbers();
+}, 1000);
 }
 
 function displayCQBatchResults(results, successCount, errorCount) {
