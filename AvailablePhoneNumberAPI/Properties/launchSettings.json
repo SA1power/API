@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "temp_api": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7287",
+      "launchBrowser": false
+    }
+  }
+}
