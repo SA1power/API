@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(func azure functionapp fetch-app-settings AvailablePhoneNumberAPI)",
+      "Bash(func azure functionapp download AvailablePhoneNumberAPI)",
+      "Bash(az functionapp:*)",
+      "Bash(az webapp deployment source config-zip:*)",
+      "Bash(curl -u '$AvailablePhoneNumberAPI:Gv12FeXeGu4C4TsCJ1Z8aCHUxU3MjttKXKrhv6QDT1thNH03LjGXszbZdxhj' https://availablephonenumberapi.scm.azurewebsites.net/api/zip/site/wwwroot/ -o functionapp.zip)",
+      "Bash(az webapp download:*)",
+      "Bash(curl -L -u '$AvailablePhoneNumberAPI:Gv12FeXeGu4C4TsCJ1Z8aCHUxU3MjttKXKrhv6QDT1thNH03LjGXszbZdxhj' https://availablephonenumberapi.scm.azurewebsites.net/api/zipdeploy -o functionapp2.zip)",
+      "Bash(curl -u '$AvailablePhoneNumberAPI:Gv12FeXeGu4C4TsCJ1Z8aCHUxU3MjttKXKrhv6QDT1thNH03LjGXszbZdxhj' https://availablephonenumberapi.scm.azurewebsites.net/api/vfs/site/wwwroot/)",
+      "Bash(az rest:*)",
+      "Bash(powershell:*)",
+      "Bash(git clone:*)",
+      "Bash(func init:*)",
+      "Bash(func new:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd Azure Function code for AvailablePhoneNumberAPI\n\n- Added .NET 8 isolated function app structure\n- Created GetAvailablePhoneNumbers HTTP trigger function\n- Added host.json, Program.cs, and project files\n- Function configured for anonymous authentication\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(gh auth:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(winget install:*)",
+      "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" auth login)",
+      "Bash(func azure functionapp download ProvisionTeamsPhoneSystemUsers)",
+      "Bash(git init:*)",
+      "Bash(git remote add:*)",
+      "Bash(git commit:*)",
+      "Bash(git pull:*)",
+      "Bash(git ls-tree:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
